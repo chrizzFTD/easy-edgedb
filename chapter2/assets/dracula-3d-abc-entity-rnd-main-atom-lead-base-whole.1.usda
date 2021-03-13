@@ -1,0 +1,52 @@
+#usda 1.0
+
+def "City" (
+    kind = "assembly"
+)
+{
+    def "Munich"
+    {
+    }
+
+    def "Budapest" (
+        customData = {
+            string display_name = "Buda-Pesth"
+            string modern_name = "Budapest"
+        }
+    )
+    {
+    }
+
+    def "Bistritz" (
+        customData = {
+            string display_name = "Bistritz"
+            string modern_name = "Bistri\xc8\x9ba"
+        }
+        kind = "assembly"
+    )
+    {
+        def "GoldenKroneHotel" (
+            kind = "component"
+        )
+        {
+        }
+    }
+}
+
+def "Person"
+{
+    def "JonathanHarker" (
+        customData = {
+            string display_name = "Jonathan Harker"
+        }
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+}
+
