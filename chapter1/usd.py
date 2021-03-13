@@ -7,26 +7,13 @@ Bistritz for example is now called Bistrița (it's in Romania), and Buda-Pesth i
 Some kind of Person type. We need it to have a name, and also a way to track the places that the person visited.
 
 """
-from pxr import Usd, Sdf, Ar
 from grill import names
-from naming import NameConfig
-
-
-_USD_SUFFIX = "usda"
+from pxr import Usd, Sdf, Ar
 
 
 # class UsdFile(names.DateTimeFile, names.CGAssetFile):
 class UsdFile(names.CGAssetFile):
-    file_config = NameConfig(dict(suffix=_USD_SUFFIX))
-
-    @property
-    def _defaults(self):
-        result = super()._defaults
-        result.update(suffix=_USD_SUFFIX)
-        return result
-
-    def get_path_pattern_list(self):
-        return []
+    DEFAULT_SUFFIX = 'usda'
 
 
 from pathlib import Path
