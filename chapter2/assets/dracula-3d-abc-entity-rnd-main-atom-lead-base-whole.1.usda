@@ -48,5 +48,40 @@ def "Person"
             </City/Bistritz>,
         ]
     }
+
+    def "EmilSinclair" (
+        customData = {
+            string display_name = "Emil Sinclair"
+        }
+        prepend references = </Transport>
+        variants = {
+            string Transport = "HorseDrawnCarriage"
+        }
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+}
+
+def "Transport" (
+    prepend variantSets = "Transport"
+)
+{
+    variantSet "Transport" = {
+        "Feet" {
+
+        }
+        "HorseDrawnCarriage" {
+
+        }
+        "Train" {
+
+        }
+    }
 }
 
