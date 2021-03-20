@@ -1,46 +1,105 @@
 #usda 1.0
 
+def "DBTypes"
+{
+    def "DisplayableName"
+    {
+        custom string display_name
+    }
+
+    def "Transport" (
+        prepend variantSets = "Transport"
+    )
+    {
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
+    }
+
+    def "Person" (
+        prepend references = </DBTypes/DisplayableName>
+    )
+    {
+        custom rel places_visited
+    }
+
+    def "PC" (
+        prepend references = [
+            </DBTypes/Transport>,
+            </DBTypes/Person>
+        ]
+    )
+    {
+    }
+
+    def "Place" (
+        prepend references = </DBTypes/DisplayableName>
+    )
+    {
+        custom string modern_name
+    }
+
+    def "City" (
+        kind = "assembly"
+        prepend references = [
+            </DBTypes/Place>,
+            </DBTypes/DisplayableName>
+        ]
+    )
+    {
+    }
+}
+
 def "City" (
     kind = "assembly"
 )
 {
-    def "Munich"
+    def "Munich" (
+        prepend references = </DBTypes/City>
+    )
     {
     }
 
     def "Budapest" (
-        customData = {
-            string display_name = "Buda-Pesth"
-            string modern_name = "Budapest"
-        }
+        prepend references = </DBTypes/City>
     )
     {
+        custom string display_name = "Buda-Pesth"
     }
 
     def "Bistritz" (
-        customData = {
-            string display_name = "Bistritz"
-            string modern_name = "Bistri\xc8\x9ba"
-        }
-        kind = "assembly"
+        prepend references = </DBTypes/City>
     )
     {
-        def "GoldenKroneHotel" (
+        custom string display_name = "Bistritz"
+        custom string modern_name = "Bistri\xc8\x9ba"
+
+        over "GoldenKroneHotel" (
             kind = "component"
+            prepend references = </Place/GoldenKroneHotel>
         )
         {
         }
     }
 }
 
-def "Person"
+def "PC" (
+    kind = "assembly"
+)
 {
     def "JonathanHarker" (
-        customData = {
-            string display_name = "Jonathan Harker"
-        }
+        prepend references = </DBTypes/PC>
     )
     {
+        custom string display_name = "Jonathan Harker"
         custom rel places_visited
         prepend rel places_visited = [
             </City/Munich>,
@@ -50,15 +109,13 @@ def "Person"
     }
 
     def "EmilSinclair" (
-        customData = {
-            string display_name = "Emil Sinclair"
-        }
-        prepend references = </Transport>
+        prepend references = </DBTypes/PC>
         variants = {
             string Transport = "HorseDrawnCarriage"
         }
     )
     {
+        custom string display_name = "Emil Sinclair"
         custom rel places_visited
         prepend rel places_visited = [
             </City/Munich>,
@@ -68,20 +125,15 @@ def "Person"
     }
 }
 
-def "Transport" (
-    prepend variantSets = "Transport"
+def "Place" (
+    kind = "assembly"
 )
 {
-    variantSet "Transport" = {
-        "Feet" {
-
-        }
-        "HorseDrawnCarriage" {
-
-        }
-        "Train" {
-
-        }
+    def "GoldenKroneHotel" (
+        prepend references = </DBTypes/Place>
+    )
+    {
+        custom string display_name = "Golden Krone Hotel"
     }
 }
 

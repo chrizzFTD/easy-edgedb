@@ -7,32 +7,39 @@ Bistritz for example is now called Bistrița (it's in Romania), and Buda-Pesth i
 Some kind of Person type. We need it to have a name, and also a way to track the places that the person visited.
 
 """
+import logging
+from pathlib import Path
+
 from grill import names
-from pxr import Usd, Sdf, Ar
+
+from pxr import Usd, Sdf, Ar, Kind
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+repo = Path(__file__).parent / "assets"
 
 
 class UsdFile(names.CGAssetFile):
     DEFAULT_SUFFIX = 'usda'
 
 
-from pathlib import Path
-repo = Path(__file__).parent / "assets"
-import logging
-logging.basicConfig(level=logging.INFO)
-LOG = logging.getLogger(__name__)
-usdf = UsdFile.get_default(code='dracula')
-LOG.info(f"Repository path: {repo}")
-LOG.info(f"Stage identifier: {usdf}")
-# we first create a layer under our repo
-layer = Sdf.Layer.CreateNew(str(repo / usdf.name))
-# delete it since it will have an identifier with the full path,
-# and we want to have the identifier relative to the repository path
-del layer
-# to get the relative identifier, use an asset resolver context to load the layer
-ctx = Ar.DefaultResolverContext([str(repo)])
-with Ar.ResolverContextBinder(ctx):
-    # stage's root layer identifier will now be relative to the repository path
-    stage = Usd.Stage.Open(usdf.name)
+dracula_root_id = UsdFile.get_default(code='dracula')
+logger.info(f"Repository path: {repo}")
+logger.info(f"Stage identifier: {dracula_root_id}")
+
+
+def open_stage(root_id) -> Usd.Stage:
+    rootf = UsdFile(root_id)
+    # we first create a layer under our repo
+    layer = Sdf.Layer.CreateNew(str(repo / rootf.name))
+    # delete it since it will have an identifier with the full path,
+    # and we want to have the identifier relative to the repository path
+    del layer
+    # to get the relative identifier, use an asset resolver context to load the layer
+    ctx = Ar.DefaultResolverContext([str(repo)])
+    with Ar.ResolverContextBinder(ctx):
+        # stage's root layer identifier will now be relative to the repository path
+        return Usd.Stage.Open(rootf.name)
 
 
 """
@@ -59,49 +66,75 @@ INSERT Person {
 
 # types, types.
 # this types should ideally come directly from EdgeDB? without reaching the database first?
-from dataclasses import dataclass, field
+
+stage = open_stage(dracula_root_id)
+
+db_root = stage.DefinePrim("/DBTypes")
+db_root_path = db_root.GetPath()
+
+# TODO: what should person and place be? Assemblies vs components.
+#       For now, only cities are considered assemblies.
+
+displayable_type = stage.DefinePrim(db_root_path.AppendChild("DisplayableName"))
+displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+
+transport_enum = stage.DefinePrim(db_root_path.AppendChild("Transport"))
+variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
+for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
+    variant_set.AddVariant(set_name)
 
 
-@dataclass
-class Place:
-    name: str
-    display_name: str = ''
-    modern_name: str = ''
+person_type = stage.DefinePrim(db_root_path.AppendChild("Person"))
+person_type.CreateRelationship('places_visited')
+
+pc_type = stage.DefinePrim(db_root_path.AppendChild("PC"))
+for reference in (person_type.GetPath(), transport_enum.GetPath()):
+    pc_type.GetReferences().AddInternalReference(reference)
+
+npc_type = stage.DefinePrim(db_root_path.AppendChild("PC"))
+npc_type.GetReferences().AddInternalReference(person_type.GetPath())
+
+place_type = stage.DefinePrim(db_root_path.AppendChild("Place"))
+place_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
+
+city_type = stage.DefinePrim(db_root_path.AppendChild("City"))
+city_type.GetReferences().AddInternalReference(place_type.GetPath())
+# all places that end up in the database are "important places"
+Usd.ModelAPI(city_type).SetKind(Kind.Tokens.assembly)
+
+for db_type in (person_type, place_type, city_type):
+    db_type.GetReferences().AddInternalReference(displayable_type.GetPath())
+
+pseudoRootPath = stage.GetPseudoRoot().GetPath()
+cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
 
 
-@dataclass
-class City(Place):
-    important_places: set = field(default_factory=set)
+def create(stage, dbtype, name, display_name=""):
+    # contract: all dbtypes have a display_name
+    scope_path = pseudoRootPath.AppendPath(dbtype.GetName())
+    scope = stage.GetPrimAtPath(scope_path)
+    if not scope:
+        scope = stage.DefinePrim(scope_path)
+    if not scope.IsModel():
+        Usd.ModelAPI(scope).SetKind(Kind.Tokens.assembly)
+    path = scope_path.AppendChild(name)
+    prim = stage.DefinePrim(path)
+    prim.GetReferences().AddInternalReference(dbtype.GetPath())
+    if display_name:
+        prim.GetAttribute("display_name").Set(display_name)
+    return prim
 
 
-@dataclass(frozen=True)
-class Person:
-    name: str
-    display_name: str = ''
+munich = create(stage, city_type, 'Munich')
+budapest = create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
+bistritz = create(stage, city_type, 'Bistritz', display_name='Bistritz')
+bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-
-munich = City('Munich')
-budapest = City('Budapest', 'Buda-Pesth', 'Budapest',)
-bistritz = City('Bistritz', 'Bistritz', 'Bistrița',)
+jonathan = create(stage, pc_type, 'JonathanHarker', display_name='Jonathan Harker')
+emil = create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
 
 tos = lambda: print(stage.GetRootLayer().ExportToString())
-jonathan = Person('JonathanHarker', 'Jonathan Harker')
-emil = Person("EmilSinclair", "Emil Sinclair")
 
-cityPath = Sdf.Path("/City")
-personPath = Sdf.Path("/Person")
-for rootPath, children in {
-    cityPath: (munich, budapest, bistritz),
-    personPath: (jonathan, emil),
-}.items():
-    for each in children:
-        path = rootPath.AppendChild(each.name)
-        prim = stage.DefinePrim(path)
-        for datum in ('display_name', 'modern_name'):
-            value = getattr(each, datum, None)
-            if not value:
-                continue
-            prim.SetCustomDataByKey(datum, value)
 
 """
 If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
@@ -109,54 +142,37 @@ If you just want to return a single part of a type without the object structure,
 {'Budapest', 'Bistrița'}
 """
 
-cityRoot = stage.GetPrimAtPath(cityPath)
-print([p for p in Usd.PrimRange(cityRoot) if p.GetCustomDataByKey("modern_name")])
+# cityRoot = stage.GetPrimAtPath(cityPath)
+print([p for p in Usd.PrimRange(cityRoot) if p.GetAttribute("modern_name").IsValid() and p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
 But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
 """
 
-personRoot = stage.GetPrimAtPath(personPath)
 
-for person, places in {
+for prim, places in {
     jonathan: cityRoot.GetChildren(),
     emil: cityRoot.GetChildren(),
 }.items():
-    prim = personRoot.GetPrimAtPath(person.name)
-    visitRel = prim.CreateRelationship('places_visited')
+    visitRel = prim.GetRelationship('places_visited')
     for place in places:
         visitRel.AddTarget(place.GetPath())
 
-bistritzPrim = cityRoot.GetChild(bistritz.name)
-# we could set "important_places" as extra custom data.
-# bistritzPrim.SetCustomDataByKey('important_places')
+
+# we could set "important_places" as a custom new property
 # but "important" prims are already provided by the USD model hierarchy.
 # let's try it and see if we can get away with it.
-from pxr import Kind
-Usd.ModelAPI(cityRoot).SetKind(Kind.Tokens.assembly)
-Usd.ModelAPI(bistritzPrim).SetKind(Kind.Tokens.assembly)
-goldenKrone = Place('GoldenKroneHotel', 'Golden Krone Hotel')
-goldenKronePrim = stage.DefinePrim(bistritzPrim.GetPath().AppendChild(goldenKrone.name))
-Usd.ModelAPI(goldenKronePrim).SetKind(Kind.Tokens.component)
+goldenKrone = create(stage, place_type, 'GoldenKroneHotel', 'Golden Krone Hotel')
+# also, let's make it a child of bistritz
+childPrim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
+childPrim.GetReferences().AddInternalReference(goldenKrone.GetPath())
+Usd.ModelAPI(childPrim).SetKind(Kind.Tokens.component)  # should be component or reference?
+emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
-
-
-for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
-    print(prim)
-
-transportPath = Sdf.Path("/Transport")
-
-transportRoot = stage.DefinePrim(transportPath)
-variantSet = transportRoot.GetVariantSets().AddVariantSet("Transport")
-for childName in ("Feet", "Train", "HorseDrawnCarriage"):
-    variantSet.AddVariant(childName)
-
-emilPrim = personRoot.GetPrimAtPath(emil.name)
-emilPrim.GetReferences().AddInternalReference(transportRoot.GetPath())
-emilPrim.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
 if __name__ == "__main__":
     tos()
+    for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
+        print(prim)
     stage.GetRootLayer().Save()
-
