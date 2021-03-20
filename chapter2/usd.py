@@ -74,7 +74,7 @@ class City(Place):
     important_places: set = field(default_factory=set)
 
 
-@dataclass
+@dataclass(frozen=True)
 class Person:
     name: str
     display_name: str = ''
@@ -86,12 +86,13 @@ bistritz = City('Bistritz', 'Bistritz', 'Bistrița',)
 
 tos = lambda: print(stage.GetRootLayer().ExportToString())
 jonathan = Person('JonathanHarker', 'Jonathan Harker')
+emil = Person("EmilSinclair", "Emil Sinclair")
 
 cityPath = Sdf.Path("/City")
 personPath = Sdf.Path("/Person")
 for rootPath, children in {
     cityPath: (munich, budapest, bistritz),
-    personPath: (jonathan,),
+    personPath: (jonathan, emil),
 }.items():
     for each in children:
         path = rootPath.AppendChild(each.name)
@@ -116,10 +117,16 @@ print([p for p in Usd.PrimRange(cityRoot) if p.GetCustomDataByKey("modern_name")
 But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
 """
 
-jonathanPrim = stage.GetPrimAtPath(personPath).GetPrimAtPath(jonathan.name)
-jonathanVisitRel = jonathanPrim.CreateRelationship('places_visited')
-for city in cityRoot.GetChildren():
-    jonathanVisitRel.AddTarget(city.GetPath())
+personRoot = stage.GetPrimAtPath(personPath)
+
+for person, places in {
+    jonathan: cityRoot.GetChildren(),
+    emil: cityRoot.GetChildren(),
+}.items():
+    prim = personRoot.GetPrimAtPath(person.name)
+    visitRel = prim.CreateRelationship('places_visited')
+    for place in places:
+        visitRel.AddTarget(place.GetPath())
 
 bistritzPrim = cityRoot.GetChild(bistritz.name)
 # we could set "important_places" as extra custom data.
@@ -133,12 +140,23 @@ goldenKrone = Place('GoldenKroneHotel', 'Golden Krone Hotel')
 goldenKronePrim = stage.DefinePrim(bistritzPrim.GetPath().AppendChild(goldenKrone.name))
 Usd.ModelAPI(goldenKronePrim).SetKind(Kind.Tokens.component)
 
-tos()
+
 
 for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
     print(prim)
 
-stage.GetRootLayer().Save()
+transportPath = Sdf.Path("/Transport")
+
+transportRoot = stage.DefinePrim(transportPath)
+variantSet = transportRoot.GetVariantSets().AddVariantSet("Transport")
+for childName in ("Feet", "Train", "HorseDrawnCarriage"):
+    variantSet.AddVariant(childName)
+
+emilPrim = personRoot.GetPrimAtPath(emil.name)
+emilPrim.GetReferences().AddInternalReference(transportRoot.GetPath())
+emilPrim.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
 if __name__ == "__main__":
-    ...
+    tos()
+    stage.GetRootLayer().Save()
+
