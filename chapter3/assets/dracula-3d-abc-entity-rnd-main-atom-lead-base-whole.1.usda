@@ -1,0 +1,222 @@
+#usda 1.0
+
+def "DBTypes"
+{
+    def "DisplayableName"
+    {
+        custom string display_name
+    }
+
+    def "Transport" (
+        prepend variantSets = "Transport"
+    )
+    {
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
+    }
+
+    def "Person" (
+        prepend references = </DBTypes/DisplayableName>
+    )
+    {
+        custom int2 age
+        custom rel places_visited
+    }
+
+    def "PC" (
+        prepend references = [
+            </DBTypes/Person>,
+            </DBTypes/Transport>
+        ]
+    )
+    {
+    }
+
+    def "NPC" (
+        prepend references = </DBTypes/Person>
+    )
+    {
+    }
+
+    def "Vampire" (
+        prepend references = </DBTypes/Person>
+    )
+    {
+    }
+
+    def "Place" (
+        prepend references = </DBTypes/DisplayableName>
+    )
+    {
+        custom string modern_name
+    }
+
+    def "City" (
+        kind = "assembly"
+        prepend references = </DBTypes/Place>
+    )
+    {
+    }
+
+    def "Country" (
+        kind = "assembly"
+        prepend references = </DBTypes/Place>
+    )
+    {
+    }
+}
+
+def "City" (
+    kind = "assembly"
+)
+{
+    def "Munich" (
+        prepend references = </DBTypes/City>
+    )
+    {
+    }
+
+    def "Budapest" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "Buda-Pesth"
+    }
+
+    def "Bistritz" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "Bistritz"
+        custom string modern_name = "Bistri\xc8\x9ba"
+
+        over "GoldenKroneHotel" (
+            kind = "component"
+            prepend references = </Place/GoldenKroneHotel>
+        )
+        {
+        }
+    }
+
+    def "NewCity0" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "New City Hello 0"
+    }
+
+    def "NewCity1" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "New City Hello 1"
+    }
+
+    def "NewCity2" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "New City Hello 2"
+    }
+
+    def "NewCity3" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "New City Hello 3"
+    }
+
+    def "NewCity4" (
+        prepend references = </DBTypes/City>
+    )
+    {
+        custom string display_name = "New City Hello 4"
+    }
+}
+
+def "Country" (
+    kind = "assembly"
+)
+{
+    def "Hungary" (
+        prepend references = </DBTypes/Country>
+    )
+    {
+    }
+
+    def "Romania" (
+        prepend references = </DBTypes/Country>
+    )
+    {
+    }
+}
+
+def "PC" (
+    kind = "assembly"
+)
+{
+    def "JonathanHarker" (
+        prepend references = </DBTypes/PC>
+    )
+    {
+        custom string display_name = "Jonathan Harker"
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+
+    def "EmilSinclair" (
+        prepend references = </DBTypes/PC>
+        variants = {
+            string Transport = "HorseDrawnCarriage"
+        }
+    )
+    {
+        custom string display_name = "Emil Sinclair"
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+}
+
+def "Vampire" (
+    kind = "assembly"
+)
+{
+    def "CountDracula" (
+        prepend references = </DBTypes/Vampire>
+    )
+    {
+        custom string display_name = "Count Dracula"
+        custom rel places_visited
+        prepend rel places_visited = </Country/Romania>
+    }
+}
+
+def "Place" (
+    kind = "assembly"
+)
+{
+    def "GoldenKroneHotel" (
+        prepend references = </DBTypes/Place>
+    )
+    {
+        custom string display_name = "Golden Krone Hotel"
+    }
+}
+
