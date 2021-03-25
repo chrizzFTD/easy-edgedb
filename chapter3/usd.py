@@ -3,7 +3,7 @@ from pathlib import Path
 
 from grill import names
 
-from pxr import Usd, Sdf, Ar, Kind
+from pxr import UsdUtils, Usd, Sdf, Ar, Kind
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,59 +19,108 @@ logger.info(f"Repository path: {repo}")
 logger.info(f"Stage identifier: {dracula_root_id}")
 
 
-def open_stage(root_id) -> Usd.Stage:
-    rootf = UsdFile(root_id)
-    # we first create a layer under our repo
-    layer = Sdf.Layer.CreateNew(str(repo / rootf.name))
-    # delete it since it will have an identifier with the full path,
-    # and we want to have the identifier relative to the repository path
-    del layer
-    # to get the relative identifier, use an asset resolver context to load the layer
-    ctx = Ar.DefaultResolverContext([str(repo)])
-    with Ar.ResolverContextBinder(ctx):
-        # stage's root layer identifier will now be relative to the repository path
-        return Usd.Stage.Open(rootf.name)
+def fetch_stage(root_id) -> Usd.Stage:
+    """For the given root layer identifier, get a corresponding stage.
 
+    If layer does not exist, it is created in the repository.
+
+    If a stage for the corresponding layer is found on the global cache, return it.
+    Otherwise open it, populate the cache and return it.
+
+    :param root_id:
+    :return:
+    """
+    rootf = UsdFile(root_id)
+    ctx = Ar.DefaultResolverContext([str(repo)])
+    cache = UsdUtils.StageCache.Get()
+    with Ar.ResolverContextBinder(ctx):
+        layer_id = rootf.name
+        layer = Sdf.Layer.Find(layer_id)
+        if not layer:
+            print(f"Layer {layer_id} was not found open. Attempting to open it.")
+            if not Sdf.Layer.FindOrOpen(layer_id):
+                print(f"Layer {layer_id} does not exist on repository path: {ctx.GetSearchPath()}. Creating a new one.")
+                # we first create a layer under our repo
+                tmp_new_layer = Sdf.Layer.CreateNew(str(repo / layer_id))
+                # delete it since it will have an identifier with the full path,
+                # and we want to have the identifier relative to the repository path
+                # TODO: with AR 2.0 it should be possible to create in memory layers
+                #   with relative identifers to that of the search path of the context.
+                #   In the meantime, we need to create the layer first on disk.
+                del tmp_new_layer
+            stage = Usd.Stage.Open(layer_id)
+            print(f"Opened stage: {stage}")
+            cache_id = cache.Insert(stage)
+            print(f"Added stage for {layer_id} with cache ID: {cache_id.ToString()}.")
+        else:
+            print(f"Layer was open. Found: {layer}")
+            stage = cache.FindOneMatching(layer)
+            if not stage:
+                print(f"Could not find stage on the cache.")
+                stage = Usd.Stage.Open(layer)
+                cache_id = cache.Insert(stage)
+                print(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
+            else:
+                print(f"Found stage: {stage}")
+    return stage
+
+
+stage = fetch_stage(dracula_root_id)
+assert stage is fetch_stage(dracula_root_id)
 
 # types, types.
 # this types should ideally come directly from EdgeDB? without reaching the database first?
 
-stage = open_stage(dracula_root_id)
 db_root_path = Sdf.Path("/DBTypes")
 
 
 def define_db_type(stage, name, references=None) -> Usd.Prim:
-    db_type = stage.DefinePrim(db_root_path.AppendChild(name))
+    stage_layer = stage.GetRootLayer()
+    resolver_ctx = stage.GetPathResolverContext()
+    current_asset_name = UsdFile(Path(stage.GetRootLayer().realPath).name)
+    db_asset_name = current_asset_name.get(kingdom="db", item='types')
+    db_stage = fetch_stage(db_asset_name)
+
+    db_layer = db_stage.GetRootLayer()
+    if db_layer.identifier not in stage_layer.subLayerPaths:
+        stage_layer.subLayerPaths.append(db_layer.identifier)
+
+    db_type_path = db_root_path.AppendChild(name)
+    db_type = stage.GetPrimAtPath(db_type_path)
+    if db_type:
+        return db_type
+    db_type = db_stage.DefinePrim(db_type_path)
     if references:
         for reference in references:
             db_type.GetReferences().AddInternalReference(reference.GetPath())
-    return db_type
+    return stage.GetPrimAtPath(db_type_path)
 
 # TODO: what should person and place be? Assemblies vs components.
 #   For now, only cities are considered assemblies.
 
+# all DB definitions go to the db types asset.
 displayable_type = define_db_type(stage, "DisplayableName")
-displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
-
 transport_enum = define_db_type(stage, "Transport")
+person_type = define_db_type(stage, "Person", (displayable_type,))
+pc_type = define_db_type(stage, "PC", (person_type, transport_enum))
+npc_type = define_db_type(stage, "NPC", (person_type,))
+vampire_type = define_db_type(stage, "Vampire", (person_type,))
+place_type = define_db_type(stage, "Place", (displayable_type,))
+city_type = define_db_type(stage, "City", (place_type,))
+
+# TODO: the following db relationships as well. This time we do this with an edit target
+# with
+displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
 variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
 for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
     variant_set.AddVariant(set_name)
 
-person_type = define_db_type(stage, "Person", (displayable_type,))
 person_type.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
 # TODO: how to add constraints? Useful to catch errors before they hit the database
 #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
 person_type.CreateRelationship('places_visited')
 
-pc_type = define_db_type(stage, "PC", (person_type, transport_enum))
-npc_type = define_db_type(stage, "NPC", (person_type,))
-vampire_type = define_db_type(stage, "Vampire", (person_type,))
-
-place_type = define_db_type(stage, "Place", (displayable_type,))
 place_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-
-city_type = define_db_type(stage, "City", (place_type,))
 country_type = define_db_type(stage, "Country", (place_type,))
 for each in (city_type, country_type):
     # all places that end up in the database are "important places"
@@ -79,7 +128,6 @@ for each in (city_type, country_type):
 
 pseudoRootPath = stage.GetPseudoRoot().GetPath()
 cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
-
 
 def create(stage, dbtype, name, display_name=""):
     # contract: all dbtypes have a display_name
@@ -155,12 +203,20 @@ emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 # stage.RemovePrim(country_root.GetPath())
 
 if __name__ == "__main__":
-    tos()
-    for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
-        print(prim)
+    # tos()
+    # for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
+    #     print(prim)
+    #
+    # # for x in range(5_000):
+    # for x in range(5):
+    #     create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
+    #
+    # stage.GetRootLayer().Save()
+    stage.Save()
 
-    # for x in range(5_000):
-    for x in range(5):
-        create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
-
-    stage.GetRootLayer().Save()
+    def persist(stage):
+        logger.info(f"Extracting information from f{stage} to persist on the database.")
+        city_root = stage.GetPseudoRoot().GetPrimAtPath("City")
+        for prim in city_root.GetChildren():
+            print(prim)
+    persist(stage)
