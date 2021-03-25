@@ -1,0 +1,58 @@
+#usda 1.0
+
+def "DBTypes"
+{
+    def "DisplayableName"
+    {
+    }
+
+    def "Transport"
+    {
+    }
+
+    def "Person" (
+        prepend references = </DBTypes/DisplayableName>
+    )
+    {
+    }
+
+    def "PC" (
+        prepend references = [
+            </DBTypes/Person>,
+            </DBTypes/Transport>
+        ]
+    )
+    {
+    }
+
+    def "NPC" (
+        prepend references = </DBTypes/Person>
+    )
+    {
+    }
+
+    def "Vampire" (
+        prepend references = </DBTypes/Person>
+    )
+    {
+    }
+
+    def "Place" (
+        prepend references = </DBTypes/DisplayableName>
+    )
+    {
+    }
+
+    def "City" (
+        prepend references = </DBTypes/Place>
+    )
+    {
+    }
+
+    def "Country" (
+        prepend references = </DBTypes/Place>
+    )
+    {
+    }
+}
+
