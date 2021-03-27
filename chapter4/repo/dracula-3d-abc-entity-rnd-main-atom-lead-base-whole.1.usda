@@ -1,0 +1,106 @@
+#usda 1.0
+(
+    subLayers = [
+        @dracula-3d-db-entity-rnd-main-types-lead-base-whole.1.usda@
+    ]
+)
+
+def "City" (
+    kind = "assembly"
+)
+{
+    over "Munich" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Munich-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "Budapest" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Budapest-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "Bistritz" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Bistritz-lead-base-whole.1.usda@
+    )
+    {
+        over "GoldenKroneHotel" (
+            kind = "component"
+            prepend references = </Place/GoldenKroneHotel>
+        )
+        {
+        }
+    }
+}
+
+def "Country" (
+    kind = "assembly"
+)
+{
+    over "Hungary" (
+        prepend payload = @dracula-3d-assets-Country-rnd-main-Hungary-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "Romania" (
+        prepend payload = @dracula-3d-assets-Country-rnd-main-Romania-lead-base-whole.1.usda@
+    )
+    {
+    }
+}
+
+def "PC" (
+    kind = "assembly"
+)
+{
+    over "JonathanHarker" (
+        prepend payload = @dracula-3d-assets-PC-rnd-main-JonathanHarker-lead-base-whole.1.usda@
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+
+    over "EmilSinclair" (
+        prepend payload = @dracula-3d-assets-PC-rnd-main-EmilSinclair-lead-base-whole.1.usda@
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+}
+
+def "Vampire" (
+    kind = "assembly"
+)
+{
+    over "CountDracula" (
+        prepend payload = @dracula-3d-assets-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = </Country/Romania>
+    }
+}
+
+def "Place" (
+    kind = "assembly"
+)
+{
+    over "GoldenKroneHotel" (
+        prepend payload = @dracula-3d-assets-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+    )
+    {
+    }
+}
+
