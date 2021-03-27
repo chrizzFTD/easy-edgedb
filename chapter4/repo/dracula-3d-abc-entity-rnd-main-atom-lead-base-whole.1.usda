@@ -32,6 +32,12 @@ def "City" (
         {
         }
     }
+
+    over "London" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-London-lead-base-whole.1.usda@
+    )
+    {
+    }
 }
 
 def "Country" (
@@ -64,6 +70,7 @@ def "PC" (
             </City/Munich>,
             </City/Budapest>,
             </City/Bistritz>,
+            </City/London>,
         ]
     }
 
@@ -76,6 +83,7 @@ def "PC" (
             </City/Munich>,
             </City/Budapest>,
             </City/Bistritz>,
+            </City/London>,
         ]
     }
 }
@@ -101,6 +109,21 @@ def "Place" (
         prepend payload = @dracula-3d-assets-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
     )
     {
+    }
+}
+
+def "NPC" (
+    kind = "assembly"
+)
+{
+    over "MinaMurray" (
+        prepend payload = @dracula-3d-assets-NPC-rnd-main-MinaMurray-lead-base-whole.1.usda@
+    )
+    {
+        custom rel lover
+        prepend rel lover = </PC/JonathanHarker>
+        custom rel places_visited
+        prepend rel places_visited = </City/London>
     }
 }
 
