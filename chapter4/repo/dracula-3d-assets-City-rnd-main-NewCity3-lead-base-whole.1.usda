@@ -7,5 +7,6 @@ def "origin" (
     prepend references = @dracula-3d-db-entity-rnd-main-types-lead-base-whole.1.usda@</DBTypes/City>
 )
 {
+    custom string display_name = "New City Hello 3"
 }
 
