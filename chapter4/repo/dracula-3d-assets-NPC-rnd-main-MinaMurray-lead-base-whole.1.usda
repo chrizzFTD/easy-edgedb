@@ -1,0 +1,12 @@
+#usda 1.0
+(
+    defaultPrim = "origin"
+)
+
+def "origin" (
+    prepend references = @b:/write/code/git/easy-edgedb/chapter4/repo/dracula-3d-db-entity-rnd-main-types-lead-base-whole.1.usda@</DBTypes/NPC>
+)
+{
+    custom string display_name = "Mina Murray"
+}
+
