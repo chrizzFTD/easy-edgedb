@@ -103,7 +103,8 @@ def define_db_type(stage, name, references=tuple()) -> Usd.Prim:
         #   str(Path(db_layer.identifier).relative_to(repo))
         stage_layer.subLayerPaths.append(db_layer.identifier)
 
-    db_type = db_stage.DefinePrim(db_type_path)
+    # Use class prims since we want db types to be abstract.
+    db_type = db_stage.CreateClassPrim(db_type_path)
     for reference in references:
         db_type.GetReferences().AddInternalReference(reference.GetPath())
 
@@ -184,10 +185,6 @@ def create(stage, dbtype, name, display_name=""):
 
     over_prim = stage.OverridePrim(path)
     over_prim.GetPayloads().AddPayload(asset_stage.GetRootLayer().identifier)
-    # db_fname = Path(db_layer.identifier).relative_to(repo).name
-    # prim.GetReferences().AddReference(db_layer.identifier, dbtype.GetPath())
-    # if display_name:
-    #     prim.GetAttribute("display_name").Set(display_name)
     return over_prim
 
 
@@ -282,7 +279,7 @@ with Usd.EditContext(stage, editTarget):
 # DELETING
 # try deleting the countries, this works as long as definitions are on the current edit target
 # note how relationships still exist (since they're authored paths)
-# country_root = stage.GetPrimAtPath(f"/{country_type.GetName()}")
+# country_root = stage.GetPrimAtPath(f"/{city_type.GetName()}")
 # stage.RemovePrim(country_root.GetPath())
 
 if __name__ == "__main__":

@@ -5,12 +5,12 @@
 
 def "DBTypes"
 {
-    def "DisplayableName"
+    class "DisplayableName"
     {
         custom string display_name
     }
 
-    def "Transport" (
+    class "Transport" (
         prepend variantSets = "Transport"
     )
     {
@@ -27,7 +27,7 @@ def "DBTypes"
         }
     }
 
-    def "Person" (
+    class "Person" (
         prepend references = </DBTypes/DisplayableName>
     )
     {
@@ -35,7 +35,7 @@ def "DBTypes"
         custom rel places_visited
     }
 
-    def "PC" (
+    class "PC" (
         prepend references = [
             </DBTypes/Person>,
             </DBTypes/Transport>
@@ -44,33 +44,33 @@ def "DBTypes"
     {
     }
 
-    def "NPC" (
+    class "NPC" (
         prepend references = </DBTypes/Person>
     )
     {
     }
 
-    def "Vampire" (
+    class "Vampire" (
         prepend references = </DBTypes/Person>
     )
     {
     }
 
-    def "Place" (
+    class "Place" (
         prepend references = </DBTypes/DisplayableName>
     )
     {
         custom string modern_name
     }
 
-    def "City" (
+    class "City" (
         kind = "assembly"
         prepend references = </DBTypes/Place>
     )
     {
     }
 
-    def "Country" (
+    class "Country" (
         kind = "assembly"
         prepend references = </DBTypes/Place>
     )
