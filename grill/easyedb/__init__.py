@@ -8,7 +8,6 @@ from grill import names
 
 from pxr import UsdUtils, Usd, Sdf, Ar, Kind
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 repo = contextvars.ContextVar('repo')
@@ -19,6 +18,10 @@ class UsdFile(names.CGAssetFile):
     DEFAULT_SUFFIX = 'usda'
 
 
+from functools import lru_cache
+
+
+@lru_cache(maxsize=None)
 def fetch_stage(root_id) -> Usd.Stage:
     """For the given root layer identifier, get a corresponding stage.
 
@@ -36,12 +39,12 @@ def fetch_stage(root_id) -> Usd.Stage:
     resolver_ctx = Ar.DefaultResolverContext([str(repo_path)])
     with Ar.ResolverContextBinder(resolver_ctx):
         layer_id = rootf.name
-        logger.info(f"Searching for {layer_id}")
+        logger.debug(f"Searching for {layer_id}")
         layer = Sdf.Layer.Find(layer_id)
         if not layer:
-            logger.info(f"Layer {layer_id} was not found open. Attempting to open it.")
+            logger.debug(f"Layer {layer_id} was not found open. Attempting to open it.")
             if not Sdf.Layer.FindOrOpen(layer_id):
-                logger.info(f"Layer {layer_id} does not exist on repository path: {resolver_ctx.GetSearchPath()}. Creating a new one.")
+                logger.debug(f"Layer {layer_id} does not exist on repository path: {resolver_ctx.GetSearchPath()}. Creating a new one.")
                 # we first create a layer under our repo
                 tmp_new_layer = Sdf.Layer.CreateNew(str(repo_path / layer_id))
                 # delete it since it will have an identifier with the full path,
@@ -51,20 +54,20 @@ def fetch_stage(root_id) -> Usd.Stage:
                 #   In the meantime, we need to create the layer first on disk.
                 del tmp_new_layer
             stage = Usd.Stage.Open(layer_id)
-            logger.info(f"Root layer: {stage.GetRootLayer()}")
-            logger.info(f"Opened stage: {stage}")
+            logger.debug(f"Root layer: {stage.GetRootLayer()}")
+            logger.debug(f"Opened stage: {stage}")
             cache_id = cache.Insert(stage)
-            logger.info(f"Added stage for {layer_id} with cache ID: {cache_id.ToString()}.")
+            logger.debug(f"Added stage for {layer_id} with cache ID: {cache_id.ToString()}.")
         else:
-            logger.info(f"Layer was open. Found: {layer}")
+            logger.debug(f"Layer was open. Found: {layer}")
             stage = cache.FindOneMatching(layer)
             if not stage:
-                logger.info(f"Could not find stage on the cache.")
+                logger.debug(f"Could not find stage on the cache.")
                 stage = Usd.Stage.Open(layer)
                 cache_id = cache.Insert(stage)
-                logger.info(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
+                logger.debug(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
             else:
-                logger.info(f"Found stage: {stage}")
+                logger.debug(f"Found stage: {stage}")
 
     return stage
 
@@ -156,5 +159,6 @@ def _(obj: Sdf.Layer, stage):
 
 @edit_context.register
 def _(obj: Usd.Prim, layer, stage):
+    # We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
     target = Usd.EditTarget(layer, obj.GetPrimIndex().rootNode.children[0])
     return Usd.EditContext(stage, target)

@@ -38,6 +38,36 @@ def "City" (
     )
     {
     }
+
+    over "NewCity0" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-NewCity0-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "NewCity1" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-NewCity1-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "NewCity2" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-NewCity2-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "NewCity3" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-NewCity3-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "NewCity4" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-NewCity4-lead-base-whole.1.usda@
+    )
+    {
+    }
 }
 
 def "Country" (
@@ -101,17 +131,6 @@ def "Vampire" (
     }
 }
 
-def "Place" (
-    kind = "assembly"
-)
-{
-    over "GoldenKroneHotel" (
-        prepend payload = @dracula-3d-assets-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
-    )
-    {
-    }
-}
-
 def "NPC" (
     kind = "assembly"
 )
@@ -124,6 +143,17 @@ def "NPC" (
         prepend rel lover = </PC/JonathanHarker>
         custom rel places_visited
         prepend rel places_visited = </City/London>
+    }
+}
+
+def "Place" (
+    kind = "assembly"
+)
+{
+    over "GoldenKroneHotel" (
+        prepend payload = @dracula-3d-assets-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+    )
+    {
     }
 }
 
