@@ -7,7 +7,7 @@ from pxr import UsdUtils, Usd, Sdf, Ar, Kind
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-repo = Path(__file__).parent / "assets"
+repo = Path(__file__).parent / "repo"
 
 
 class UsdFile(names.CGAssetFile):
@@ -64,10 +64,10 @@ def fetch_stage(root_id) -> Usd.Stage:
                 logger.info(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
             else:
                 logger.info(f"Found stage: {stage}")
-    for layer in stage.GetLayerStack():
-        logger.warning(f"Layer: {layer}")
-        logger.warning(f"Layer: {layer.identifier}")
-        logger.warning(f"Layer: {layer.realPath}")
+    # for layer in stage.GetLayerStack():
+    #     logger.warning(f"Layer: {layer}")
+    #     logger.warning(f"Layer: {layer.identifier}")
+    #     logger.warning(f"Layer: {layer.realPath}")
     return stage
 
 
@@ -83,27 +83,32 @@ import types
 db_tokens = types.MappingProxyType(dict(kingdom="db", item='types'))
 
 
-def define_db_type(stage, name, references=None) -> Usd.Prim:
+def define_db_type(stage, name, references=tuple()) -> Usd.Prim:
+    db_type_path = db_root_path.AppendChild(name)
+    db_type = stage.GetPrimAtPath(db_type_path)
+    if db_type:
+        return db_type
+
     stage_layer = stage.GetRootLayer()
     current_asset_name = UsdFile(Path(stage.GetRootLayer().realPath).name)
     db_asset_name = current_asset_name.get(**db_tokens)
     db_stage = fetch_stage(db_asset_name)
 
-    with Ar.ResolverContextBinder(stage.GetPathResolverContext()):
-        db_layer = db_stage.GetRootLayer()
-        logger.critical(f"------------------ {db_layer.identifier}")
-        if db_layer not in stage.GetLayerStack():
-            # if db_layer.identifier not in stage_layer.subLayerPaths:
-            stage_layer.subLayerPaths.append(db_layer.identifier)
+    db_layer = db_stage.GetRootLayer()
+    if db_layer not in stage.GetLayerStack():
+        # TODO: There's a slight chance that the identifier is not a relative one.
+        #   Ensure we don't author absolute paths here. It should all be relative
+        #   to a path in our search path from the current resolver context.
+        #   If it's not happening, we need to manually create a relative asset path
+        #   str(Path(db_layer.identifier).relative_to(repo))
+        stage_layer.subLayerPaths.append(db_layer.identifier)
 
-    db_type_path = db_root_path.AppendChild(name)
-    db_type = stage.GetPrimAtPath(db_type_path)
-    if db_type:
-        return db_type
     db_type = db_stage.DefinePrim(db_type_path)
-    if references:
-        for reference in references:
-            db_type.GetReferences().AddInternalReference(reference.GetPath())
+    for reference in references:
+        db_type.GetReferences().AddInternalReference(reference.GetPath())
+
+    if not db_stage.GetDefaultPrim():
+        db_stage.SetDefaultPrim(db_stage.GetPrimAtPath(db_root_path))
     return stage.GetPrimAtPath(db_type_path)
 
 # TODO: what should person and place be? Assemblies vs components.
@@ -156,7 +161,13 @@ cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
 
 
 def create(stage, dbtype, name, display_name=""):
+    """Whenever we create a new item from the database, make it it's own entity"""
+    new_tokens = dict(kingdom='assets', cluster=dbtype.GetName(), item=name)
     # contract: all dbtypes have a display_name
+    current_asset_name = UsdFile(Path(stage.GetRootLayer().realPath).name)
+    new_asset_name = current_asset_name.get(**new_tokens)
+    asset_stage = fetch_stage(new_asset_name)
+
     scope_path = pseudoRootPath.AppendPath(dbtype.GetName())
     scope = stage.GetPrimAtPath(scope_path)
     if not scope:
@@ -164,17 +175,44 @@ def create(stage, dbtype, name, display_name=""):
     if not scope.IsModel():
         Usd.ModelAPI(scope).SetKind(Kind.Tokens.assembly)
     path = scope_path.AppendChild(name)
-    prim = stage.DefinePrim(path)
-    prim.GetReferences().AddInternalReference(dbtype.GetPath())
+
+    asset_origin = asset_stage.DefinePrim("/origin")
+    asset_stage.SetDefaultPrim(asset_origin)
+    asset_origin.GetReferences().AddReference(db_layer.identifier, dbtype.GetPath())
     if display_name:
-        prim.GetAttribute("display_name").Set(display_name)
-    return prim
+        asset_origin.GetAttribute("display_name").Set(display_name)
+
+    over_prim = stage.OverridePrim(path)
+    over_prim.GetPayloads().AddPayload(asset_stage.GetRootLayer().identifier)
+    # db_fname = Path(db_layer.identifier).relative_to(repo).name
+    # prim.GetReferences().AddReference(db_layer.identifier, dbtype.GetPath())
+    # if display_name:
+    #     prim.GetAttribute("display_name").Set(display_name)
+    return over_prim
 
 
 munich = create(stage, city_type, 'Munich')
 budapest = create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
 bistritz = create(stage, city_type, 'Bistritz', display_name='Bistritz')
-bistritz.GetAttribute("modern_name").Set('Bistrița')
+
+for spec in bistritz.GetPrimStack():
+    layer = spec.layer
+    if not layer or not layer.identifier:
+        continue
+    lname = UsdFile(Path(layer.identifier).name)
+    if set(dict(item='Bistritz', kingdom='assets').items()).difference(lname.values.items()):
+        logger.info(f"Not our edit target: {layer}")
+        continue
+    logger.info(f"Found edit target!: {layer}")
+    break
+else:
+    raise ValueError("Could not find edit target")
+
+# We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
+refNode = bistritz.GetPrimIndex().rootNode.children[0]
+editTarget = Usd.EditTarget(layer, refNode)
+with Usd.EditContext(stage, editTarget):
+    bistritz.GetAttribute("modern_name").Set('Bistrița')
 
 hungary = create(stage, country_type, 'Hungary')
 romania = create(stage, country_type, 'Romania')
@@ -219,7 +257,26 @@ goldenKrone = create(stage, place_type, 'GoldenKroneHotel', 'Golden Krone Hotel'
 childPrim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
 childPrim.GetReferences().AddInternalReference(goldenKrone.GetPath())
 Usd.ModelAPI(childPrim).SetKind(Kind.Tokens.component)  # should be component or reference?
-emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
+
+
+for spec in emil.GetPrimStack():
+    layer = spec.layer
+    if not layer or not layer.identifier:
+        continue
+    lname = UsdFile(Path(layer.identifier).name)
+    if set(dict(item='EmilSinclair', kingdom='assets').items()).difference(lname.values.items()):
+        logger.info(f"Not our edit target: {layer}")
+        continue
+    logger.info(f"Found edit target!: {layer}")
+    break
+else:
+    raise ValueError("Could not find edit target")
+
+# We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
+refNode = emil.GetPrimIndex().rootNode.children[0]
+editTarget = Usd.EditTarget(layer, refNode)
+with Usd.EditContext(stage, editTarget):
+    emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
 
 # DELETING

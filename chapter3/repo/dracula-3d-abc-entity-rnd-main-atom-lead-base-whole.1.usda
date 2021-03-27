@@ -9,26 +9,22 @@ def "City" (
     kind = "assembly"
 )
 {
-    def "Munich" (
-        prepend references = </DBTypes/City>
+    over "Munich" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Munich-lead-base-whole.1.usda@
     )
     {
     }
 
-    def "Budapest" (
-        prepend references = </DBTypes/City>
+    over "Budapest" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Budapest-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Buda-Pesth"
     }
 
-    def "Bistritz" (
-        prepend references = </DBTypes/City>
+    over "Bistritz" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Bistritz-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Bistritz"
-        custom string modern_name = "Bistri\xc8\x9ba"
-
         over "GoldenKroneHotel" (
             kind = "component"
             prepend references = </Place/GoldenKroneHotel>
@@ -42,14 +38,14 @@ def "Country" (
     kind = "assembly"
 )
 {
-    def "Hungary" (
-        prepend references = </DBTypes/Country>
+    over "Hungary" (
+        prepend payload = @dracula-3d-assets-Country-rnd-main-Hungary-lead-base-whole.1.usda@
     )
     {
     }
 
-    def "Romania" (
-        prepend references = </DBTypes/Country>
+    over "Romania" (
+        prepend payload = @dracula-3d-assets-Country-rnd-main-Romania-lead-base-whole.1.usda@
     )
     {
     }
@@ -59,11 +55,10 @@ def "PC" (
     kind = "assembly"
 )
 {
-    def "JonathanHarker" (
-        prepend references = </DBTypes/PC>
+    over "JonathanHarker" (
+        prepend payload = @dracula-3d-assets-PC-rnd-main-JonathanHarker-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Jonathan Harker"
         custom rel places_visited
         prepend rel places_visited = [
             </City/Munich>,
@@ -72,14 +67,10 @@ def "PC" (
         ]
     }
 
-    def "EmilSinclair" (
-        prepend references = </DBTypes/PC>
-        variants = {
-            string Transport = "HorseDrawnCarriage"
-        }
+    over "EmilSinclair" (
+        prepend payload = @dracula-3d-assets-PC-rnd-main-EmilSinclair-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Emil Sinclair"
         custom rel places_visited
         prepend rel places_visited = [
             </City/Munich>,
@@ -93,11 +84,10 @@ def "Vampire" (
     kind = "assembly"
 )
 {
-    def "CountDracula" (
-        prepend references = </DBTypes/Vampire>
+    over "CountDracula" (
+        prepend payload = @dracula-3d-assets-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Count Dracula"
         custom rel places_visited
         prepend rel places_visited = </Country/Romania>
     }
@@ -107,11 +97,10 @@ def "Place" (
     kind = "assembly"
 )
 {
-    def "GoldenKroneHotel" (
-        prepend references = </DBTypes/Place>
+    over "GoldenKroneHotel" (
+        prepend payload = @dracula-3d-assets-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Golden Krone Hotel"
     }
 }
 
