@@ -1,3 +1,4 @@
+import types
 import logging
 from pathlib import Path
 
@@ -64,21 +65,19 @@ def fetch_stage(root_id) -> Usd.Stage:
                 logger.info(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
             else:
                 logger.info(f"Found stage: {stage}")
-    # for layer in stage.GetLayerStack():
-    #     logger.warning(f"Layer: {layer}")
-    #     logger.warning(f"Layer: {layer.identifier}")
-    #     logger.warning(f"Layer: {layer.realPath}")
+
     return stage
 
 
 stage = fetch_stage(dracula_root_id)
+tos = lambda: logger.info(stage.GetRootLayer().ExportToString())
+
 assert stage is fetch_stage(dracula_root_id)
 
 # types, types.
 # this types should ideally come directly from EdgeDB? without reaching the database first?
 
 db_root_path = Sdf.Path("/DBTypes")
-import types
 
 db_tokens = types.MappingProxyType(dict(kingdom="db", item='types'))
 
@@ -112,6 +111,17 @@ def define_db_type(stage, name, references=tuple()) -> Usd.Prim:
         db_stage.SetDefaultPrim(db_stage.GetPrimAtPath(db_root_path))
     return stage.GetPrimAtPath(db_type_path)
 
+
+def _first_matching(tokens, layers):
+    tokens = set(tokens.items())
+    for layer in layers:
+        name = UsdFile(Path(layer.realPath).name)
+        if tokens.difference(name.values.items()):
+            continue
+        return layer
+    raise ValueError(f"Could not find layer matching {tokens}")
+
+
 # TODO: what should person and place be? Assemblies vs components.
 #   For now, only cities are considered assemblies.
 
@@ -126,16 +136,7 @@ place_type = define_db_type(stage, "Place", (displayable_type,))
 city_type = define_db_type(stage, "City", (place_type,))
 
 # TODO: the following db relationships as well. This time we do this with an edit target
-for db_layer in stage.GetLayerStack():
-    lname = UsdFile(Path(db_layer.realPath).name)
-    if set(db_tokens.items()).difference(lname.values.items()):
-        logger.info(f"Not our edit target: {db_layer}")
-        continue
-    logger.info(f"Found edit target!: {db_layer}")
-    break
-else:
-    raise ValueError("Could not find edit target")
-
+db_layer = _first_matching(db_tokens, stage.GetLayerStack())
 
 ### DB edits  ###
 with Usd.EditContext(stage, db_layer):
@@ -200,22 +201,12 @@ munich = create(stage, city_type, 'Munich')
 budapest = create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
 bistritz = create(stage, city_type, 'Bistritz', display_name='Bistritz')
 
-for spec in bistritz.GetPrimStack():
-    layer = spec.layer
-    if not layer or not layer.identifier:
-        continue
-    lname = UsdFile(Path(layer.identifier).name)
-    if set(dict(item='Bistritz', kingdom='assets').items()).difference(lname.values.items()):
-        logger.info(f"Not our edit target: {layer}")
-        continue
-    logger.info(f"Found edit target!: {layer}")
-    break
-else:
-    raise ValueError("Could not find edit target")
+bistritz_layer = _first_matching(
+    dict(item='Bistritz', kingdom='assets'), (stack.layer for stack in bistritz.GetPrimStack())
+)
 
 # We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
-refNode = bistritz.GetPrimIndex().rootNode.children[0]
-editTarget = Usd.EditTarget(layer, refNode)
+editTarget = Usd.EditTarget(bistritz_layer, bistritz.GetPrimIndex().rootNode.children[0])
 with Usd.EditContext(stage, editTarget):
     bistritz.GetAttribute("modern_name").Set('Bistrița')
 
@@ -226,8 +217,6 @@ jonathan = create(stage, pc_type, 'JonathanHarker', display_name='Jonathan Harke
 emil = create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
 dracula = create(stage, vampire_type, 'CountDracula', display_name='Count Dracula')
 dracula.GetRelationship('places_visited').AddTarget(romania.GetPath())
-
-tos = lambda: logger.info(stage.GetRootLayer().ExportToString())
 
 
 """
@@ -263,23 +252,12 @@ childPrim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetNam
 childPrim.GetReferences().AddInternalReference(goldenKrone.GetPath())
 Usd.ModelAPI(childPrim).SetKind(Kind.Tokens.component)  # should be component or reference?
 
-
-for spec in emil.GetPrimStack():
-    layer = spec.layer
-    if not layer or not layer.identifier:
-        continue
-    lname = UsdFile(Path(layer.identifier).name)
-    if set(dict(item='EmilSinclair', kingdom='assets').items()).difference(lname.values.items()):
-        logger.info(f"Not our edit target: {layer}")
-        continue
-    logger.info(f"Found edit target!: {layer}")
-    break
-else:
-    raise ValueError("Could not find edit target")
+emil_layer = _first_matching(
+    dict(item='EmilSinclair', kingdom='assets'), (stack.layer for stack in emil.GetPrimStack())
+)
 
 # We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
-refNode = emil.GetPrimIndex().rootNode.children[0]
-editTarget = Usd.EditTarget(layer, refNode)
+editTarget = Usd.EditTarget(emil_layer, emil.GetPrimIndex().rootNode.children[0])
 with Usd.EditContext(stage, editTarget):
     emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
