@@ -146,7 +146,7 @@ def create(stage, dbtype, name, display_name=""):
 
 @singledispatch
 def edit_context(obj, stage):
-    raise ValueError("Not implemented")
+    raise ValueError(f"Not implemented: {locals()}")  # lazy
 
 
 @edit_context.register
