@@ -4,16 +4,32 @@ def "DBTypes"
 {
     def "DisplayableName"
     {
+        custom string display_name
     }
 
-    def "Transport"
+    def "Transport" (
+        prepend variantSets = "Transport"
+    )
     {
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
     }
 
     def "Person" (
         prepend references = </DBTypes/DisplayableName>
     )
     {
+        custom int2 age
+        custom rel places_visited
     }
 
     def "PC" (
@@ -41,15 +57,18 @@ def "DBTypes"
         prepend references = </DBTypes/DisplayableName>
     )
     {
+        custom string modern_name
     }
 
     def "City" (
+        kind = "assembly"
         prepend references = </DBTypes/Place>
     )
     {
     }
 
     def "Country" (
+        kind = "assembly"
         prepend references = </DBTypes/Place>
     )
     {
