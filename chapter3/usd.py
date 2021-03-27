@@ -31,15 +31,16 @@ def fetch_stage(root_id) -> Usd.Stage:
     :return:
     """
     rootf = UsdFile(root_id)
-    ctx = Ar.DefaultResolverContext([str(repo)])
     cache = UsdUtils.StageCache.Get()
-    with Ar.ResolverContextBinder(ctx):
+    resolver_ctx = Ar.DefaultResolverContext([str(repo)])
+    with Ar.ResolverContextBinder(resolver_ctx):
         layer_id = rootf.name
+        logger.info(f"Searching for {layer_id}")
         layer = Sdf.Layer.Find(layer_id)
         if not layer:
-            print(f"Layer {layer_id} was not found open. Attempting to open it.")
+            logger.info(f"Layer {layer_id} was not found open. Attempting to open it.")
             if not Sdf.Layer.FindOrOpen(layer_id):
-                print(f"Layer {layer_id} does not exist on repository path: {ctx.GetSearchPath()}. Creating a new one.")
+                logger.info(f"Layer {layer_id} does not exist on repository path: {resolver_ctx.GetSearchPath()}. Creating a new one.")
                 # we first create a layer under our repo
                 tmp_new_layer = Sdf.Layer.CreateNew(str(repo / layer_id))
                 # delete it since it will have an identifier with the full path,
@@ -49,19 +50,24 @@ def fetch_stage(root_id) -> Usd.Stage:
                 #   In the meantime, we need to create the layer first on disk.
                 del tmp_new_layer
             stage = Usd.Stage.Open(layer_id)
-            print(f"Opened stage: {stage}")
+            logger.info(f"Root layer: {stage.GetRootLayer()}")
+            logger.info(f"Opened stage: {stage}")
             cache_id = cache.Insert(stage)
-            print(f"Added stage for {layer_id} with cache ID: {cache_id.ToString()}.")
+            logger.info(f"Added stage for {layer_id} with cache ID: {cache_id.ToString()}.")
         else:
-            print(f"Layer was open. Found: {layer}")
+            logger.info(f"Layer was open. Found: {layer}")
             stage = cache.FindOneMatching(layer)
             if not stage:
-                print(f"Could not find stage on the cache.")
+                logger.info(f"Could not find stage on the cache.")
                 stage = Usd.Stage.Open(layer)
                 cache_id = cache.Insert(stage)
-                print(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
+                logger.info(f"Added stage for {layer} with cache ID: {cache_id.ToString()}.")
             else:
-                print(f"Found stage: {stage}")
+                logger.info(f"Found stage: {stage}")
+    for layer in stage.GetLayerStack():
+        logger.warning(f"Layer: {layer}")
+        logger.warning(f"Layer: {layer.identifier}")
+        logger.warning(f"Layer: {layer.realPath}")
     return stage
 
 
@@ -72,18 +78,23 @@ assert stage is fetch_stage(dracula_root_id)
 # this types should ideally come directly from EdgeDB? without reaching the database first?
 
 db_root_path = Sdf.Path("/DBTypes")
+import types
+
+db_tokens = types.MappingProxyType(dict(kingdom="db", item='types'))
 
 
 def define_db_type(stage, name, references=None) -> Usd.Prim:
     stage_layer = stage.GetRootLayer()
-    resolver_ctx = stage.GetPathResolverContext()
     current_asset_name = UsdFile(Path(stage.GetRootLayer().realPath).name)
-    db_asset_name = current_asset_name.get(kingdom="db", item='types')
+    db_asset_name = current_asset_name.get(**db_tokens)
     db_stage = fetch_stage(db_asset_name)
 
-    db_layer = db_stage.GetRootLayer()
-    if db_layer.identifier not in stage_layer.subLayerPaths:
-        stage_layer.subLayerPaths.append(db_layer.identifier)
+    with Ar.ResolverContextBinder(stage.GetPathResolverContext()):
+        db_layer = db_stage.GetRootLayer()
+        logger.critical(f"------------------ {db_layer.identifier}")
+        if db_layer not in stage.GetLayerStack():
+            # if db_layer.identifier not in stage_layer.subLayerPaths:
+            stage_layer.subLayerPaths.append(db_layer.identifier)
 
     db_type_path = db_root_path.AppendChild(name)
     db_type = stage.GetPrimAtPath(db_type_path)
@@ -109,25 +120,40 @@ place_type = define_db_type(stage, "Place", (displayable_type,))
 city_type = define_db_type(stage, "City", (place_type,))
 
 # TODO: the following db relationships as well. This time we do this with an edit target
-# with
-displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
-variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
-for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
-    variant_set.AddVariant(set_name)
+for db_layer in stage.GetLayerStack():
+    lname = UsdFile(Path(db_layer.realPath).name)
+    if set(db_tokens.items()).difference(lname.values.items()):
+        logger.info(f"Not our edit target: {db_layer}")
+        continue
+    logger.info(f"Found edit target!: {db_layer}")
+    break
+else:
+    raise ValueError("Could not find edit target")
 
-person_type.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
-# TODO: how to add constraints? Useful to catch errors before they hit the database
-#   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
-person_type.CreateRelationship('places_visited')
 
-place_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-country_type = define_db_type(stage, "Country", (place_type,))
-for each in (city_type, country_type):
-    # all places that end up in the database are "important places"
-    Usd.ModelAPI(each).SetKind(Kind.Tokens.assembly)
+### DB edits  ###
+with Usd.EditContext(stage, db_layer):
+    displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+    variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
+    for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
+        variant_set.AddVariant(set_name)
+
+    person_type.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
+    # TODO: how to add constraints? Useful to catch errors before they hit the database
+    #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
+    person_type.CreateRelationship('places_visited')
+
+    place_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
+    country_type = define_db_type(stage, "Country", (place_type,))
+    for each in (city_type, country_type):
+        # all places that end up in the database are "important places"
+        Usd.ModelAPI(each).SetKind(Kind.Tokens.assembly)
+
+### DB END ###
 
 pseudoRootPath = stage.GetPseudoRoot().GetPath()
 cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
+
 
 def create(stage, dbtype, name, display_name=""):
     # contract: all dbtypes have a display_name
@@ -158,7 +184,7 @@ emil = create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
 dracula = create(stage, vampire_type, 'CountDracula', display_name='Count Dracula')
 dracula.GetRelationship('places_visited').AddTarget(romania.GetPath())
 
-tos = lambda: print(stage.GetRootLayer().ExportToString())
+tos = lambda: logger.info(stage.GetRootLayer().ExportToString())
 
 
 """
@@ -168,7 +194,7 @@ If you just want to return a single part of a type without the object structure,
 """
 
 # cityRoot = stage.GetPrimAtPath(cityPath)
-print([p for p in Usd.PrimRange(cityRoot) if p.GetAttribute("modern_name").IsValid() and p.GetAttribute("modern_name").Get()])
+logger.info([p for p in Usd.PrimRange(cityRoot) if p.GetAttribute("modern_name").IsValid() and p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
@@ -205,7 +231,7 @@ emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 if __name__ == "__main__":
     # tos()
     # for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
-    #     print(prim)
+    #     logger.info(prim)
     #
     # # for x in range(5_000):
     # for x in range(5):
@@ -218,5 +244,5 @@ if __name__ == "__main__":
         logger.info(f"Extracting information from f{stage} to persist on the database.")
         city_root = stage.GetPseudoRoot().GetPrimAtPath("City")
         for prim in city_root.GetChildren():
-            print(prim)
+            logger.info(prim)
     persist(stage)
