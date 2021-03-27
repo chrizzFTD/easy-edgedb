@@ -167,8 +167,9 @@ def create(stage, dbtype, name, display_name=""):
     # contract: all dbtypes have a display_name
     current_asset_name = UsdFile(Path(stage.GetRootLayer().realPath).name)
     new_asset_name = current_asset_name.get(**new_tokens)
-    asset_stage = fetch_stage(new_asset_name)
 
+
+    # Scope collecting all assets of the same type
     scope_path = pseudoRootPath.AppendPath(dbtype.GetName())
     scope = stage.GetPrimAtPath(scope_path)
     if not scope:
@@ -176,10 +177,17 @@ def create(stage, dbtype, name, display_name=""):
     if not scope.IsModel():
         Usd.ModelAPI(scope).SetKind(Kind.Tokens.assembly)
     path = scope_path.AppendChild(name)
+    if stage.GetPrimAtPath(path):
+        return stage.GetPrimAtPath(path)
 
-    asset_origin = asset_stage.DefinePrim("/origin")
+    asset_stage = fetch_stage(new_asset_name)
+    asset_origin = asset_stage.GetPrimAtPath("/origin")
+    if not asset_origin:
+        asset_origin = asset_stage.DefinePrim()
+        asset_origin.GetReferences().AddReference(db_layer.identifier, dbtype.GetPath())
+
     asset_stage.SetDefaultPrim(asset_origin)
-    asset_origin.GetReferences().AddReference(db_layer.identifier, dbtype.GetPath())
+
     if display_name:
         asset_origin.GetAttribute("display_name").Set(display_name)
 
