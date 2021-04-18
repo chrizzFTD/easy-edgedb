@@ -17,20 +17,20 @@ write.repo.set(Path(__file__).parent / "assets")
 stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
 # we can define a category with or without an edit context
-displayable_type = write.define_category(stage, "DisplayableName")
-city_type = write.define_category(stage, "City", (displayable_type,))
+displayable_cat = write.define_category(stage, "DisplayableName")
+city_cat = write.define_category(stage, "City", references=(displayable_cat,))
 
 with write.category_context(stage):
-    person_type = write.define_category(stage, "Person", (displayable_type,))
+    person_cat = write.define_category(stage, "Person", references=(displayable_cat,))
     # but to edit a category definition we must be in the proper context
-    displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
-    city_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-    person_type.CreateRelationship('places_visited')
+    displayable_cat.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+    city_cat.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
+    person_cat.CreateRelationship('places_visited')
 
-write.create(city_type, 'Munich')
-budapest = write.create(city_type, 'Budapest', display_name='Buda-Pesth')
-bistritz = write.create(city_type, 'Bistritz', display_name='Bistritz')
-jonathan = write.create(person_type, 'JonathanHarker', display_name='Jonathan Harker')
+write.create(city_cat, 'Munich')
+budapest = write.create(city_cat, 'Budapest', display_name='Buda-Pesth')
+bistritz = write.create(city_cat, 'Bistritz', display_name='Bistritz')
+jonathan = write.create(person_cat, 'JonathanHarker', display_name='Jonathan Harker')
 
 """
 
