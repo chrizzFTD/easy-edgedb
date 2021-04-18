@@ -26,15 +26,13 @@ logger.info(f"Stage identifier: {root_asset}")
 
 root_stage = write.fetch_stage(root_asset)
 
-displayable_type = write.define_db_type(root_stage, "DisplayableName")
+# we can define a category with or without an edit context
+displayable_type = write.define_category(root_stage, "DisplayableName")
+city_type = write.define_category(root_stage, "City", (displayable_type,))
 
-# TODO: the following db relationships as well. This time we do this with an edit target
-db_layer = write.find_layer_matching(write._DB_TOKENS, root_stage.GetLayerStack())
-city_type = write.define_db_type(root_stage, "City", (displayable_type,))
-person_type = write.define_db_type(root_stage, "Person", (displayable_type,))
-
-### DB edits  ###
-with write.edit_context(db_layer, root_stage):
+with write.category_context(root_stage):
+    person_type = write.define_category(root_stage, "Person", (displayable_type,))
+    # but to edit a category definition we must be in the proper context
     displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
     city_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
     person_type.CreateRelationship('places_visited')

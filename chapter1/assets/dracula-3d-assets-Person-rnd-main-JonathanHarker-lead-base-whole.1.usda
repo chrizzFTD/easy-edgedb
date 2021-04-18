@@ -4,7 +4,7 @@
 )
 
 def "origin" (
-    prepend references = @dracula-3d-db-entity-rnd-main-types-lead-base-whole.1.usda@</DBTypes/Person>
+    prepend references = @dracula-3d-category-entity-rnd-main-atom-lead-base-whole.1.usda@</Category/Person>
 )
 {
     custom string display_name = "Jonathan Harker"
