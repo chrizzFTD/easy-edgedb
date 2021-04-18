@@ -41,17 +41,10 @@ munich = write.create(root_stage, city_type, 'Munich')
 budapest = write.create(root_stage, city_type, 'Budapest', display_name='Buda-Pesth')
 bistritz = write.create(root_stage, city_type, 'Bistritz', display_name='Bistritz')
 
-bistritz_layer = write.find_layer_matching(
-        dict(item='Bistritz', kingdom='assets'), (stack.layer for stack in bistritz.GetPrimStack())
-    )
-with write.edit_context(bistritz, bistritz_layer, root_stage):
+with write.asset_context(bistritz):
     bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-
-budapest_layer = write.find_layer_matching(
-        dict(item='Budapest', kingdom='assets'), (stack.layer for stack in budapest.GetPrimStack())
-    )
-with write.edit_context(budapest, budapest_layer, root_stage):
+with write.asset_context(budapest):
     budapest.GetAttribute("modern_name").Set('Budapest!')
 
 jonathan = write.create(root_stage, person_type, 'JonathanHarker', display_name='Jonathan Harker')
