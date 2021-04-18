@@ -17,20 +17,20 @@ write.repo.set(Path(__file__).parent / "assets")
 stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
 # we can define a category with or without an edit context
-displayable_cat = write.define_category(stage, "DisplayableName")
-city_cat = write.define_category(stage, "City", references=(displayable_cat,))
+displayable = write.define_category(stage, "DisplayableName")
+city = write.define_category(stage, "City", references=(displayable,))
 
 with write.category_context(stage):
-    person_cat = write.define_category(stage, "Person", references=(displayable_cat,))
+    person = write.define_category(stage, "Person", references=(displayable,))
     # but to edit a category definition we must be in the proper context
-    displayable_cat.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
-    city_cat.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-    person_cat.CreateRelationship('places_visited')
+    displayable.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+    city.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
+    person.CreateRelationship('places_visited')
 
-write.create(city_cat, 'Munich')
-budapest = write.create(city_cat, 'Budapest', display_name='Buda-Pesth')
-bistritz = write.create(city_cat, 'Bistritz', display_name='Bistritz')
-jonathan = write.create(person_cat, 'JonathanHarker', display_name='Jonathan Harker')
+write.create(city, 'Munich')
+budapest = write.create(city, 'Budapest', display_name='Buda-Pesth')
+bistritz = write.create(city, 'Bistritz', display_name='Bistritz')
+jonathan = write.create(person, 'JonathanHarker', display_name='Jonathan Harker')
 
 """
 
@@ -65,8 +65,8 @@ If you just want to return a single part of a type without the object structure,
 
 {'Budapest', 'Bistrița'}
 """
-cityRoot = budapest.GetParent()
-print([p for p in Usd.PrimRange(cityRoot) if p.GetAttribute("modern_name").Get()])
+city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
+print([p for p in Usd.PrimRange(city_root) if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
@@ -74,7 +74,7 @@ But we want to have Jonathan be connected to the cities he has traveled to. We'l
 """
 
 jonathanVisitRel = jonathan.GetRelationship('places_visited')
-for city in cityRoot.GetChildren():
+for city in city_root.GetChildren():
     jonathanVisitRel.AddTarget(city.GetPath())
 
 stage.Save()
