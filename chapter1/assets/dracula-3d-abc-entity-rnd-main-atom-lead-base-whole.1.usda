@@ -1,36 +1,39 @@
 #usda 1.0
+(
+    subLayers = [
+        @dracula-3d-db-entity-rnd-main-types-lead-base-whole.1.usda@
+    ]
+)
 
-def "City"
+def "City" (
+    kind = "assembly"
+)
 {
-    def "Munich"
-    {
-    }
-
-    def "Budapest" (
-        customData = {
-            string display_name = "Buda-Pesth"
-            string modern_name = "Budapest"
-        }
+    over "Munich" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Munich-lead-base-whole.1.usda@
     )
     {
     }
 
-    def "Bistritz" (
-        customData = {
-            string display_name = "Bistritz"
-            string modern_name = "Bistri\xc8\x9ba"
-        }
+    over "Budapest" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Budapest-lead-base-whole.1.usda@
+    )
+    {
+    }
+
+    over "Bistritz" (
+        prepend payload = @dracula-3d-assets-City-rnd-main-Bistritz-lead-base-whole.1.usda@
     )
     {
     }
 }
 
-def "Person"
+def "Person" (
+    kind = "assembly"
+)
 {
-    def "JonathanHarker" (
-        customData = {
-            string display_name = "Jonathan Harker"
-        }
+    over "JonathanHarker" (
+        prepend payload = @dracula-3d-assets-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
     )
     {
         custom rel places_visited
