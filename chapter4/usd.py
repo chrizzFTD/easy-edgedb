@@ -2,8 +2,7 @@ import logging
 from pathlib import Path
 
 from pxr import Usd, Sdf, Kind
-import sys
-sys.path.append(r"B:\write\code\git\grill")
+
 from grill import write
 
 import datetime
@@ -14,118 +13,96 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    dracula_root_id = write.UsdAsset.get_default(code='dracula')
+    token = write.repo.set(Path(__file__).parent / "assets")
 
-    token = write.repo.set(Path(__file__).parent / "repo")
+    stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
+    # we can define a category with or without an edit context
+    displayable = write.define_category(stage, "DisplayableName")
 
-    logger.info(f"Repository path: {write.repo.get()}")
-    logger.info(f"Stage identifier: {dracula_root_id}")
-
-    stage = write.fetch_stage(dracula_root_id)
-    tos = lambda: logger.info(stage.GetRootLayer().ExportToString())
-
-    assert stage is write.fetch_stage(dracula_root_id)
-
-    # types, types.
-    # this types should ideally come directly from EdgeDB? without reaching the database first?
-
-    # TODO: what should person and place be? Assemblies vs components.
-    #   For now, only cities are considered assemblies.
-
-    # all DB definitions go to the db types asset.
-    displayable_type = write.define_db_type(stage, "DisplayableName")
-    transport_enum = write.define_db_type(stage, "Transport")
-    person_type = write.define_db_type(stage, "Person", (displayable_type,))
-    pc_type = write.define_db_type(stage, "PC", (person_type, transport_enum))
-    npc_type = write.define_db_type(stage, "NPC", (person_type,))
-    vampire_type = write.define_db_type(stage, "Vampire", (person_type,))
-    place_type = write.define_db_type(stage, "Place", (displayable_type,))
-    country_type = write.define_db_type(stage, "Country", (place_type,))
-    city_type = write.define_db_type(stage, "City", (place_type,))
-
-    # TODO: the following db relationships as well. This time we do this with an edit target
-    db_layer = write.find_layer_matching(write._DB_TOKENS, stage.GetLayerStack())
-
-    ### DB edits  ###
-    with write.edit_context(db_layer, stage):
-        displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
-        variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
-        for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
-            variant_set.AddVariant(set_name)
-
-        # TODO: how to add constraints? Useful to catch errors before they hit the database
-        #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
-        person_type.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
-        person_type.CreateRelationship('places_visited')
-        person_type.CreateRelationship('lover')
-
-        place_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-        for each in (city_type, country_type):
+    with write.category_context(stage):
+        # but to edit a category definition we must be in the proper context
+        transport = write.define_category(stage, "Transport")
+        person = write.define_category(stage, "Person", references=(displayable,))
+        vampire = write.define_category(stage, "Vampire", (person,))
+        player = write.define_category(stage, "Player", references=(person, transport))
+        non_player = write.define_category(stage, "NonPlayer", references=(person,))
+        place = write.define_category(stage, "Place", references=(displayable,))
+        city = write.define_category(stage, "City", references=(place,))
+        country = write.define_category(stage, "Country", (place,))
+        # TODO: what should person and place be? Assemblies vs components.
+        #       For now, only cities are considered assemblies.
+        # all places that end up in the database are "important places"
+        for each in (city, country):
             # all places that end up in the database are "important places"
             Usd.ModelAPI(each).SetKind(Kind.Tokens.assembly)
 
-    ### DB END ###
-    cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
+        # TODO: how to add constraints? Useful to catch errors before they hit the database
+        #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
+        person.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
+        displayable.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+        place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
 
-    write.create(stage, city_type, 'Munich')
-    write.create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
-    bistritz = write.create(stage, city_type, 'Bistritz', display_name='Bistritz')
-    london = write.create(stage, city_type, 'London')
+        person.CreateRelationship('lover')
+        person.CreateRelationship('places_visited')
 
-    bistritz_layer = write.find_layer_matching(
-        dict(item='Bistritz', kingdom='assets'), (stack.layer for stack in bistritz.GetPrimStack())
-    )
+        variant_set = transport.GetVariantSets().AddVariantSet("Transport")
+        for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
+            variant_set.AddVariant(set_name)
 
-    with write.edit_context(bistritz, bistritz_layer, stage):
+
+    write.create(city, 'Munich')
+    budapest = write.create(city, 'Budapest', display_name='Buda-Pesth')
+    bistritz = write.create(city, 'Bistritz', display_name='Bistritz')
+    london = write.create(city, 'London')
+    write.create(country, 'Hungary')
+    romania = write.create(country, 'Romania')
+
+    jonathan = write.create(person, 'JonathanHarker', display_name='Jonathan Harker')
+    emil = write.create(player, "EmilSinclair", display_name="Emil Sinclair")
+    dracula = write.create(vampire, 'CountDracula', display_name='Count Dracula')
+    mina = write.create(non_player, 'MinaMurray', display_name='Mina Murray')
+    mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
+
+    with write.asset_context(bistritz):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-    write.create(stage, country_type, 'Hungary')
-    romania = write.create(stage, country_type, 'Romania')
+    with write.asset_context(budapest):
+        budapest.GetAttribute("modern_name").Set('Budapest!')
 
-    jonathan = write.create(stage, pc_type, 'JonathanHarker', display_name='Jonathan Harker')
-    emil = write.create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
-    dracula = write.create(stage, vampire_type, 'CountDracula', display_name='Count Dracula')
-    mina = write.create(stage, npc_type, 'MinaMurray', display_name='Mina Murray')
-    # TODO: LIMIT, how to? (Unsure if USD supports constraints on relationships.
-    mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
+    city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
+
     """
     If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
-    
+
     {'Budapest', 'Bistrița'}
     """
-
-    logger.info([p for p in Usd.PrimRange(cityRoot) if p.GetAttribute("modern_name").IsValid() and p.GetAttribute("modern_name").Get()])
+    print([p for p in Usd.PrimRange(city_root) if p.GetAttribute("modern_name").Get()])
+    # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
     """
     But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
     """
-
-
-    for prim, places in {
-        jonathan: cityRoot.GetChildren(),
-        emil: cityRoot.GetChildren(),
+    for person, places in {
+        jonathan: city_root.GetChildren(),
+        emil: city_root.GetChildren(),
         dracula: [romania],
         mina: [london],
     }.items():
-        visitRel = prim.GetRelationship('places_visited')
-        for place in places:
-            visitRel.AddTarget(place.GetPath())
+        visit_rel = person.GetRelationship('places_visited')
+        for each in places:
+            visit_rel.AddTarget(each.GetPath())
 
     # we could set "important_places" as a custom new property
     # but "important" prims are already provided by the USD model hierarchy.
     # let's try it and see if we can get away with it.
-    goldenKrone = write.create(stage, place_type, 'GoldenKroneHotel', 'Golden Krone Hotel')
+    goldenKrone = write.create(place, 'GoldenKroneHotel', display_name='Golden Krone Hotel')
     # also, let's make it a child of bistritz
-    childPrim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
-    childPrim.GetReferences().AddInternalReference(goldenKrone.GetPath())
-    Usd.ModelAPI(childPrim).SetKind(Kind.Tokens.component)  # should be component or reference?
+    child_prim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
+    child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
+    Usd.ModelAPI(child_prim).SetKind(Kind.Tokens.component)  # should be component or reference?
 
-    emil_layer = write.find_layer_matching(
-        dict(item='EmilSinclair', kingdom='assets'), (stack.layer for stack in emil.GetPrimStack())
-    )
-
-    with write.edit_context(emil, emil_layer, stage):
+    with write.asset_context(emil):
         emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
     # DELETING
@@ -138,14 +115,11 @@ def main():
     # Time type, needed? Has "awake" property  driven by hour ( awake < 7am asleep < 19h awake
 
     for x in range(5):
-    # for x in range(1_000):
         # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
         # could be faster.
-        write.create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
+        write.create(city, f'NewCity{x}', display_name=f"New City Hello {x}")
 
     stage.Save()
-
-    # code that uses 'var'; var.get() returns 'new value'. Call at the end.
     write.repo.reset(token)
 
 
