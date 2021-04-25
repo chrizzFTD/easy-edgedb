@@ -2,8 +2,9 @@ import logging
 from pathlib import Path
 
 from pxr import Usd, Sdf, Kind
-
-from grill import easyedb
+import sys
+sys.path.append(r"B:\write\code\git\grill")
+from grill import write
 
 import datetime
 
@@ -13,18 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    dracula_root_id = easyedb.UsdFile.get_default(code='dracula')
+    dracula_root_id = write.UsdAsset.get_default(code='dracula')
 
-    token = easyedb.repo.set(Path(__file__).parent / "repo")
+    token = write.repo.set(Path(__file__).parent / "repo")
 
 
-    logger.info(f"Repository path: {easyedb.repo.get()}")
+    logger.info(f"Repository path: {write.repo.get()}")
     logger.info(f"Stage identifier: {dracula_root_id}")
 
-    stage = easyedb.fetch_stage(dracula_root_id)
+    stage = write.fetch_stage(dracula_root_id)
     tos = lambda: logger.info(stage.GetRootLayer().ExportToString())
 
-    assert stage is easyedb.fetch_stage(dracula_root_id)
+    assert stage is write.fetch_stage(dracula_root_id)
 
     # types, types.
     # this types should ideally come directly from EdgeDB? without reaching the database first?
@@ -33,21 +34,21 @@ def main():
     #   For now, only cities are considered assemblies.
 
     # all DB definitions go to the db types asset.
-    displayable_type = easyedb.define_db_type(stage, "DisplayableName")
-    transport_enum = easyedb.define_db_type(stage, "Transport")
-    person_type = easyedb.define_db_type(stage, "Person", (displayable_type,))
-    pc_type = easyedb.define_db_type(stage, "PC", (person_type, transport_enum))
-    npc_type = easyedb.define_db_type(stage, "NPC", (person_type,))
-    vampire_type = easyedb.define_db_type(stage, "Vampire", (person_type,))
-    place_type = easyedb.define_db_type(stage, "Place", (displayable_type,))
-    country_type = easyedb.define_db_type(stage, "Country", (place_type,))
-    city_type = easyedb.define_db_type(stage, "City", (place_type,))
+    displayable_type = write.define_db_type(stage, "DisplayableName")
+    transport_enum = write.define_db_type(stage, "Transport")
+    person_type = write.define_db_type(stage, "Person", (displayable_type,))
+    pc_type = write.define_db_type(stage, "PC", (person_type, transport_enum))
+    npc_type = write.define_db_type(stage, "NPC", (person_type,))
+    vampire_type = write.define_db_type(stage, "Vampire", (person_type,))
+    place_type = write.define_db_type(stage, "Place", (displayable_type,))
+    country_type = write.define_db_type(stage, "Country", (place_type,))
+    city_type = write.define_db_type(stage, "City", (place_type,))
 
     # TODO: the following db relationships as well. This time we do this with an edit target
-    db_layer = easyedb._first_matching(easyedb.DB_TOKENS, stage.GetLayerStack())
+    db_layer = write.find_layer_matching(write._DB_TOKENS, stage.GetLayerStack())
 
     ### DB edits  ###
-    with easyedb.edit_context(db_layer, stage):
+    with write.edit_context(db_layer, stage):
         displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
         variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
         for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
@@ -67,25 +68,25 @@ def main():
     ### DB END ###
     cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
 
-    easyedb.create(stage, city_type, 'Munich')
-    easyedb.create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
-    bistritz = easyedb.create(stage, city_type, 'Bistritz', display_name='Bistritz')
-    london = easyedb.create(stage, city_type, 'London')
+    write.create(stage, city_type, 'Munich')
+    write.create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
+    bistritz = write.create(stage, city_type, 'Bistritz', display_name='Bistritz')
+    london = write.create(stage, city_type, 'London')
 
-    bistritz_layer = easyedb._first_matching(
+    bistritz_layer = write.find_layer_matching(
         dict(item='Bistritz', kingdom='assets'), (stack.layer for stack in bistritz.GetPrimStack())
     )
 
-    with easyedb.edit_context(bistritz, bistritz_layer, stage):
+    with write.edit_context(bistritz, bistritz_layer, stage):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-    easyedb.create(stage, country_type, 'Hungary')
-    romania = easyedb.create(stage, country_type, 'Romania')
+    write.create(stage, country_type, 'Hungary')
+    romania = write.create(stage, country_type, 'Romania')
 
-    jonathan = easyedb.create(stage, pc_type, 'JonathanHarker', display_name='Jonathan Harker')
-    emil = easyedb.create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
-    dracula = easyedb.create(stage, vampire_type, 'CountDracula', display_name='Count Dracula')
-    mina = easyedb.create(stage, npc_type, 'MinaMurray', display_name='Mina Murray')
+    jonathan = write.create(stage, pc_type, 'JonathanHarker', display_name='Jonathan Harker')
+    emil = write.create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
+    dracula = write.create(stage, vampire_type, 'CountDracula', display_name='Count Dracula')
+    mina = write.create(stage, npc_type, 'MinaMurray', display_name='Mina Murray')
     # TODO: LIMIT, how to? (Unsure if USD supports constraints on relationships.
     mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
     """
@@ -114,17 +115,17 @@ def main():
     # we could set "important_places" as a custom new property
     # but "important" prims are already provided by the USD model hierarchy.
     # let's try it and see if we can get away with it.
-    goldenKrone = easyedb.create(stage, place_type, 'GoldenKroneHotel', 'Golden Krone Hotel')
+    goldenKrone = write.create(stage, place_type, 'GoldenKroneHotel', 'Golden Krone Hotel')
     # also, let's make it a child of bistritz
     childPrim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
     childPrim.GetReferences().AddInternalReference(goldenKrone.GetPath())
     Usd.ModelAPI(childPrim).SetKind(Kind.Tokens.component)  # should be component or reference?
 
-    emil_layer = easyedb._first_matching(
+    emil_layer = write.find_layer_matching(
         dict(item='EmilSinclair', kingdom='assets'), (stack.layer for stack in emil.GetPrimStack())
     )
 
-    with easyedb.edit_context(emil, emil_layer, stage):
+    with write.edit_context(emil, emil_layer, stage):
         emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
     # DELETING
@@ -140,24 +141,25 @@ def main():
     # for x in range(1_000):
         # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
         # could be faster.
-        easyedb.create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
+        write.create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
 
     stage.Save()
 
     # code that uses 'var'; var.get() returns 'new value'. Call at the end.
-    easyedb.repo.reset(token)
+    write.repo.reset(token)
 
 
 if __name__ == "__main__":
     # tos()
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
+    # logging.getLogger("grill").setLevel(logging.DEBUG)
     import cProfile
     start = datetime.datetime.now()
     pr = cProfile.Profile()
     pr.enable()
     pr.runcall(main)
     pr.disable()
-    pr.dump_stats(str(Path(__file__).parent / "stats.log"))
+    pr.dump_stats(str(Path(__file__).parent / "stats_no_init_name.log"))
 
     end = datetime.datetime.now()
     print(f"Total time: {end - start}")

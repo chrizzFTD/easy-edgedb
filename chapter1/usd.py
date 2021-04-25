@@ -45,7 +45,7 @@ INSERT City {
 
 INSERT City {
   name := 'Bistritz',
-  modern_name := 'Bistri?a'
+  modern_name := 'Bistrița'
 };
 
 INSERT Person {
