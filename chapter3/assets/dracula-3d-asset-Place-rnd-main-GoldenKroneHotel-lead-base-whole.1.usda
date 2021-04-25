@@ -1,0 +1,12 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend references = @dracula-3d-category-entity-rnd-main-atom-lead-base-whole.1.usda@</Category/Place>
+)
+{
+    custom string display_name = "Golden Krone Hotel"
+}
+

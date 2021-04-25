@@ -1,13 +1,21 @@
 #usda 1.0
 (
-    defaultPrim = "DBTypes"
+    defaultPrim = "Category"
 )
 
-def "DBTypes"
+def "Category"
 {
     class "DisplayableName"
     {
         custom string display_name
+    }
+
+    class "Person" (
+        prepend references = </Category/DisplayableName>
+    )
+    {
+        custom int2 age
+        custom rel places_visited
     }
 
     class "Transport" (
@@ -27,37 +35,23 @@ def "DBTypes"
         }
     }
 
-    class "Person" (
-        prepend references = </DBTypes/DisplayableName>
-    )
-    {
-        custom int2 age
-        custom rel places_visited
-    }
-
-    class "PC" (
+    class "Player" (
         prepend references = [
-            </DBTypes/Person>,
-            </DBTypes/Transport>
+            </Category/Person>,
+            </Category/Transport>
         ]
     )
     {
     }
 
-    class "NPC" (
-        prepend references = </DBTypes/Person>
-    )
-    {
-    }
-
-    class "Vampire" (
-        prepend references = </DBTypes/Person>
+    class "NonPlayer" (
+        prepend references = </Category/Person>
     )
     {
     }
 
     class "Place" (
-        prepend references = </DBTypes/DisplayableName>
+        prepend references = </Category/DisplayableName>
     )
     {
         custom string modern_name
@@ -65,14 +59,20 @@ def "DBTypes"
 
     class "City" (
         kind = "assembly"
-        prepend references = </DBTypes/Place>
+        prepend references = </Category/Place>
+    )
+    {
+    }
+
+    class "Vampire" (
+        prepend references = </Category/Person>
     )
     {
     }
 
     class "Country" (
         kind = "assembly"
-        prepend references = </DBTypes/Place>
+        prepend references = </Category/Place>
     )
     {
     }

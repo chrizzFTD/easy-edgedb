@@ -54,16 +54,12 @@ with write.asset_context(bistritz):
 with write.asset_context(budapest):
     budapest.GetAttribute("modern_name").Set('Budapest!')
 
-pseudoRootPath = stage.GetPseudoRoot().GetPath()
 city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
-
 """
 If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
 
 {'Budapest', 'Bistrița'}
 """
-
-# cityRoot = stage.GetPrimAtPath(cityPath)
 print([p for p in Usd.PrimRange(city_root) if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
