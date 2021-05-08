@@ -1,0 +1,116 @@
+#usda 1.0
+(
+    defaultPrim = "Taxonomy"
+)
+
+def "Taxonomy"
+{
+    class "DisplayableName" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "DisplayableName"
+                }
+            }
+        }
+    )
+    {
+        custom string label
+    }
+
+    class "Person" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "Person"
+                }
+            }
+        }
+        prepend references = </Taxonomy/DisplayableName>
+    )
+    {
+        custom rel places_visited
+    }
+
+    class "Transport" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "Transport"
+                }
+            }
+        }
+        prepend variantSets = "Transport"
+    )
+    {
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
+    }
+
+    class "Player" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "Player"
+                }
+            }
+        }
+        prepend references = [
+            </Taxonomy/Person>,
+            </Taxonomy/Transport>
+        ]
+    )
+    {
+    }
+
+    class "NonPlayer" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "NonPlayer"
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+    }
+
+    class "Place" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "Place"
+                }
+            }
+        }
+        prepend references = </Taxonomy/DisplayableName>
+    )
+    {
+        custom string modern_name
+    }
+
+    class "City" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string kingdom = "City"
+                }
+            }
+        }
+        kind = "assembly"
+        prepend references = </Taxonomy/Place>
+    )
+    {
+    }
+}
+

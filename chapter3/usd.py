@@ -11,22 +11,22 @@ write.repo.set(Path(__file__).parent / "assets")
 stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
 # we can define a category with or without an edit context
-displayable = write.define_category(stage, "DisplayableName")
+displayable = write.define_taxon(stage, "DisplayableName")
 
-with write.category_context(stage):
+with write.taxonomy_context(stage):
     # but to edit a category definition we must be in the proper context
-    person = write.define_category(stage, "Person", references=(displayable,))
-    transport = write.define_category(stage, "Transport")
-    player = write.define_category(stage, "Player", references=(person, transport))
-    non_player = write.define_category(stage, "NonPlayer", references=(person,))
-    place = write.define_category(stage, "Place", references=(displayable,))
+    person = write.define_taxon(stage, "Person", references=(displayable,))
+    transport = write.define_taxon(stage, "Transport")
+    player = write.define_taxon(stage, "Player", references=(person, transport))
+    non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
+    place = write.define_taxon(stage, "Place", references=(displayable,))
 
-    displayable.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+    displayable.CreateAttribute("label", Sdf.ValueTypeNames.String)
     place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
 
-    city = write.define_category(stage, "City", references=(place,))
-    vampire = write.define_category(stage, "Vampire", (person,))
-    country = write.define_category(stage, "Country", (place,))
+    city = write.define_taxon(stage, "City", references=(place,))
+    vampire = write.define_taxon(stage, "Vampire", references=(person,))
+    country = write.define_taxon(stage, "Country", references=(place,))
     # TODO: what should person and place be? Assemblies vs components.
     #       For now, only cities are considered assemblies.
     # all places that end up in the database are "important places"
@@ -44,11 +44,11 @@ with write.category_context(stage):
     person.CreateRelationship('places_visited')
 
 write.create(city, 'Munich')
-budapest = write.create(city, 'Budapest', display_name='Buda-Pesth')
-bistritz = write.create(city, 'Bistritz', display_name='Bistritz')
-jonathan = write.create(person, 'JonathanHarker', display_name='Jonathan Harker')
-emil = write.create(player, "EmilSinclair", display_name="Emil Sinclair")
-dracula = write.create(vampire, 'CountDracula', display_name='Count Dracula')
+budapest = write.create(city, 'Budapest', label='Buda-Pesth')
+bistritz = write.create(city, 'Bistritz', label='Bistritz')
+jonathan = write.create(person, 'JonathanHarker', label='Jonathan Harker')
+emil = write.create(player, "EmilSinclair", label="Emil Sinclair")
+dracula = write.create(vampire, 'CountDracula', label='Count Dracula')
 hungary = write.create(country, 'Hungary')
 romania = write.create(country, 'Romania')
 
@@ -84,7 +84,7 @@ for person, places in {
 # we could set "important_places" as a custom new property
 # but "important" prims are already provided by the USD model hierarchy.
 # let's try it and see if we can get away with it.
-goldenKrone = write.create(place, 'GoldenKroneHotel', display_name='Golden Krone Hotel')
+goldenKrone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
 # also, let's make it a child of bistritz
 child_prim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
 child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     #
     # # for x in range(5_000):
     # for x in range(5):
-    #     easyedb.create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
+    #     easyedb.create(stage, city_type, f'NewCity{x}', label=f"New City Hello {x}")
     #
     # stage.GetRootLayer().Save()
     stage.Save()

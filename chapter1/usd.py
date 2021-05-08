@@ -17,20 +17,20 @@ write.repo.set(Path(__file__).parent / "assets")
 stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
 # we can define a category with or without an edit context
-displayable = write.define_category(stage, "DisplayableName")
-city = write.define_category(stage, "City", references=(displayable,))
+displayable = write.define_taxon(stage, "DisplayableName")
+city = write.define_taxon(stage, "City", references=(displayable,))
 
-with write.category_context(stage):
-    person = write.define_category(stage, "Person", references=(displayable,))
+with write.taxonomy_context(stage):
+    person = write.define_taxon(stage, "Person", references=(displayable,))
     # but to edit a category definition we must be in the proper context
-    displayable.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+    displayable.CreateAttribute("label", Sdf.ValueTypeNames.String)
     city.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
     person.CreateRelationship('places_visited')
 
 write.create(city, 'Munich')
-budapest = write.create(city, 'Budapest', display_name='Buda-Pesth')
-bistritz = write.create(city, 'Bistritz', display_name='Bistritz')
-jonathan = write.create(person, 'JonathanHarker', display_name='Jonathan Harker')
+budapest = write.create(city, 'Budapest', label='Buda-Pesth')
+bistritz = write.create(city, 'Bistritz', label='Bistritz')
+jonathan = write.create(person, 'JonathanHarker', label='Jonathan Harker')
 
 """
 

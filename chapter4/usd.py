@@ -18,18 +18,18 @@ def main():
     stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
     # we can define a category with or without an edit context
-    displayable = write.define_category(stage, "DisplayableName")
+    displayable = write.define_taxon(stage, "DisplayableName")
 
-    with write.category_context(stage):
+    with write.taxonomy_context(stage):
         # but to edit a category definition we must be in the proper context
-        transport = write.define_category(stage, "Transport")
-        person = write.define_category(stage, "Person", references=(displayable,))
-        vampire = write.define_category(stage, "Vampire", (person,))
-        player = write.define_category(stage, "Player", references=(person, transport))
-        non_player = write.define_category(stage, "NonPlayer", references=(person,))
-        place = write.define_category(stage, "Place", references=(displayable,))
-        city = write.define_category(stage, "City", references=(place,))
-        country = write.define_category(stage, "Country", (place,))
+        transport = write.define_taxon(stage, "Transport")
+        person = write.define_taxon(stage, "Person", references=(displayable,))
+        vampire = write.define_taxon(stage, "Vampire", references=(person,))
+        player = write.define_taxon(stage, "Player", references=(person, transport))
+        non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
+        place = write.define_taxon(stage, "Place", references=(displayable,))
+        city = write.define_taxon(stage, "City", references=(place,))
+        country = write.define_taxon(stage, "Country", references=(place,))
         # TODO: what should person and place be? Assemblies vs components.
         #       For now, only cities are considered assemblies.
         # all places that end up in the database are "important places"
@@ -40,7 +40,7 @@ def main():
         # TODO: how to add constraints? Useful to catch errors before they hit the database
         #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
         person.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
-        displayable.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
+        displayable.CreateAttribute("label", Sdf.ValueTypeNames.String)
         place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
 
         person.CreateRelationship('lover')
@@ -52,16 +52,16 @@ def main():
 
 
     write.create(city, 'Munich')
-    budapest = write.create(city, 'Budapest', display_name='Buda-Pesth')
-    bistritz = write.create(city, 'Bistritz', display_name='Bistritz')
+    budapest = write.create(city, 'Budapest', label='Buda-Pesth')
+    bistritz = write.create(city, 'Bistritz', label='Bistritz')
     london = write.create(city, 'London')
     write.create(country, 'Hungary')
     romania = write.create(country, 'Romania')
 
-    jonathan = write.create(person, 'JonathanHarker', display_name='Jonathan Harker')
-    emil = write.create(player, "EmilSinclair", display_name="Emil Sinclair")
-    dracula = write.create(vampire, 'CountDracula', display_name='Count Dracula')
-    mina = write.create(non_player, 'MinaMurray', display_name='Mina Murray')
+    jonathan = write.create(person, 'JonathanHarker', label='Jonathan Harker')
+    emil = write.create(player, "EmilSinclair", label="Emil Sinclair")
+    dracula = write.create(vampire, 'CountDracula', label='Count Dracula')
+    mina = write.create(non_player, 'MinaMurray', label='Mina Murray')
     mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
 
     with write.asset_context(bistritz):
@@ -96,7 +96,7 @@ def main():
     # we could set "important_places" as a custom new property
     # but "important" prims are already provided by the USD model hierarchy.
     # let's try it and see if we can get away with it.
-    goldenKrone = write.create(place, 'GoldenKroneHotel', display_name='Golden Krone Hotel')
+    goldenKrone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
     # also, let's make it a child of bistritz
     child_prim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
     child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
@@ -117,7 +117,7 @@ def main():
     for x in range(5):
         # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
         # could be faster.
-        write.create(city, f'NewCity{x}', display_name=f"New City Hello {x}")
+        write.create(city, f'NewCity{x}', label=f"New City Hello {x}")
 
     stage.Save()
     write.repo.reset(token)
