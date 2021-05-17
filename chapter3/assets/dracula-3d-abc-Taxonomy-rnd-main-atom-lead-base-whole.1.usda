@@ -9,7 +9,7 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "DisplayableName"
+                    string cluster = "DisplayableName"
                 }
             }
         }
@@ -22,7 +22,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Person"
+                    string cluster = "Person"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -37,7 +38,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Transport"
+                    string cluster = "Transport"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -61,7 +63,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Player"
+                    string cluster = "Player"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -77,7 +80,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "NonPlayer"
+                    string cluster = "NonPlayer"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -90,7 +94,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Place"
+                    string cluster = "Place"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -104,7 +109,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "City"
+                    string cluster = "City"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -118,7 +124,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Vampire"
+                    string cluster = "Vampire"
+                    string kingdom = "Object"
                 }
             }
         }
@@ -131,7 +138,8 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Country"
+                    string cluster = "Country"
+                    string kingdom = "Object"
                 }
             }
         }

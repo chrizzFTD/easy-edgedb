@@ -1,8 +1,10 @@
 import logging
 from pathlib import Path
 
-from grill import write
 from pxr import Usd, Sdf, Kind
+
+from grill import write
+from grill.tokens import ids
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +15,15 @@ stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 # we can define a category with or without an edit context
 displayable = write.define_taxon(stage, "DisplayableName")
 
+_OBJECT_FIELDS = {ids.CGAsset.kingdom.name: "Object"}
+
 with write.taxonomy_context(stage):
     # but to edit a category definition we must be in the proper context
-    person = write.define_taxon(stage, "Person", references=(displayable,))
-    transport = write.define_taxon(stage, "Transport")
+    person = write.define_taxon(stage, "Person", references=(displayable,), id_fields=_OBJECT_FIELDS)
+    transport = write.define_taxon(stage, "Transport", id_fields=_OBJECT_FIELDS)
     player = write.define_taxon(stage, "Player", references=(person, transport))
     non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
-    place = write.define_taxon(stage, "Place", references=(displayable,))
+    place = write.define_taxon(stage, "Place", references=(displayable,), id_fields=_OBJECT_FIELDS)
 
     displayable.CreateAttribute("label", Sdf.ValueTypeNames.String)
     place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)

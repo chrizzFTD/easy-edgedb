@@ -1,12 +1,11 @@
 import logging
+import datetime
 from pathlib import Path
 
 from pxr import Usd, Sdf, Kind
 
 from grill import write
-
-import datetime
-
+from grill.tokens import ids
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,16 +19,21 @@ def main():
     # we can define a category with or without an edit context
     displayable = write.define_taxon(stage, "DisplayableName")
 
+    _object_fields = {ids.CGAsset.kingdom.name: "Object"}
+
     with write.taxonomy_context(stage):
-        # but to edit a category definition we must be in the proper context
-        transport = write.define_taxon(stage, "Transport")
-        person = write.define_taxon(stage, "Person", references=(displayable,))
-        vampire = write.define_taxon(stage, "Vampire", references=(person,))
+        person = write.define_taxon(stage, "Person", references=(displayable,), id_fields=_object_fields)
+        transport = write.define_taxon(stage, "Transport", id_fields=_object_fields)
+        place = write.define_taxon(stage, "Place", references=(displayable,), id_fields=_object_fields)
+
         player = write.define_taxon(stage, "Player", references=(person, transport))
         non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
-        place = write.define_taxon(stage, "Place", references=(displayable,))
+        vampire = write.define_taxon(stage, "Vampire", references=(person,))
+
         city = write.define_taxon(stage, "City", references=(place,))
         country = write.define_taxon(stage, "Country", references=(place,))
+
+        # but to edit a category definition we must be in the proper context
         # TODO: what should person and place be? Assemblies vs components.
         #       For now, only cities are considered assemblies.
         # all places that end up in the database are "important places"
@@ -50,7 +54,6 @@ def main():
         for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
             variant_set.AddVariant(set_name)
 
-
     write.create(city, 'Munich')
     budapest = write.create(city, 'Budapest', label='Buda-Pesth')
     bistritz = write.create(city, 'Bistritz', label='Bistritz')
@@ -64,10 +67,10 @@ def main():
     mina = write.create(non_player, 'MinaMurray', label='Mina Murray')
     mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
 
-    with write.asset_context(bistritz):
+    with write.unit_context(bistritz):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-    with write.asset_context(budapest):
+    with write.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
 
     city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
@@ -102,7 +105,7 @@ def main():
     child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
     Usd.ModelAPI(child_prim).SetKind(Kind.Tokens.component)  # should be component or reference?
 
-    with write.asset_context(emil):
+    with write.unit_context(emil):
         emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
     # DELETING
@@ -114,7 +117,7 @@ def main():
     # 4 Questions / Unresolved
     # Time type, needed? Has "awake" property  driven by hour ( awake < 7am asleep < 19h awake
 
-    for x in range(5):
+    for x in range(1_000):
         # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
         # could be faster.
         write.create(city, f'NewCity{x}', label=f"New City Hello {x}")
