@@ -4,7 +4,7 @@
 )
 
 def "Origin" (
-    prepend references = @dracula-3d-taxonomy-entity-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
 )
 {
     custom string label = "Bistritz"

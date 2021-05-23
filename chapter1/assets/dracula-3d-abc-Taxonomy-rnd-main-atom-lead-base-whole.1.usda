@@ -5,30 +5,20 @@
 
 def "Taxonomy"
 {
-    class "DisplayableName" (
+    class "City" (
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "DisplayableName"
+                    string cluster = "City"
+                }
+                dictionary taxa = {
+                    int City = 0
                 }
             }
         }
     )
     {
         custom string label
-    }
-
-    class "City" (
-        customData = {
-            dictionary grill = {
-                dictionary fields = {
-                    string kingdom = "City"
-                }
-            }
-        }
-        prepend references = </Taxonomy/DisplayableName>
-    )
-    {
         custom string modern_name
     }
 
@@ -36,13 +26,16 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Person"
+                    string cluster = "Person"
+                }
+                dictionary taxa = {
+                    int Person = 0
                 }
             }
         }
-        prepend references = </Taxonomy/DisplayableName>
     )
     {
+        custom string label
         custom rel places_visited
     }
 }
