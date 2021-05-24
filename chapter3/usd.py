@@ -13,19 +13,16 @@ write.repo.set(Path(__file__).parent / "assets")
 stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
 # we can define a category with or without an edit context
-displayable = write.define_taxon(stage, "DisplayableName")
-
 _OBJECT_FIELDS = {ids.CGAsset.kingdom.name: "Object"}
 
 with write.taxonomy_context(stage):
     # but to edit a category definition we must be in the proper context
-    person = write.define_taxon(stage, "Person", references=(displayable,), id_fields=_OBJECT_FIELDS)
+    person = write.define_taxon(stage, "Person", id_fields=_OBJECT_FIELDS)
     transport = write.define_taxon(stage, "Transport", id_fields=_OBJECT_FIELDS)
     player = write.define_taxon(stage, "Player", references=(person, transport))
     non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
-    place = write.define_taxon(stage, "Place", references=(displayable,), id_fields=_OBJECT_FIELDS)
+    place = write.define_taxon(stage, "Place", id_fields=_OBJECT_FIELDS)
 
-    displayable.CreateAttribute("label", Sdf.ValueTypeNames.String)
     place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
 
     city = write.define_taxon(stage, "City", references=(place,))
@@ -56,10 +53,10 @@ dracula = write.create(vampire, 'CountDracula', label='Count Dracula')
 hungary = write.create(country, 'Hungary')
 romania = write.create(country, 'Romania')
 
-with write.asset_context(bistritz):
+with write.unit_context(bistritz):
     bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-with write.asset_context(budapest):
+with write.unit_context(budapest):
     budapest.GetAttribute("modern_name").Set('Budapest!')
 
 dracula.GetRelationship('places_visited').AddTarget(romania.GetPath())
@@ -94,7 +91,7 @@ child_prim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetNa
 child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
 Usd.ModelAPI(child_prim).SetKind(Kind.Tokens.component)  # should be component or reference?
 
-with write.asset_context(emil):
+with write.unit_context(emil):
     emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
 # DELETING
