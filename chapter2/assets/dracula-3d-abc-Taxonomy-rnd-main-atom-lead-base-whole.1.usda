@@ -5,30 +5,20 @@
 
 def "Taxonomy"
 {
-    class "DisplayableName" (
+    class "Person" (
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "DisplayableName"
+                    string cluster = "Person"
+                }
+                dictionary taxa = {
+                    int Person = 0
                 }
             }
         }
     )
     {
         custom string label
-    }
-
-    class "Person" (
-        customData = {
-            dictionary grill = {
-                dictionary fields = {
-                    string kingdom = "Person"
-                }
-            }
-        }
-        prepend references = </Taxonomy/DisplayableName>
-    )
-    {
         custom rel places_visited
     }
 
@@ -36,13 +26,17 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Transport"
+                    string cluster = "Transport"
+                }
+                dictionary taxa = {
+                    int Transport = 0
                 }
             }
         }
         prepend variantSets = "Transport"
     )
     {
+        custom string label
         variantSet "Transport" = {
             "Feet" {
 
@@ -60,7 +54,10 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Player"
+                    string cluster = "Player"
+                }
+                dictionary taxa = {
+                    int Player = 0
                 }
             }
         }
@@ -70,32 +67,40 @@ def "Taxonomy"
         ]
     )
     {
+        custom string label
     }
 
     class "NonPlayer" (
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "NonPlayer"
+                    string cluster = "NonPlayer"
+                }
+                dictionary taxa = {
+                    int NonPlayer = 0
                 }
             }
         }
         prepend references = </Taxonomy/Person>
     )
     {
+        custom string label
     }
 
     class "Place" (
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "Place"
+                    string cluster = "Place"
+                }
+                dictionary taxa = {
+                    int Place = 0
                 }
             }
         }
-        prepend references = </Taxonomy/DisplayableName>
     )
     {
+        custom string label
         custom string modern_name
     }
 
@@ -103,7 +108,10 @@ def "Taxonomy"
         customData = {
             dictionary grill = {
                 dictionary fields = {
-                    string kingdom = "City"
+                    string cluster = "City"
+                }
+                dictionary taxa = {
+                    int City = 0
                 }
             }
         }
@@ -111,6 +119,7 @@ def "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
+        custom string label
     }
 }
 

@@ -1,7 +1,7 @@
 #usda 1.0
 (
     subLayers = [
-        @dracula-3d-taxonomy-entity-rnd-main-atom-lead-base-whole.1.usda@
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
     ]
 )
 
@@ -10,19 +10,19 @@ def "City" (
 )
 {
     over "Munich" (
-        prepend payload = @dracula-3d-City-entity-rnd-main-Munich-lead-base-whole.1.usda@
+        prepend payload = @dracula-3d-abc-City-rnd-main-Munich-lead-base-whole.1.usda@
     )
     {
     }
 
     over "Budapest" (
-        prepend payload = @dracula-3d-City-entity-rnd-main-Budapest-lead-base-whole.1.usda@
+        prepend payload = @dracula-3d-abc-City-rnd-main-Budapest-lead-base-whole.1.usda@
     )
     {
     }
 
     over "Bistritz" (
-        prepend payload = @dracula-3d-City-entity-rnd-main-Bistritz-lead-base-whole.1.usda@
+        prepend payload = @dracula-3d-abc-City-rnd-main-Bistritz-lead-base-whole.1.usda@
     )
     {
         over "GoldenKroneHotel" (
@@ -34,12 +34,23 @@ def "City" (
     }
 }
 
+def "Place" (
+    kind = "assembly"
+)
+{
+    over "GoldenKroneHotel" (
+        prepend payload = @dracula-3d-abc-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+    )
+    {
+    }
+}
+
 def "Person" (
     kind = "assembly"
 )
 {
     over "JonathanHarker" (
-        prepend payload = @dracula-3d-Person-entity-rnd-main-JonathanHarker-lead-base-whole.1.usda@
+        prepend payload = @dracula-3d-abc-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
     )
     {
         custom rel places_visited
@@ -56,7 +67,7 @@ def "Player" (
 )
 {
     over "EmilSinclair" (
-        prepend payload = @dracula-3d-Player-entity-rnd-main-EmilSinclair-lead-base-whole.1.usda@
+        prepend payload = @dracula-3d-abc-Player-rnd-main-EmilSinclair-lead-base-whole.1.usda@
         variants = {
             string Transport = "HorseDrawnCarriage"
         }
@@ -68,17 +79,6 @@ def "Player" (
             </City/Budapest>,
             </City/Bistritz>,
         ]
-    }
-}
-
-def "Place" (
-    kind = "assembly"
-)
-{
-    over "GoldenKroneHotel" (
-        prepend payload = @dracula-3d-Place-entity-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
-    )
-    {
     }
 }
 
