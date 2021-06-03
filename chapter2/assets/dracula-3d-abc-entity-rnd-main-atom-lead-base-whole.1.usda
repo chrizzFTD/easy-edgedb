@@ -25,12 +25,6 @@ def "City" (
         prepend payload = @dracula-3d-abc-City-rnd-main-Bistritz-lead-base-whole.1.usda@
     )
     {
-        over "GoldenKroneHotel" (
-            kind = "component"
-            prepend references = </Place/GoldenKroneHotel>
-        )
-        {
-        }
     }
 }
 

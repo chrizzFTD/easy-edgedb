@@ -9,5 +9,15 @@ def "Origin" (
 {
     custom string label = "Bistritz"
     custom string modern_name = "Bistri\xc8\x9ba"
+
+    over "GoldenKroneHotel" (
+        kind = "component"
+        prepend references = [
+            @dracula-3d-abc-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@,
+            @b:/write/code/git/easy-edgedb/chapter2/assets/dracula-3d-abc-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+        ]
+    )
+    {
+    }
 }
 
