@@ -16,15 +16,13 @@ def main():
 
     stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
-    # we can define a category with or without an edit context
-    displayable = write.define_taxon(stage, "DisplayableName")
-
     _object_fields = {ids.CGAsset.kingdom.name: "Object"}
+    # we can define a category with or without an edit context
+    person = write.define_taxon(stage, "Person", id_fields=_object_fields)
 
     with write.taxonomy_context(stage):
-        person = write.define_taxon(stage, "Person", references=(displayable,), id_fields=_object_fields)
         transport = write.define_taxon(stage, "Transport", id_fields=_object_fields)
-        place = write.define_taxon(stage, "Place", references=(displayable,), id_fields=_object_fields)
+        place = write.define_taxon(stage, "Place", id_fields=_object_fields)
 
         player = write.define_taxon(stage, "Player", references=(person, transport))
         non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
@@ -44,7 +42,6 @@ def main():
         # TODO: how to add constraints? Useful to catch errors before they hit the database
         #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
         person.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
-        displayable.CreateAttribute("label", Sdf.ValueTypeNames.String)
         place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
 
         person.CreateRelationship('lover')
@@ -58,6 +55,7 @@ def main():
     budapest = write.create(city, 'Budapest', label='Buda-Pesth')
     bistritz = write.create(city, 'Bistritz', label='Bistritz')
     london = write.create(city, 'London')
+    golden_krone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
     write.create(country, 'Hungary')
     romania = write.create(country, 'Romania')
 
@@ -65,10 +63,20 @@ def main():
     emil = write.create(player, "EmilSinclair", label="Emil Sinclair")
     dracula = write.create(vampire, 'CountDracula', label='Count Dracula')
     mina = write.create(non_player, 'MinaMurray', label='Mina Murray')
+
     mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
 
     with write.unit_context(bistritz):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
+        # we could set "important_places" as a custom new property
+        # but "important" prims are already provided by the USD model hierarchy.
+        # let's try it and see if we can get away with it.
+        # also, let's make it a child of bistritz
+        instanced_krone = stage.OverridePrim(bistritz.GetPath().AppendChild(golden_krone.GetName()))
+        golden_krone_layer = write.unit_asset(golden_krone)
+        # TODO: should this be a payload or a reference?
+        instanced_krone.GetPayloads().AddPayload(golden_krone_layer.identifier)
+        Usd.ModelAPI(instanced_krone).SetKind(Kind.Tokens.component)  # should be component or assembly?
 
     with write.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
@@ -96,15 +104,6 @@ def main():
         for each in places:
             visit_rel.AddTarget(each.GetPath())
 
-    # we could set "important_places" as a custom new property
-    # but "important" prims are already provided by the USD model hierarchy.
-    # let's try it and see if we can get away with it.
-    goldenKrone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
-    # also, let's make it a child of bistritz
-    child_prim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
-    child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
-    Usd.ModelAPI(child_prim).SetKind(Kind.Tokens.component)  # should be component or reference?
-
     with write.unit_context(emil):
         emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
@@ -117,24 +116,24 @@ def main():
     # 4 Questions / Unresolved
     # Time type, needed? Has "awake" property  driven by hour ( awake < 7am asleep < 19h awake
 
-    for x in range(1_000):
-        # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
-        # could be faster.
-        write.create(city, f'NewCity{x}', label=f"New City Hello {x}")
+    # for x in range(1_000):
+    #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
+    #     # Total time: 0:00:06.993190
+    #     # could be faster.
+    #     write.create(city, f'NewCity{x}', label=f"New City Hello {x}")
 
     stage.Save()
     write.repo.reset(token)
+    return stage
 
 
 if __name__ == "__main__":
-    # tos()
     logging.basicConfig(level=logging.DEBUG)
-    # logging.getLogger("grill").setLevel(logging.DEBUG)
     import cProfile
     start = datetime.datetime.now()
     pr = cProfile.Profile()
     pr.enable()
-    pr.runcall(main)
+    stage = pr.runcall(main)
     pr.disable()
     pr.dump_stats(str(Path(__file__).parent / "stats_no_init_name.log"))
 
