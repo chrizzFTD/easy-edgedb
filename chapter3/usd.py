@@ -12,22 +12,23 @@ write.repo.set(Path(__file__).parent / "assets")
 
 stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
-# we can define a category with or without an edit context
 _OBJECT_FIELDS = {ids.CGAsset.kingdom.name: "Object"}
 
+# we can define a category with or without an edit context
+person = write.define_taxon(stage, "Person", id_fields=_OBJECT_FIELDS)
+
 with write.taxonomy_context(stage):
-    # but to edit a category definition we must be in the proper context
-    person = write.define_taxon(stage, "Person", id_fields=_OBJECT_FIELDS)
     transport = write.define_taxon(stage, "Transport", id_fields=_OBJECT_FIELDS)
+    place = write.define_taxon(stage, "Place", id_fields=_OBJECT_FIELDS)
     player = write.define_taxon(stage, "Player", references=(person, transport))
     non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
-    place = write.define_taxon(stage, "Place", id_fields=_OBJECT_FIELDS)
-
-    place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-
     city = write.define_taxon(stage, "City", references=(place,))
     vampire = write.define_taxon(stage, "Vampire", references=(person,))
     country = write.define_taxon(stage, "Country", references=(place,))
+
+    # but to edit a category definition we must be in a taxonomy context
+    place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
+
     # TODO: what should person and place be? Assemblies vs components.
     #       For now, only cities are considered assemblies.
     # all places that end up in the database are "important places"
@@ -47,6 +48,7 @@ with write.taxonomy_context(stage):
 write.create(city, 'Munich')
 budapest = write.create(city, 'Budapest', label='Buda-Pesth')
 bistritz = write.create(city, 'Bistritz', label='Bistritz')
+golden_krone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
 jonathan = write.create(person, 'JonathanHarker', label='Jonathan Harker')
 emil = write.create(player, "EmilSinclair", label="Emil Sinclair")
 dracula = write.create(vampire, 'CountDracula', label='Count Dracula')
@@ -55,6 +57,15 @@ romania = write.create(country, 'Romania')
 
 with write.unit_context(bistritz):
     bistritz.GetAttribute("modern_name").Set('Bistrița')
+    # we could set "important_places" as a custom new property
+    # but "important" prims are already provided by the USD model hierarchy.
+    # let's try it and see if we can get away with it.
+    # also, let's make it a child of bistritz
+    instanced_krone = stage.OverridePrim(bistritz.GetPath().AppendChild(golden_krone.GetName()))
+    golden_krone_layer = write.unit_asset(golden_krone)
+    instanced_krone.GetReferences().AddReference(golden_krone_layer.identifier)
+    Usd.ModelAPI(instanced_krone).SetKind(Kind.Tokens.component)  # should be component or assembly?
+
 
 with write.unit_context(budapest):
     budapest.GetAttribute("modern_name").Set('Budapest!')
@@ -81,15 +92,6 @@ for person, places in {
     visit_rel = person.GetRelationship('places_visited')
     for each in places:
         visit_rel.AddTarget(each.GetPath())
-
-# we could set "important_places" as a custom new property
-# but "important" prims are already provided by the USD model hierarchy.
-# let's try it and see if we can get away with it.
-goldenKrone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
-# also, let's make it a child of bistritz
-child_prim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
-child_prim.GetReferences().AddInternalReference(goldenKrone.GetPath())
-Usd.ModelAPI(child_prim).SetKind(Kind.Tokens.component)  # should be component or reference?
 
 with write.unit_context(emil):
     emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")

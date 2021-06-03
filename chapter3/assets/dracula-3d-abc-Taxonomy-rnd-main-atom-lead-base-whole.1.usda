@@ -53,6 +53,24 @@ def "Taxonomy"
         }
     }
 
+    class "Place" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Place"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Place = 0
+                }
+            }
+        }
+    )
+    {
+        custom string label
+        custom string modern_name
+    }
+
     class "Player" (
         customData = {
             dictionary grill = {
@@ -88,24 +106,6 @@ def "Taxonomy"
     )
     {
         custom string label
-    }
-
-    class "Place" (
-        customData = {
-            dictionary grill = {
-                dictionary fields = {
-                    string cluster = "Place"
-                    string kingdom = "Object"
-                }
-                dictionary taxa = {
-                    int Place = 0
-                }
-            }
-        }
-    )
-    {
-        custom string label
-        custom string modern_name
     }
 
     class "City" (

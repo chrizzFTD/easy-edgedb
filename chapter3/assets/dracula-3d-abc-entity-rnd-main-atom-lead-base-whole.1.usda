@@ -25,12 +25,17 @@ def "City" (
         prepend payload = @dracula-3d-Object-City-rnd-main-Bistritz-lead-base-whole.1.usda@
     )
     {
-        over "GoldenKroneHotel" (
-            kind = "component"
-            prepend references = </Place/GoldenKroneHotel>
-        )
-        {
-        }
+    }
+}
+
+def "Place" (
+    kind = "assembly"
+)
+{
+    over "GoldenKroneHotel" (
+        prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+    )
+    {
     }
 }
 
@@ -93,17 +98,6 @@ def "Country" (
 
     over "Romania" (
         prepend payload = @dracula-3d-Object-Country-rnd-main-Romania-lead-base-whole.1.usda@
-    )
-    {
-    }
-}
-
-def "Place" (
-    kind = "assembly"
-)
-{
-    over "GoldenKroneHotel" (
-        prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
     )
     {
     }
