@@ -1,0 +1,165 @@
+#usda 1.0
+(
+    defaultPrim = "Taxonomy"
+)
+
+def "Taxonomy"
+{
+    class "Person" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Person"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Person = 0
+                }
+            }
+        }
+    )
+    {
+        custom int2 age
+        custom string label
+        custom rel lover
+        custom rel places_visited
+    }
+
+    class "Transport" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Transport"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Transport = 0
+                }
+            }
+        }
+        prepend variantSets = "Transport"
+    )
+    {
+        custom string label
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
+    }
+
+    class "Place" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Place"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Place = 0
+                }
+            }
+        }
+    )
+    {
+        custom string label
+        custom string modern_name
+    }
+
+    class "Player" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Player"
+                }
+                dictionary taxa = {
+                    int Player = 0
+                }
+            }
+        }
+        prepend references = [
+            </Taxonomy/Person>,
+            </Taxonomy/Transport>
+        ]
+    )
+    {
+        custom string label
+    }
+
+    class "NonPlayer" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "NonPlayer"
+                }
+                dictionary taxa = {
+                    int NonPlayer = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+        custom string label
+    }
+
+    class "Vampire" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Vampire"
+                }
+                dictionary taxa = {
+                    int Vampire = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+        custom string label
+    }
+
+    class "City" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "City"
+                }
+                dictionary taxa = {
+                    int City = 0
+                }
+            }
+        }
+        kind = "assembly"
+        prepend references = </Taxonomy/Place>
+    )
+    {
+        custom string label
+    }
+
+    class "Country" (
+        customData = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Country"
+                }
+                dictionary taxa = {
+                    int Country = 0
+                }
+            }
+        }
+        kind = "assembly"
+        prepend references = </Taxonomy/Place>
+    )
+    {
+        custom string label
+    }
+}
+
