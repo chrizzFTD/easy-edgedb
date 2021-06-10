@@ -1,127 +1,30 @@
 #usda 1.0
-
-def "DBTypes"
-{
-    def "DisplayableName"
-    {
-        custom string display_name
-    }
-
-    def "Transport" (
-        prepend variantSets = "Transport"
-    )
-    {
-        variantSet "Transport" = {
-            "Feet" {
-
-            }
-            "HorseDrawnCarriage" {
-
-            }
-            "Train" {
-
-            }
-        }
-    }
-
-    def "Person" (
-        prepend references = </DBTypes/DisplayableName>
-    )
-    {
-        custom rel places_visited
-    }
-
-    def "PC" (
-        prepend references = [
-            </DBTypes/Transport>,
-            </DBTypes/Person>
-        ]
-    )
-    {
-    }
-
-    def "Place" (
-        prepend references = </DBTypes/DisplayableName>
-    )
-    {
-        custom string modern_name
-    }
-
-    def "City" (
-        kind = "assembly"
-        prepend references = [
-            </DBTypes/Place>,
-            </DBTypes/DisplayableName>
-        ]
-    )
-    {
-    }
-}
+(
+    subLayers = [
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
 
 def "City" (
     kind = "assembly"
 )
 {
-    def "Munich" (
-        prepend references = </DBTypes/City>
+    over "Munich" (
+        prepend payload = @dracula-3d-abc-City-rnd-main-Munich-lead-base-whole.1.usda@
     )
     {
     }
 
-    def "Budapest" (
-        prepend references = </DBTypes/City>
+    over "Budapest" (
+        prepend payload = @dracula-3d-abc-City-rnd-main-Budapest-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Buda-Pesth"
     }
 
-    def "Bistritz" (
-        prepend references = </DBTypes/City>
+    over "Bistritz" (
+        prepend payload = @dracula-3d-abc-City-rnd-main-Bistritz-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Bistritz"
-        custom string modern_name = "Bistri\xc8\x9ba"
-
-        over "GoldenKroneHotel" (
-            kind = "component"
-            prepend references = </Place/GoldenKroneHotel>
-        )
-        {
-        }
-    }
-}
-
-def "PC" (
-    kind = "assembly"
-)
-{
-    def "JonathanHarker" (
-        prepend references = </DBTypes/PC>
-    )
-    {
-        custom string display_name = "Jonathan Harker"
-        custom rel places_visited
-        prepend rel places_visited = [
-            </City/Munich>,
-            </City/Budapest>,
-            </City/Bistritz>,
-        ]
-    }
-
-    def "EmilSinclair" (
-        prepend references = </DBTypes/PC>
-        variants = {
-            string Transport = "HorseDrawnCarriage"
-        }
-    )
-    {
-        custom string display_name = "Emil Sinclair"
-        custom rel places_visited
-        prepend rel places_visited = [
-            </City/Munich>,
-            </City/Budapest>,
-            </City/Bistritz>,
-        ]
     }
 }
 
@@ -129,11 +32,47 @@ def "Place" (
     kind = "assembly"
 )
 {
-    def "GoldenKroneHotel" (
-        prepend references = </DBTypes/Place>
+    over "GoldenKroneHotel" (
+        prepend payload = @dracula-3d-abc-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
     )
     {
-        custom string display_name = "Golden Krone Hotel"
+    }
+}
+
+def "Person" (
+    kind = "assembly"
+)
+{
+    over "JonathanHarker" (
+        prepend payload = @dracula-3d-abc-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
+    }
+}
+
+def "Player" (
+    kind = "assembly"
+)
+{
+    over "EmilSinclair" (
+        prepend payload = @dracula-3d-abc-Player-rnd-main-EmilSinclair-lead-base-whole.1.usda@
+        variants = {
+            string Transport = "HorseDrawnCarriage"
+        }
+    )
+    {
+        custom rel places_visited
+        prepend rel places_visited = [
+            </City/Munich>,
+            </City/Budapest>,
+            </City/Bistritz>,
+        ]
     }
 }
 

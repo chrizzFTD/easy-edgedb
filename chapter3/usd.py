@@ -3,133 +3,98 @@ from pathlib import Path
 
 from pxr import Usd, Sdf, Kind
 
-from grill import easyedb
+from grill import write
+from grill.tokens import ids
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-dracula_root_id = easyedb.UsdFile.get_default(code='dracula')
+write.repo.set(Path(__file__).parent / "assets")
 
-token = easyedb.repo.set(Path(__file__).parent / "repo")
+stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
 
+_OBJECT_FIELDS = {ids.CGAsset.kingdom.name: "Object"}
 
-logger.info(f"Repository path: {easyedb.repo.get()}")
-logger.info(f"Stage identifier: {dracula_root_id}")
+# we can define a category with or without an edit context
+person = write.define_taxon(stage, "Person", id_fields=_OBJECT_FIELDS)
 
-stage = easyedb.fetch_stage(dracula_root_id)
-tos = lambda: logger.info(stage.GetRootLayer().ExportToString())
+with write.taxonomy_context(stage):
+    transport = write.define_taxon(stage, "Transport", id_fields=_OBJECT_FIELDS)
+    place = write.define_taxon(stage, "Place", id_fields=_OBJECT_FIELDS)
+    player = write.define_taxon(stage, "Player", references=(person, transport))
+    non_player = write.define_taxon(stage, "NonPlayer", references=(person,))
+    city = write.define_taxon(stage, "City", references=(place,))
+    vampire = write.define_taxon(stage, "Vampire", references=(person,))
+    country = write.define_taxon(stage, "Country", references=(place,))
 
-assert stage is easyedb.fetch_stage(dracula_root_id)
+    # but to edit a category definition we must be in a taxonomy context
+    place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
 
-# types, types.
-# this types should ideally come directly from EdgeDB? without reaching the database first?
+    # TODO: what should person and place be? Assemblies vs components.
+    #       For now, only cities are considered assemblies.
+    # all places that end up in the database are "important places"
+    for each in (city, country):
+        # all places that end up in the database are "important places"
+        Usd.ModelAPI(each).SetKind(Kind.Tokens.assembly)
 
-# TODO: what should person and place be? Assemblies vs components.
-#   For now, only cities are considered assemblies.
-
-# all DB definitions go to the db types asset.
-displayable_type = easyedb.define_db_type(stage, "DisplayableName")
-transport_enum = easyedb.define_db_type(stage, "Transport")
-person_type = easyedb.define_db_type(stage, "Person", (displayable_type,))
-pc_type = easyedb.define_db_type(stage, "PC", (person_type, transport_enum))
-npc_type = easyedb.define_db_type(stage, "NPC", (person_type,))
-vampire_type = easyedb.define_db_type(stage, "Vampire", (person_type,))
-place_type = easyedb.define_db_type(stage, "Place", (displayable_type,))
-country_type = easyedb.define_db_type(stage, "Country", (place_type,))
-city_type = easyedb.define_db_type(stage, "City", (place_type,))
-
-# TODO: the following db relationships as well. This time we do this with an edit target
-db_layer = easyedb._first_matching(easyedb.DB_TOKENS, stage.GetLayerStack())
-
-### DB edits  ###
-with easyedb.edit_context(db_layer, stage):
-    displayable_type.CreateAttribute("display_name", Sdf.ValueTypeNames.String)
-    variant_set = transport_enum.GetVariantSets().AddVariantSet("Transport")
+    variant_set = transport.GetVariantSets().AddVariantSet("Transport")
     for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
         variant_set.AddVariant(set_name)
 
     # TODO: how to add constraints? Useful to catch errors before they hit the database
     #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
-    person_type.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
-    person_type.CreateRelationship('places_visited')
+    person.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
+    person.CreateRelationship('places_visited')
 
-    place_type.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
-    for each in (city_type, country_type):
-        # all places that end up in the database are "important places"
-        Usd.ModelAPI(each).SetKind(Kind.Tokens.assembly)
+write.create(city, 'Munich')
+budapest = write.create(city, 'Budapest', label='Buda-Pesth')
+bistritz = write.create(city, 'Bistritz', label='Bistritz')
+golden_krone = write.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
+jonathan = write.create(person, 'JonathanHarker', label='Jonathan Harker')
+emil = write.create(player, "EmilSinclair", label="Emil Sinclair")
+dracula = write.create(vampire, 'CountDracula', label='Count Dracula')
+hungary = write.create(country, 'Hungary')
+romania = write.create(country, 'Romania')
 
-### DB END ###
-
-pseudoRootPath = stage.GetPseudoRoot().GetPath()
-cityRoot = stage.DefinePrim(f"/{city_type.GetName()}")
-
-munich = easyedb.create(stage, city_type, 'Munich')
-budapest = easyedb.create(stage, city_type, 'Budapest', display_name='Buda-Pesth')
-bistritz = easyedb.create(stage, city_type, 'Bistritz', display_name='Bistritz')
-
-bistritz_layer = easyedb._first_matching(
-    dict(item='Bistritz', kingdom='assets'), (stack.layer for stack in bistritz.GetPrimStack())
-)
-
-# We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
-
-# editTarget = Usd.EditTarget(bistritz_layer, bistritz.GetPrimIndex().rootNode.children[0])
-# with Usd.EditContext(stage, editTarget):
-with easyedb.edit_context(bistritz, bistritz_layer, stage):
+with write.unit_context(bistritz):
     bistritz.GetAttribute("modern_name").Set('Bistrița')
+    # we could set "important_places" as a custom new property
+    # but "important" prims are already provided by the USD model hierarchy.
+    # let's try it and see if we can get away with it.
+    # also, let's make it a child of bistritz
+    instanced_krone = stage.OverridePrim(bistritz.GetPath().AppendChild(golden_krone.GetName()))
+    golden_krone_layer = write.unit_asset(golden_krone)
+    instanced_krone.GetReferences().AddReference(golden_krone_layer.identifier)
+    Usd.ModelAPI(instanced_krone).SetKind(Kind.Tokens.component)  # should be component or assembly?
 
-hungary = easyedb.create(stage, country_type, 'Hungary')
-romania = easyedb.create(stage, country_type, 'Romania')
 
-jonathan = easyedb.create(stage, pc_type, 'JonathanHarker', display_name='Jonathan Harker')
-emil = easyedb.create(stage, pc_type, "EmilSinclair", display_name="Emil Sinclair")
-dracula = easyedb.create(stage, vampire_type, 'CountDracula', display_name='Count Dracula')
+with write.unit_context(budapest):
+    budapest.GetAttribute("modern_name").Set('Budapest!')
+
 dracula.GetRelationship('places_visited').AddTarget(romania.GetPath())
 
+city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
 
 """
 If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
 
 {'Budapest', 'Bistrița'}
 """
-
-# cityRoot = stage.GetPrimAtPath(cityPath)
-logger.info([p for p in Usd.PrimRange(cityRoot) if p.GetAttribute("modern_name").IsValid() and p.GetAttribute("modern_name").Get()])
+print([p for p in Usd.PrimRange(city_root) if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
 But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
 """
-
-
-for prim, places in {
-    jonathan: cityRoot.GetChildren(),
-    emil: cityRoot.GetChildren(),
+for person, places in {
+    jonathan: city_root.GetChildren(),
+    emil: city_root.GetChildren(),
 }.items():
-    visitRel = prim.GetRelationship('places_visited')
-    for place in places:
-        visitRel.AddTarget(place.GetPath())
+    visit_rel = person.GetRelationship('places_visited')
+    for each in places:
+        visit_rel.AddTarget(each.GetPath())
 
-
-# we could set "important_places" as a custom new property
-# but "important" prims are already provided by the USD model hierarchy.
-# let's try it and see if we can get away with it.
-goldenKrone = easyedb.create(stage, place_type, 'GoldenKroneHotel', 'Golden Krone Hotel')
-# also, let's make it a child of bistritz
-childPrim = stage.OverridePrim(bistritz.GetPath().AppendChild(goldenKrone.GetName()))
-childPrim.GetReferences().AddInternalReference(goldenKrone.GetPath())
-Usd.ModelAPI(childPrim).SetKind(Kind.Tokens.component)  # should be component or reference?
-
-emil_layer = easyedb._first_matching(
-    dict(item='EmilSinclair', kingdom='assets'), (stack.layer for stack in emil.GetPrimStack())
-)
-
-# We need to explicitely construct our edit target since our layer is not on the layer stack of the stage.
-# editTarget = Usd.EditTarget(emil_layer, emil.GetPrimIndex().rootNode.children[0])
-# with Usd.EditContext(stage, editTarget):
-with easyedb.edit_context(emil, emil_layer, stage):
+with write.unit_context(emil):
     emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
-
 
 # DELETING
 # try deleting the countries, this works as long as definitions are on the current edit target
@@ -144,7 +109,7 @@ if __name__ == "__main__":
     #
     # # for x in range(5_000):
     # for x in range(5):
-    #     easyedb.create(stage, city_type, f'NewCity{x}', display_name=f"New City Hello {x}")
+    #     easyedb.create(stage, city_type, f'NewCity{x}', label=f"New City Hello {x}")
     #
     # stage.GetRootLayer().Save()
     stage.Save()
@@ -156,4 +121,4 @@ if __name__ == "__main__":
             logger.info(prim)
     persist(stage)
     # code that uses 'var'; var.get() returns 'new value'. Call at the end.
-    easyedb.repo.reset(token)
+
