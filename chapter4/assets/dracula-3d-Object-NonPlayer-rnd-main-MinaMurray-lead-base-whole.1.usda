@@ -7,6 +7,6 @@ def "Origin" (
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/NonPlayer>
 )
 {
-    custom string label = "Mina Murray"
+    string label = "Mina Murray"
 }
 

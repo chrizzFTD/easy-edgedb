@@ -19,10 +19,10 @@ def "Taxonomy"
         }
     )
     {
-        custom int2 age
-        custom string label
-        custom rel lover
-        custom rel places_visited
+        int2 age
+        string label
+        rel lover
+        rel places_visited
     }
 
     class "Transport" (
@@ -40,7 +40,7 @@ def "Taxonomy"
         prepend variantSets = "Transport"
     )
     {
-        custom string label
+        string label
         variantSet "Transport" = {
             "Feet" {
 
@@ -68,8 +68,8 @@ def "Taxonomy"
         }
     )
     {
-        custom string label
-        custom string modern_name
+        string label
+        string modern_name
     }
 
     class "Player" (
@@ -89,7 +89,7 @@ def "Taxonomy"
         ]
     )
     {
-        custom string label
+        string label
     }
 
     class "NonPlayer" (
@@ -106,7 +106,7 @@ def "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        custom string label
+        string label
     }
 
     class "Vampire" (
@@ -123,7 +123,7 @@ def "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        custom string label
+        string label
     }
 
     class "City" (
@@ -141,7 +141,7 @@ def "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        custom string label
+        string label
     }
 
     class "Country" (
@@ -159,7 +159,7 @@ def "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        custom string label
+        string label
     }
 }
 

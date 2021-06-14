@@ -41,11 +41,11 @@ def main():
 
         # TODO: how to add constraints? Useful to catch errors before they hit the database
         #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
-        person.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
-        place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
+        person.CreateAttribute('age', Sdf.ValueTypeNames.Int2, custom=False)
+        place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String, custom=False)
 
-        person.CreateRelationship('lover')
-        person.CreateRelationship('places_visited')
+        person.CreateRelationship('lover', custom=False)
+        person.CreateRelationship('places_visited', custom=False)
 
         variant_set = transport.GetVariantSets().AddVariantSet("Transport")
         for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
@@ -116,7 +116,8 @@ def main():
     # 4 Questions / Unresolved
     # Time type, needed? Has "awake" property  driven by hour ( awake < 7am asleep < 19h awake
 
-    # for x in range(1_000):
+    # # for x in range(1_000):
+    # for x in range(10):
     #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
     #     # Total time: 0:00:06.993190
     #     # could be faster.
