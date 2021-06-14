@@ -7,7 +7,7 @@ def "Origin" (
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
 )
 {
-    custom string label = "Buda-Pesth"
-    custom string modern_name = "Budapest!"
+    string label = "Buda-Pesth"
+    string modern_name = "Budapest!"
 }
 

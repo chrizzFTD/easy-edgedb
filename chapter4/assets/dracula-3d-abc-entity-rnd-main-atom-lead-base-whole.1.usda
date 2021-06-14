@@ -70,7 +70,6 @@ def "Person" (
         prepend payload = @dracula-3d-Object-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
     )
     {
-        custom rel places_visited
         prepend rel places_visited = [
             </City/Munich>,
             </City/Budapest>,
@@ -88,7 +87,6 @@ def "Player" (
         prepend payload = @dracula-3d-Object-Player-rnd-main-EmilSinclair-lead-base-whole.1.usda@
     )
     {
-        custom rel places_visited
         prepend rel places_visited = [
             </City/Munich>,
             </City/Budapest>,
@@ -106,7 +104,6 @@ def "Vampire" (
         prepend payload = @dracula-3d-Object-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
     )
     {
-        custom rel places_visited
         prepend rel places_visited = </Country/Romania>
     }
 }
@@ -119,9 +116,7 @@ def "NonPlayer" (
         prepend payload = @dracula-3d-Object-NonPlayer-rnd-main-MinaMurray-lead-base-whole.1.usda@
     )
     {
-        custom rel lover
         prepend rel lover = </Person/JonathanHarker>
-        custom rel places_visited
         prepend rel places_visited = </City/London>
     }
 }
