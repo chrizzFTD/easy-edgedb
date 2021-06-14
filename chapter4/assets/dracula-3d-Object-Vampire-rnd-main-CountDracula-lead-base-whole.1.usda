@@ -7,6 +7,6 @@ def "Origin" (
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Vampire>
 )
 {
-    custom string label = "Count Dracula"
+    string label = "Count Dracula"
 }
 

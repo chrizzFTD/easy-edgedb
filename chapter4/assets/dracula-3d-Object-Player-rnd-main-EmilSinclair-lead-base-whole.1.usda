@@ -10,6 +10,6 @@ def "Origin" (
     }
 )
 {
-    custom string label = "Emil Sinclair"
+    string label = "Emil Sinclair"
 }
 
