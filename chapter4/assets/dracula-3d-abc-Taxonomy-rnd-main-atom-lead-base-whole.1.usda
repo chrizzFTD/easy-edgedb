@@ -3,10 +3,10 @@
     defaultPrim = "Taxonomy"
 )
 
-def "Taxonomy"
+class "Taxonomy"
 {
-    class "Person" (
-        customData = {
+    def "Person" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Person"
@@ -25,8 +25,8 @@ def "Taxonomy"
         rel places_visited
     }
 
-    class "Transport" (
-        customData = {
+    def "Transport" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Transport"
@@ -54,8 +54,8 @@ def "Taxonomy"
         }
     }
 
-    class "Place" (
-        customData = {
+    def "Place" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Place"
@@ -72,8 +72,8 @@ def "Taxonomy"
         string modern_name
     }
 
-    class "Player" (
-        customData = {
+    def "Player" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Player"
@@ -92,8 +92,8 @@ def "Taxonomy"
         string label
     }
 
-    class "NonPlayer" (
-        customData = {
+    def "NonPlayer" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "NonPlayer"
@@ -109,8 +109,8 @@ def "Taxonomy"
         string label
     }
 
-    class "Vampire" (
-        customData = {
+    def "Vampire" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Vampire"
@@ -126,8 +126,8 @@ def "Taxonomy"
         string label
     }
 
-    class "City" (
-        customData = {
+    def "City" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "City"
@@ -144,8 +144,8 @@ def "Taxonomy"
         string label
     }
 
-    class "Country" (
-        customData = {
+    def "Country" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Country"
