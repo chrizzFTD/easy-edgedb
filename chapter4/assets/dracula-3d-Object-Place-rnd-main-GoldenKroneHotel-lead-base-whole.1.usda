@@ -1,10 +1,13 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
 )
 
 def "Origin" (
-    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Place>
+    prepend inherits = </Taxonomy/Place>
 )
 {
     string label = "Golden Krone Hotel"

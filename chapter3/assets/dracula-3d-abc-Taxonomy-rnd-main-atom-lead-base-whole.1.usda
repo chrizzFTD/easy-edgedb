@@ -3,10 +3,10 @@
     defaultPrim = "Taxonomy"
 )
 
-def "Taxonomy"
+class "Taxonomy"
 {
-    class "Person" (
-        customData = {
+    def "Person" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Person"
@@ -20,12 +20,12 @@ def "Taxonomy"
     )
     {
         custom int2 age
-        custom string label
+        string label
         custom rel places_visited
     }
 
-    class "Transport" (
-        customData = {
+    def "Transport" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Transport"
@@ -39,7 +39,7 @@ def "Taxonomy"
         prepend variantSets = "Transport"
     )
     {
-        custom string label
+        string label
         variantSet "Transport" = {
             "Feet" {
 
@@ -53,8 +53,8 @@ def "Taxonomy"
         }
     }
 
-    class "Place" (
-        customData = {
+    def "Place" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Place"
@@ -67,12 +67,12 @@ def "Taxonomy"
         }
     )
     {
-        custom string label
+        string label
         custom string modern_name
     }
 
-    class "Player" (
-        customData = {
+    def "Player" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Player"
@@ -88,11 +88,11 @@ def "Taxonomy"
         ]
     )
     {
-        custom string label
+        string label
     }
 
-    class "NonPlayer" (
-        customData = {
+    def "NonPlayer" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "NonPlayer"
@@ -105,11 +105,11 @@ def "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        custom string label
+        string label
     }
 
-    class "City" (
-        customData = {
+    def "City" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "City"
@@ -123,11 +123,11 @@ def "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        custom string label
+        string label
     }
 
-    class "Vampire" (
-        customData = {
+    def "Vampire" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Vampire"
@@ -140,11 +140,11 @@ def "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        custom string label
+        string label
     }
 
-    class "Country" (
-        customData = {
+    def "Country" (
+        assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Country"
@@ -158,7 +158,7 @@ def "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        custom string label
+        string label
     }
 }
 
