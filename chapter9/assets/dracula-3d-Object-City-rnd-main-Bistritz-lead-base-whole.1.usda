@@ -1,0 +1,31 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-City-rnd-main-Bistritz-lead-base-whole.1.usda@
+        string name = "Bistritz"
+    }
+    prepend inherits = </Taxonomy/City>
+)
+{
+    string label = "Bistritz"
+    string modern_name = "Bistrița"
+
+    over "GoldenKroneHotel" (
+        prepend specializes = </Catalogue/Place/GoldenKroneHotel>
+    )
+    {
+    }
+}
+
