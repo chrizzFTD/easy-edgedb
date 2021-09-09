@@ -106,25 +106,11 @@ def main():
     with cook.unit_context(bistritz):  # this works ok
         bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-    # our unit context does not let us author directly from the current stage,
-    # we need to do this directly on the stage of the asset. TODO: is this good UX?
-    bistritz_stage = cook.fetch_stage(cook.unit_asset(bistritz).identifier)
-    bistritz_root = bistritz_stage.GetDefaultPrim()
-    with cook.unit_context(bistritz_root):
-        # we could set "important_places" as a custom new property
-        # but "important" prims are already provided by the USD model hierarchy.
-        # let's try it and see if we can get away with it.
-        # NOTE: Experimenting to see if specializing from catalogue is a nice approach.
-        bistritz_krone = bistritz_stage.OverridePrim(bistritz_root.GetPath().AppendChild(golden_krone.GetName()))
-        bistritz_krone.GetSpecializes().AddSpecialize(golden_krone.GetPath())
+    cook.spawn_unit(bistritz, golden_krone)
+    cook.spawn_unit(bistritz, golden_krone, "Deeper/Nested/Golden")
 
-    romania_stage = cook.fetch_stage(cook.unit_asset(romania).identifier)
-    romania_root = romania_stage.GetDefaultPrim()
-    with cook.unit_context(romania_root):
-        romania_castle = romania_stage.OverridePrim(romania_root.GetPath().AppendChild(castle_dracula.GetName()))
-        romania_castle.GetSpecializes().AddSpecialize(castle_dracula.GetPath())
-        romania_hungary = romania_stage.OverridePrim(romania_root.GetPath().AppendChild(hungary.GetName()))
-        romania_hungary.GetSpecializes().AddSpecialize(hungary.GetPath())
+    cook.spawn_unit(romania, hungary)
+    cook.spawn_unit(romania, castle_dracula)
 
     with cook.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
@@ -332,7 +318,6 @@ def main():
     for taxon in (city, other_place, person):
         cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
 
-    # stage.Save()
 
     # We know that Jonathan can't break out of the castle, but let's try to show it using a query. To do that, he needs to have a strength greater than that of a door. Or in other words, he needs a greater strength than the weakest door.
     # Fortunately, there is a function called min() that gives the minimum value of a set, so we can use that. If his strength is higher than the door with the smallest number, then he can escape. This query looks like it should work, but not quite:
