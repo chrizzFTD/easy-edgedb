@@ -12,25 +12,14 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Country-rnd-main-Romania-lead-base-whole.1.usda@
         string name = "Romania"
     }
     prepend inherits = </Taxonomy/Country>
+    kind = "component"
 )
 {
-    def "Hungary" (
-        instanceable = true
-        prepend specializes = </Catalogue/Country/Hungary>
-    )
-    {
-    }
-
-    def "CastleDracula" (
-        instanceable = true
-        prepend specializes = </Catalogue/OtherPlace/CastleDracula>
-    )
-    {
-    }
 }
 

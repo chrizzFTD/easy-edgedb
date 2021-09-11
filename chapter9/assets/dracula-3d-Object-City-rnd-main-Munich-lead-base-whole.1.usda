@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-City-rnd-main-Munich-lead-base-whole.1.usda@
         string name = "Munich"
     }
     prepend inherits = </Taxonomy/City>
+    kind = "component"
 )
 {
 }

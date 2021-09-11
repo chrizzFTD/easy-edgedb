@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-City-rnd-main-Bistritz-lead-base-whole.1.usda@
         string name = "Bistritz"
     }
     prepend inherits = </Taxonomy/City>
+    kind = "assembly"
 )
 {
     string label = "Bistritz"
@@ -27,17 +29,43 @@ def "Origin" (
         prepend specializes = </Catalogue/Place/GoldenKroneHotel>
     )
     {
+        double3 xformOp:translate = (2, 15, 6)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
     }
 
-    def "Deeper"
+    def "Deeper" (
+        kind = "group"
+    )
     {
-        def "Nested"
+        def "Nested" (
+            kind = "group"
+        )
         {
-            def "Golden" (
+            def "Golden1" (
                 instanceable = true
                 prepend specializes = </Catalogue/Place/GoldenKroneHotel>
             )
             {
+                double3 xformOp:translate = (-4, 5, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Golden2" (
+                instanceable = true
+                prepend specializes = </Catalogue/Place/GoldenKroneHotel>
+            )
+            {
+                double3 xformOp:translate = (-4, -10, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Golden3" (
+                instanceable = true
+                prepend specializes = </Catalogue/Place/GoldenKroneHotel>
+            )
+            {
+                double3 xformOp:translate = (0, 10, -2)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
             }
         }
     }

@@ -5,7 +5,7 @@
 
 class "Taxonomy"
 {
-    def "Person" (
+    def Xform "Person" (
         assetInfo = {
             dictionary grill = {
                 dictionary fields = {
@@ -59,7 +59,7 @@ class "Taxonomy"
         }
     }
 
-    def "Place" (
+    def Xform "Place" (
         assetInfo = {
             dictionary grill = {
                 dictionary fields = {
@@ -77,7 +77,7 @@ class "Taxonomy"
         string modern_name
     }
 
-    def "Ship" (
+    def Xform "Ship" (
         assetInfo = {
             dictionary grill = {
                 dictionary fields = {
@@ -228,7 +228,6 @@ class "Taxonomy"
                 }
             }
         }
-        kind = "assembly"
         prepend references = </Taxonomy/Place>
     )
     {
@@ -247,7 +246,6 @@ class "Taxonomy"
                 }
             }
         }
-        kind = "assembly"
         prepend references = </Taxonomy/Place>
     )
     {

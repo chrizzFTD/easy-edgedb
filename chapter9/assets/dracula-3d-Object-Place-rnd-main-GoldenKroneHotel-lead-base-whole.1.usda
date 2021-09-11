@@ -12,13 +12,66 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
         string name = "GoldenKroneHotel"
     }
     prepend inherits = </Taxonomy/Place>
+    kind = "component"
+    prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-Geom.1.usdc@
+    prepend variantSets = "color"
 )
 {
     string label = "Golden Krone Hotel"
+
+    over "Volume" (
+        prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@
+    )
+    {
+    }
+
+    over "Ground" (
+        prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@
+    )
+    {
+    }
+    variantSet "color" = {
+        "constant" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</constant>
+        ) {
+
+        }
+        "face_random" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</face_random>
+        ) {
+
+        }
+        "face_spectrum" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</face_spectrum>
+        ) {
+
+        }
+        "uniform" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</uniform>
+        ) {
+
+        }
+        "varying" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</varying>
+        ) {
+
+        }
+        "vertex_random" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</vertex_random>
+        ) {
+
+        }
+        "vertex_spectrum" (
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usdc@</vertex_spectrum>
+        ) {
+
+        }
+    }
 }
 
