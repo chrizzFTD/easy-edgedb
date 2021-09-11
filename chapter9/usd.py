@@ -1,8 +1,10 @@
 import logging
 import datetime
+import colorsys
 from pathlib import Path
 
-from pxr import Usd, Sdf, Kind
+import numpy as np
+from pxr import Sdf, UsdGeom
 
 from grill import cook
 from grill.tokens import ids
@@ -38,12 +40,6 @@ def main():
 
         # 1.3 Add required taxa properties
         city.CreateAttribute('population', Sdf.ValueTypeNames.Int, custom=False)
-        # TODO: what should person and place be? Assemblies vs components.
-        #       For now, only cities are considered assemblies.
-        # all places that end up in the database are "important places"
-        for each in (city, country):
-            # all places that end up in the database are "important places"
-            Usd.ModelAPI(each).SetKind(Kind.Tokens.assembly)
 
         # TODO: how to add constraints? Useful to catch errors before they hit the database
         #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
@@ -107,7 +103,24 @@ def main():
         bistritz.GetAttribute("modern_name").Set('Bistrița')
 
     cook.spawn_unit(bistritz, golden_krone)
-    cook.spawn_unit(bistritz, golden_krone, "Deeper/Nested/Golden")
+    cook.spawn_unit(bistritz, golden_krone, "Deeper/Nested/Golden1")
+    cook.spawn_unit(bistritz, golden_krone, "Deeper/Nested/Golden2")
+
+    with cook.unit_context(golden_krone):
+        # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
+        volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath("GEOM/volume"))
+        size = 2
+        # TODO: This must be a payload
+        color_size = 380
+        color_var = volume.GetDisplayColorPrimvar()
+        color_var.SetInterpolation(UsdGeom.Tokens.faceVarying)
+        color_var.SetElementSize(color_size)
+        # volume.GetDisplayColorAttr().Set(np.random.dirichlet(np.ones(3), size=color_size))
+        volume.GetDisplayColorAttr().Set([colorsys.hsv_to_rgb( (1/360) * (360/color_size) * x, 1, .8) for x in range(color_size)])
+        volume.GetRadiusAttr().Set(size)
+        extent = volume.GetExtentAttr()
+        extent.Set(extent.Get() * size)
+        volume.GetPrim().SetDocumentation("This is the main volume for the Golden Krone")
 
     cook.spawn_unit(romania, hungary)
     cook.spawn_unit(romania, castle_dracula)
