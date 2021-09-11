@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
         string name = "JonathanHarker"
     }
     prepend inherits = </Taxonomy/Person>
+    kind = "component"
 )
 {
     string label = "Jonathan Harker"

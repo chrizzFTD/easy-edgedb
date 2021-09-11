@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-OtherPlace-rnd-main-NewOtherPlace0-lead-base-whole.1.usda@
         string name = "NewOtherPlace0"
     }
     prepend inherits = </Taxonomy/OtherPlace>
+    kind = "component"
 )
 {
     string label = "New OtherPlace Hello 0"

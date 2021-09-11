@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-OtherPlace-rnd-main-CastleDracula-lead-base-whole.1.usda@
         string name = "CastleDracula"
     }
     prepend inherits = </Taxonomy/OtherPlace>
+    kind = "component"
 )
 {
     int[] doors_strength = [6, 19, 10]

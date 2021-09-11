@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Sailor-rnd-main-TheFirstMate-lead-base-whole.1.usda@
         string name = "TheFirstMate"
     }
     prepend inherits = </Taxonomy/Sailor>
+    kind = "component"
     variants = {
         string Rank = "FirstMate"
     }

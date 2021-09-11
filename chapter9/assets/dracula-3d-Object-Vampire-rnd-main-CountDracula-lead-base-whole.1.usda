@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
         string name = "CountDracula"
     }
     prepend inherits = </Taxonomy/Vampire>
+    kind = "component"
 )
 {
     string label = "Count Dracula"

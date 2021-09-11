@@ -12,11 +12,13 @@ class "Catalogue"
 }
 
 def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Ship-rnd-main-TheDemeter-lead-base-whole.1.usda@
         string name = "TheDemeter"
     }
     prepend inherits = </Taxonomy/Ship>
+    kind = "component"
 )
 {
 }
