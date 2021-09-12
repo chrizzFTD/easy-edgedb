@@ -26,6 +26,8 @@ def main():
             cook.define_taxon(stage, name, id_fields=_object_fields)
             for name in ("Person", "LandTransport", "Place", "Ship",)
         ]
+        for each in (person, place, ship):  # base xformable taxa
+            UsdGeom.Xform.Define(stage, each.GetPath())
 
         player = cook.define_taxon(stage, "Player", references=(person, transport))
         non_player, vampire, minor_vampire, crewman, sailor = [
@@ -98,28 +100,60 @@ def main():
 
     mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
     jonathan.GetRelationship("lover").AddTarget(mina.GetPath())
-
-    with cook.unit_context(bistritz):  # this works ok
+    with cook.unit_context(bistritz):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
+        for path, value in (
+                ("", (2, 4, 6)),
+                ("Deeper/Nested/Golden1", (-4, 2, 1)),
+                ("Deeper/Nested/Golden2", (-4, -2, 1)),
+                ("Deeper/Nested/Golden3", (0, 4, -2)),
+        ):
+            spawned = UsdGeom.Xform(cook.spawn_unit(bistritz, golden_krone, path))
+            spawned.AddTranslateOp().Set(value=value)
 
-    cook.spawn_unit(bistritz, golden_krone)
-    cook.spawn_unit(bistritz, golden_krone, "Deeper/Nested/Golden1")
-    cook.spawn_unit(bistritz, golden_krone, "Deeper/Nested/Golden2")
+    stage.SetStartTimeCode(0)
+    stage.SetEndTimeCode(192)
 
     with cook.unit_context(golden_krone):
         # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
-        volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath("GEOM/volume"))
+        volume_path = "GEOM/volume"
+        volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath(volume_path))
         size = 2
         # TODO: This must be a payload
-        color_size = 380
-        color_var = volume.GetDisplayColorPrimvar()
-        color_var.SetInterpolation(UsdGeom.Tokens.faceVarying)
-        color_var.SetElementSize(color_size)
-        # volume.GetDisplayColorAttr().Set(np.random.dirichlet(np.ones(3), size=color_size))
-        volume.GetDisplayColorAttr().Set([colorsys.hsv_to_rgb( (1/360) * (360/color_size) * x, 1, .8) for x in range(color_size)])
+        color_options = dict(
+            random=(UsdGeom.Tokens.vertex, primvar_size := 92, np.random.dirichlet(np.ones(3), size=primvar_size)),
+            spectrum_smooth=(UsdGeom.Tokens.vertex, primvar_size := 92, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            spectrum_hard=(UsdGeom.Tokens.faceVarying, primvar_size := 380, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+        )
+        from pxr import Usd
+        golden_stage = cook.fetch_stage(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
+        # with color_set.GetVariantEditContext():
+        # pxr.Tf.ErrorException:
+        # 	Error in 'pxrInternal_v0_21__pxrReserved__::UsdVariantSet::GetVariantEditTarget' at line 181 in file B:\write\code\git\USD\pxr\usd\usd\variantSets.cpp : 'Layer dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda is not a local layer of stage rooted at layer dracula-3d-abc-entity-rnd-main-atom-lead-base-whole.1.usda'
+        sets = golden_stage.GetDefaultPrim().GetVariantSets()
+        golden_volume = UsdGeom.Sphere(golden_stage.GetDefaultPrim().GetPrimAtPath(volume_path))
+        color_set = sets.AddVariantSet("color")
+        for option_name, (interpolation, color_size, colors) in color_options.items():
+            color_set.AddVariant(option_name)
+            color_set.SetVariantSelection(option_name)
+            with color_set.GetVariantEditContext():
+                color_var = golden_volume.GetDisplayColorPrimvar()
+                color_var.SetInterpolation(interpolation)
+                color_var.SetElementSize(color_size)
+                color_var.Set(colors)
+            color_set.ClearVariantSelection()
+
         volume.GetRadiusAttr().Set(size)
+
         extent = volume.GetExtentAttr()
         extent.Set(extent.Get() * size)
+
+        spin = volume.AddRotateZOp(opSuffix='spin')
+        spin.Set(time=0, value=0)
+        spin.Set(time=192, value=1440)
+        tilt = volume.AddRotateXOp(opSuffix='tilt')
+        tilt.Set(value=12)
+
         volume.GetPrim().SetDocumentation("This is the main volume for the Golden Krone")
 
     cook.spawn_unit(romania, hungary)
@@ -141,7 +175,6 @@ def main():
     demeter_sailors = demeter.GetRelationship("sailors")
     for each in cook.itaxa(stage.Traverse(), sailor):
         demeter_sailors.AddTarget(each.GetPath())
-    # city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
 
     """
     If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
