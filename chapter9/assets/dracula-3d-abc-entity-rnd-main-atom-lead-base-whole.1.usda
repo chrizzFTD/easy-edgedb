@@ -1,0 +1,109 @@
+#usda 1.0
+(
+    endTimeCode = 192
+    startTimeCode = 0
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+over "Catalogue"
+{
+    over "Vampire"
+    {
+        over "CountDracula"
+        {
+            prepend rel places_visited = </Catalogue/Country/Romania>
+            prepend rel slaves = [
+                </Catalogue/MinorVampire/Woman0>,
+                </Catalogue/MinorVampire/Woman1>,
+                </Catalogue/MinorVampire/Woman2>,
+                </Catalogue/MinorVampire/Woman3>,
+            ]
+        }
+    }
+
+    over "NonPlayer"
+    {
+        over "ArthurHolmwood"
+        {
+            prepend rel lover = </Catalogue/NonPlayer/LucyWestenra>
+        }
+
+        over "LucyWestenra"
+        {
+            prepend rel lover = </Catalogue/NonPlayer/ArthurHolmwood>
+        }
+
+        over "Renfield"
+        {
+            int strength = 10
+        }
+
+        over "MinaMurray"
+        {
+            prepend rel lover = </Catalogue/Person/JonathanHarker>
+            prepend rel places_visited = [
+                </Catalogue/OtherPlace/CastleDracula>,
+                </Catalogue/Country/Romania>,
+            ]
+        }
+    }
+
+    over "Person"
+    {
+        over "JonathanHarker"
+        {
+            prepend rel lover = </Catalogue/NonPlayer/MinaMurray>
+            prepend rel places_visited = [
+                </Catalogue/City/Munich>,
+                </Catalogue/City/Budapest>,
+                </Catalogue/City/Bistritz>,
+                </Catalogue/City/London>,
+                </Catalogue/Country/Romania>,
+                </Catalogue/OtherPlace/CastleDracula>,
+            ]
+        }
+    }
+
+    over "Ship"
+    {
+        over "TheDemeter"
+        {
+            prepend rel sailors = [
+                </Catalogue/Sailor/TheCaptain>,
+                </Catalogue/Sailor/Petrofsky>,
+                </Catalogue/Sailor/TheFirstMate>,
+                </Catalogue/Sailor/TheCook>,
+            ]
+        }
+    }
+
+    over "Player"
+    {
+        over "EmilSinclair"
+        {
+            prepend rel places_visited = [
+                </Catalogue/City/Budapest>,
+                </Catalogue/City/Bistritz>,
+                </Catalogue/City/Munich>,
+                </Catalogue/City/London>,
+            ]
+        }
+    }
+}
+
+over "Taxonomy"
+{
+    over "Sailor"
+    {
+        prepend rel places_visited = </Catalogue/City/London>
+    }
+
+    over "NonPlayer"
+    {
+        prepend rel places_visited = </Catalogue/City/London>
+    }
+}
+

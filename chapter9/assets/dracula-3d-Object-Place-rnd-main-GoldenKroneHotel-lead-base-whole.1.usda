@@ -1,0 +1,79 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+        string name = "GoldenKroneHotel"
+    }
+    prepend inherits = </Taxonomy/Place>
+    kind = "component"
+    prepend variantSets = "color"
+)
+{
+    string label = "Golden Krone Hotel"
+
+    def "GEOM"
+    {
+        def Sphere "volume" (
+            doc = "This is the main volume for the Golden Krone"
+            prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usda@
+        )
+        {
+            float3[] extent = [(-2, -2, -2), (2, 2, 2)]
+            double radius = 2
+            float xformOp:rotateX:tilt = 12
+            float xformOp:rotateZ:spin.timeSamples = {
+                0: 0,
+                192: 1440,
+            }
+            uniform token[] xformOpOrder = ["xformOp:rotateZ:spin", "xformOp:rotateX:tilt"]
+        }
+    }
+    variantSet "color" = {
+        "random" {
+            over "GEOM"
+            {
+                over "volume" (
+                    prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usda@</random>
+                )
+                {
+                }
+            }
+
+        }
+        "spectrum_hard" {
+            over "GEOM"
+            {
+                over "volume" (
+                    prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usda@</spectrum_hard>
+                )
+                {
+                }
+            }
+
+        }
+        "spectrum_smooth" {
+            over "GEOM"
+            {
+                over "volume" (
+                    prepend payload = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-color.1.usda@</spectrum_smooth>
+                )
+                {
+                }
+            }
+
+        }
+    }
+}
+
