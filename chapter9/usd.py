@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import datetime
 import colorsys
@@ -114,6 +115,39 @@ def main():
     stage.SetStartTimeCode(0)
     stage.SetEndTimeCode(192)
 
+    def _unit_variant_context(variant_set):
+        from pxr import Usd, Tf
+        with contextlib.suppress(Tf.ErrorException):
+            return color_set.GetVariantEditContext()
+        # ----- From Pixar Start -----
+        # pxr.Tf.ErrorException:
+        # 	Error in '...::UsdVariantSet::GetVariantEditTarget' ...: 'Layer <identifier> is not a local layer of stage rooted at layer <identifier>'
+        # https://graphics.pixar.com/usd/docs/api/class_usd_variant_set.html#a83f3adf614736a0b43fa1dd5271a9528
+        # Currently, we require layer to be in the stage's local LayerStack (see UsdStage::HasLocalLayer()), and will issue an error and return an invalid EditTarget if layer is not.
+        # We may relax this restriction in the future, if need arises, but it introduces several complications in specification and behavior.
+        # ----- From Pixar End -----
+
+        # In the meantime, build own edit target (relying on our known structure)
+        prim = variant_set.GetPrim()
+        name = variant_set.GetName()
+        selection = variant_set.GetVariantSelection()
+        query_filter = Usd.PrimCompositionQuery.Filter()
+        query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Variant
+        query_filter.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
+        query = Usd.PrimCompositionQuery(color_set.GetPrim())
+        query.filter = query_filter
+        for arc in query.GetCompositionArcs():
+            target_node = arc.GetTargetNode()
+            target_root_layer = target_node.layerStack.identifier.rootLayer
+            if (
+                    target_node.path.GetVariantSelection() == (name, selection) and
+                    Usd.ModelAPI(prim).GetAssetIdentifier().resolvedPath == target_root_layer.realPath
+            ):
+                target = Usd.EditTarget(target_root_layer, target_node)
+                return Usd.EditContext(prim.GetStage(), target)
+        from pprint import pformat
+        raise RuntimeError(f"Something went wrong {pformat(locals())}")
+
     with cook.unit_context(golden_krone):
         # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
         volume_path = "GEOM/volume"
@@ -126,22 +160,26 @@ def main():
             spectrum_hard=(UsdGeom.Tokens.faceVarying, primvar_size := 380, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
         )
         from pxr import Usd
-        golden_stage = cook.fetch_stage(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
-        # with color_set.GetVariantEditContext():
-        # pxr.Tf.ErrorException:
-        # 	Error in 'pxrInternal_v0_21__pxrReserved__::UsdVariantSet::GetVariantEditTarget' at line 181 in file B:\write\code\git\USD\pxr\usd\usd\variantSets.cpp : 'Layer dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda is not a local layer of stage rooted at layer dracula-3d-abc-entity-rnd-main-atom-lead-base-whole.1.usda'
-        sets = golden_stage.GetDefaultPrim().GetVariantSets()
-        golden_volume = UsdGeom.Sphere(golden_stage.GetDefaultPrim().GetPrimAtPath(volume_path))
+        golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
+        golden_asset_name.part = "color"
+        golden_color = cook.fetch_stage(str(golden_asset_name))
+        default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
+        golden_color.SetDefaultPrim(default_color)
+        UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
+        volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
+        sets = golden_krone.GetVariantSets()
         color_set = sets.AddVariantSet("color")
         for option_name, (interpolation, color_size, colors) in color_options.items():
+            color_prim = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath(option_name))
+            color_var = UsdGeom.Gprim(color_prim).CreateDisplayColorPrimvar()
+            color_var.SetInterpolation(interpolation)
+            color_var.SetElementSize(color_size)
+            color_var.Set(colors)
             color_set.AddVariant(option_name)
             color_set.SetVariantSelection(option_name)
-            with color_set.GetVariantEditContext():
-                color_var = golden_volume.GetDisplayColorPrimvar()
-                color_var.SetInterpolation(interpolation)
-                color_var.SetElementSize(color_size)
-                color_var.Set(colors)
-            color_set.ClearVariantSelection()
+            with _unit_variant_context(color_set):
+                volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier, color_prim.GetPath())
+            color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
 
         volume.GetRadiusAttr().Set(size)
 
