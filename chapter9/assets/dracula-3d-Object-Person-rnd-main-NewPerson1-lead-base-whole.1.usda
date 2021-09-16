@@ -1,0 +1,25 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-Person-rnd-main-NewPerson1-lead-base-whole.1.usda@
+        string name = "NewPerson1"
+    }
+    prepend inherits = </Taxonomy/Person>
+    kind = "component"
+)
+{
+    string label = "New Person Hello 1"
+}
+
