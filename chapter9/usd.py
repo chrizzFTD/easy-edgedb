@@ -104,7 +104,7 @@ def main():
     with cook.unit_context(bistritz):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
         for path, value in (
-                ("", (2, 4, 6)),
+                ("", (2, 5, 6)),
                 ("Deeper/Nested/Golden1", (-4, 2, 1)),
                 ("Deeper/Nested/Golden2", (-4, -2, 1)),
                 ("Deeper/Nested/Golden3", (0, 4, -2)),
@@ -150,14 +150,58 @@ def main():
 
     with cook.unit_context(golden_krone):
         # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
-        volume_path = "GEOM/volume"
+        volume_path = "GEOM/Volume"
+        ground_path = "GEOM/Ground"
+        plane = UsdGeom.Mesh.Define(stage, golden_krone.GetPath().AppendPath(ground_path))
+        import numpy as np
+        # https://github.com/marcomusy/vedo/issues/86
+        width = 50
+        depth = 40
+        x_ = np.linspace(-(width/2), width/2, width)
+        z_ = np.linspace(depth/2, - depth/2, depth)
+        X, Z = np.meshgrid(x_, z_)
+        x = X.ravel()
+        z = Z.ravel()
+        y = np.zeros_like(x)
+        points = np.stack((x, y, z), axis=1)
+        xmax= x_.size
+        zmax= z_.size
+        faceVertexIndices = np.array([
+            (i+j*xmax, i+j*xmax+1, i+1+(j+1)*xmax, i+(j+1)*xmax)
+            for j in range(zmax-1) for i in range(xmax-1)
+        ])
+
+        #usdviewApi.property.Set(faceVertexIndices)
+        faceVertexCounts = np.full(len(faceVertexIndices), 4)
+        plane.GetPointsAttr().Set(points)
+        plane.GetFaceVertexCountsAttr().Set(faceVertexCounts)
+        plane.GetFaceVertexIndicesAttr().Set(faceVertexIndices)
+        # color_prim = golden_color.OverridePrim(
+        #     Sdf.Path.absoluteRootPath.AppendPath(option_name))
+        interpolation, color_size, colors = (UsdGeom.Tokens.uniform, primvar_size := len(faceVertexIndices), [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)])
+        color_var = UsdGeom.Gprim(plane).CreateDisplayColorPrimvar()
+        color_var.SetInterpolation(interpolation)
+        color_var.SetElementSize(color_size)
+        color_var.Set(colors)
+
+
         volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath(volume_path))
-        size = 2
+        # volume.MakeInvisible()
+        volume_size = 2
         # TODO: This must be a payload
         color_options = dict(
-            random=(UsdGeom.Tokens.vertex, primvar_size := 92, np.random.dirichlet(np.ones(3), size=primvar_size)),
-            spectrum_smooth=(UsdGeom.Tokens.vertex, primvar_size := 92, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
-            spectrum_hard=(UsdGeom.Tokens.faceVarying, primvar_size := 380, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            # constant: One element for the entire mesh; no interpolation.
+            constant=(UsdGeom.Tokens.constant, primvar_size := 1, np.random.dirichlet(np.ones(3), size=primvar_size)),
+            # uniform: One element for each face of the mesh; elements are typically not interpolated but are inherited by other faces derived from a given face (via subdivision, tessellation, etc.).
+            uniform=(UsdGeom.Tokens.uniform, primvar_size := 100, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            # varying: One element for each point of the mesh; interpolation of point data is always linear.
+            varying=(UsdGeom.Tokens.uniform, primvar_size := 100, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            # vertex: One element for each point of the mesh; interpolation of point data is applied according to the subdivisionScheme attribute.
+            vertex_random=(UsdGeom.Tokens.vertex, primvar_size := 92, np.random.dirichlet(np.ones(3), size=primvar_size)),
+            vertex_spectrum=(UsdGeom.Tokens.vertex, primvar_size := 92, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            # faceVarying: One element for each of the face-vertices that define the mesh topology; interpolation of face-vertex data may be smooth or linear, according to the subdivisionScheme and faceVaryingLinearInterpolation attributes.
+            face_random=(UsdGeom.Tokens.faceVarying, primvar_size := 380, np.random.dirichlet(np.ones(3), size=primvar_size)),
+            face_spectrum=(UsdGeom.Tokens.faceVarying, primvar_size := 380, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
         )
         from pxr import Usd
         golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
@@ -181,10 +225,10 @@ def main():
                 volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier, color_prim.GetPath())
             color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
 
-        volume.GetRadiusAttr().Set(size)
+        volume.GetRadiusAttr().Set(volume_size)
 
         extent = volume.GetExtentAttr()
-        extent.Set(extent.Get() * size)
+        extent.Set(extent.Get() * volume_size)
 
         spin = volume.AddRotateZOp(opSuffix='spin')
         spin.Set(time=0, value=0)
