@@ -1,0 +1,25 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-NonPlayer-rnd-main-ArthurHolmwood-lead-base-whole.1.usda@
+        string name = "ArthurHolmwood"
+    }
+    prepend inherits = </Taxonomy/NonPlayer>
+    kind = "component"
+)
+{
+}
+
