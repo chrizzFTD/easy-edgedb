@@ -5,7 +5,7 @@ import colorsys
 from pathlib import Path
 
 import numpy as np
-from pxr import Sdf, UsdGeom
+from pxr import Sdf, UsdGeom, Usd
 
 from grill import cook
 from grill.tokens import ids
@@ -104,10 +104,10 @@ def main():
     with cook.unit_context(bistritz):
         bistritz.GetAttribute("modern_name").Set('Bistrița')
         for path, value in (
-                ("", (2, 5, 6)),
-                ("Deeper/Nested/Golden1", (-4, 2, 1)),
-                ("Deeper/Nested/Golden2", (-4, -2, 1)),
-                ("Deeper/Nested/Golden3", (0, 4, -2)),
+                ("", (2, 15, 6)),
+                ("Deeper/Nested/Golden1", (-4, 5, 1)),
+                ("Deeper/Nested/Golden2", (-4, -10, 1)),
+                ("Deeper/Nested/Golden3", (0, 10, -2)),
         ):
             spawned = UsdGeom.Xform(cook.spawn_unit(bistritz, golden_krone, path))
             spawned.AddTranslateOp().Set(value=value)
@@ -148,98 +148,149 @@ def main():
         from pprint import pformat
         raise RuntimeError(f"Something went wrong {pformat(locals())}")
 
+    def payload_context(obj: Usd.Prim, layer):
+        # We need to explicitly construct our edit target since our layer is not on the layer stack of the stage.
+        # TODO: this is specific about "localised edits" for an asset. Dispatch no longer looking solid?
+        # Warning: this targets the origin prim spec as the "entry point" edit target for a unit of a taxon.
+        # This means some operations like specializes, inherits or internal reference / payloads
+        # might not be able to be resolved (you will se an error like:
+        # 'Cannot map </Catalogue/OtherPlace/CastleDracula> to current edit target.'
+        _ASSET_UNIT_QUERY_FILTER = Usd.PrimCompositionQuery.Filter()
+        _ASSET_UNIT_QUERY_FILTER.dependencyTypeFilter = Usd.PrimCompositionQuery.DependencyTypeFilter.Direct
+        _ASSET_UNIT_QUERY_FILTER.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
+
+        query_filter = Usd.PrimCompositionQuery.Filter()
+        query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Payload
+        query_filter.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
+
+        query = Usd.PrimCompositionQuery(obj)
+        query.filter = query_filter
+        logger.debug(f"Searching for {layer}")
+        for arc in query.GetCompositionArcs():
+            target_node = arc.GetTargetNode()
+            target_root_layer = target_node.layerStack.identifier.rootLayer
+            # contract: we consider the "unit" target node the one matching origin path and the given layer
+            if target_root_layer == layer:
+                target = Usd.EditTarget(layer, target_node)
+                return Usd.EditContext(obj.GetStage(), target)
+        raise ValueError(f"Could not find appropriate node for edit target for {obj} matching {layer}")
+
+    def _random_colors(amount):
+        return np.random.dirichlet(np.ones(3), size=amount)
+
+    def _color_spectrum(amount):
+        return [colorsys.hsv_to_rgb(i / amount, 1, .75) for i in range(amount)]
+
     with cook.unit_context(golden_krone):
-        # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
-        volume_path = "GEOM/Volume"
-        ground_path = "GEOM/Ground"
-        plane = UsdGeom.Mesh.Define(stage, golden_krone.GetPath().AppendPath(ground_path))
-        import numpy as np
-        # https://github.com/marcomusy/vedo/issues/86
-        width = 50
-        depth = 40
-        x_ = np.linspace(-(width/2), width/2, width)
-        z_ = np.linspace(depth/2, - depth/2, depth)
-        X, Z = np.meshgrid(x_, z_)
-        x = X.ravel()
-        z = Z.ravel()
-        y = np.zeros_like(x)
-        points = np.stack((x, y, z), axis=1)
-        xmax= x_.size
-        zmax= z_.size
-        faceVertexIndices = np.array([
-            (i+j*xmax, i+j*xmax+1, i+1+(j+1)*xmax, i+(j+1)*xmax)
-            for j in range(zmax-1) for i in range(xmax-1)
-        ])
+        # idea: chain contexts to a specific prim, composition arc and a layer?
+        # unit context X -> add geom payload -> add prims A, B
+        #               `-> add variant sets -> add color to created prims A, B (same python objects)
+        golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
+        golden_asset_name.part = "Geom"
+        golden_asset_name.suffix = "usdc"
+        golden_geom = cook.fetch_stage(str(golden_asset_name))
+        golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
+        golden_krone.GetPayloads().AddPayload(golden_geom.GetRootLayer().identifier)
 
-        #usdviewApi.property.Set(faceVertexIndices)
-        faceVertexCounts = np.full(len(faceVertexIndices), 4)
-        plane.GetPointsAttr().Set(points)
-        plane.GetFaceVertexCountsAttr().Set(faceVertexCounts)
-        plane.GetFaceVertexIndicesAttr().Set(faceVertexIndices)
-        # color_prim = golden_color.OverridePrim(
-        #     Sdf.Path.absoluteRootPath.AppendPath(option_name))
-        interpolation, color_size, colors = (UsdGeom.Tokens.uniform, primvar_size := len(faceVertexIndices), [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)])
-        color_var = UsdGeom.Gprim(plane).CreateDisplayColorPrimvar()
-        color_var.SetInterpolation(interpolation)
-        color_var.SetElementSize(color_size)
-        color_var.Set(colors)
+        volume_path = "Volume"
+        ground_path = "Ground"
+        with payload_context(golden_krone, golden_geom.GetRootLayer()):
+            ground = UsdGeom.Mesh.Define(stage, golden_krone.GetPath().AppendPath(ground_path))
+            volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath(volume_path))
+            ground.GetPrim().SetDocumentation("This is the main ground where the Golden Krone exists")
+            volume.GetPrim().SetDocumentation("This is the main volume for the Golden Krone")
+            # https://github.com/marcomusy/vedo/issues/86
+            # https://blender.stackexchange.com/questions/230534/fastest-way-to-skin-a-grid
+            width = 10
+            depth = 8
+            x_ = np.linspace(-(width / 2), width / 2, width)
+            z_ = np.linspace(depth / 2, - depth / 2, depth)
+            X, Z = np.meshgrid(x_, z_)
+            x = X.ravel()
+            z = Z.ravel()
+            y = np.zeros_like(x)
+            points = np.stack((x, y, z), axis=1)
+            xmax = x_.size
+            zmax = z_.size
+            faceVertexIndices = np.array([
+                (i + j * xmax, i + j * xmax + 1, i + 1 + (j + 1) * xmax, i + (j + 1) * xmax)
+                for j in range(zmax - 1) for i in range(xmax - 1)
+            ])
 
+            faceVertexCounts = np.full(len(faceVertexIndices), 4)
+            ground.GetPointsAttr().Set(points)
+            ground.GetFaceVertexCountsAttr().Set(faceVertexCounts)
+            ground.GetFaceVertexIndicesAttr().Set(faceVertexIndices)
 
-        volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath(volume_path))
-        # volume.MakeInvisible()
-        volume_size = 2
+            volume_size = 2
+            # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
+            volume.GetRadiusAttr().Set(volume_size)
+            # TODO: these should be value clips?
+            volume.AddTranslateOp().Set(value=(0, volume_size, 0))
+
+            spin = volume.AddRotateZOp(opSuffix='spin')
+            spin.Set(time=0, value=0)
+            spin.Set(time=192, value=1440)
+            tilt = volume.AddRotateXOp(opSuffix='tilt')
+            tilt.Set(value=12)
+
+        sizes = {
+            UsdGeom.Tokens.constant: lambda x: 1,
+            UsdGeom.Tokens.uniform: lambda x: 100 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetFaceVertexCountsAttr().Get()),
+            UsdGeom.Tokens.varying: lambda x: 92 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetPointsAttr().Get()),
+            UsdGeom.Tokens.vertex: lambda x: 92 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetPointsAttr().Get()),
+            UsdGeom.Tokens.faceVarying: lambda x: 380 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetFaceVertexIndicesAttr().Get()),
+        }
         # TODO: This must be a payload
         color_options = dict(
             # constant: One element for the entire mesh; no interpolation.
-            constant=(UsdGeom.Tokens.constant, primvar_size := 1, np.random.dirichlet(np.ones(3), size=primvar_size)),
+            constant=(interp := UsdGeom.Tokens.constant, sizes[interp], _random_colors),
             # uniform: One element for each face of the mesh; elements are typically not interpolated but are inherited by other faces derived from a given face (via subdivision, tessellation, etc.).
-            uniform=(UsdGeom.Tokens.uniform, primvar_size := 100, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            uniform=(interp := UsdGeom.Tokens.uniform, sizes[interp], _color_spectrum),
             # varying: One element for each point of the mesh; interpolation of point data is always linear.
-            varying=(UsdGeom.Tokens.uniform, primvar_size := 100, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            varying=(interp := UsdGeom.Tokens.varying, sizes[interp], _color_spectrum),
             # vertex: One element for each point of the mesh; interpolation of point data is applied according to the subdivisionScheme attribute.
-            vertex_random=(UsdGeom.Tokens.vertex, primvar_size := 92, np.random.dirichlet(np.ones(3), size=primvar_size)),
-            vertex_spectrum=(UsdGeom.Tokens.vertex, primvar_size := 92, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            vertex_random=(interp := UsdGeom.Tokens.vertex, sizes[interp], _random_colors),
+            vertex_spectrum=(interp := UsdGeom.Tokens.vertex, sizes[interp], _color_spectrum),
             # faceVarying: One element for each of the face-vertices that define the mesh topology; interpolation of face-vertex data may be smooth or linear, according to the subdivisionScheme and faceVaryingLinearInterpolation attributes.
-            face_random=(UsdGeom.Tokens.faceVarying, primvar_size := 380, np.random.dirichlet(np.ones(3), size=primvar_size)),
-            face_spectrum=(UsdGeom.Tokens.faceVarying, primvar_size := 380, [colorsys.hsv_to_rgb(x/primvar_size, 1, .75) for x in range(primvar_size)]),
+            face_random=(interp := UsdGeom.Tokens.faceVarying, sizes[interp], _random_colors),
+            face_spectrum=(interp := UsdGeom.Tokens.faceVarying, sizes[interp], _color_spectrum),
         )
-        from pxr import Usd
+
         golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
         golden_asset_name.part = "color"
+        golden_asset_name.suffix = "usdc"
         golden_color = cook.fetch_stage(str(golden_asset_name))
         default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
         golden_color.SetDefaultPrim(default_color)
         UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
         volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
+        ground.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
         sets = golden_krone.GetVariantSets()
         color_set = sets.AddVariantSet("color")
-        for option_name, (interpolation, color_size, colors) in color_options.items():
-            color_prim = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath(option_name))
-            color_var = UsdGeom.Gprim(color_prim).CreateDisplayColorPrimvar()
-            color_var.SetInterpolation(interpolation)
-            color_var.SetElementSize(color_size)
-            color_var.Set(colors)
+        for option_name, (interpolation, size_caller, color_caller) in color_options.items():
             color_set.AddVariant(option_name)
             color_set.SetVariantSelection(option_name)
             with _unit_variant_context(color_set):
-                volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier, color_prim.GetPath())
+                golden_color_path = Sdf.Path.absoluteRootPath.AppendPath(option_name)
+                golden_color.DefinePrim(golden_color_path)
+                golden_color_layer = golden_color.GetRootLayer()
+                golden_krone.GetPayloads().AddPayload(golden_color_layer.identifier, golden_color_path)
+                with payload_context(golden_krone, golden_color_layer):
+                    for geom in volume, ground:
+                        color_var = geom.GetDisplayColorPrimvar()
+                        color_var.SetInterpolation(interpolation)
+                        color_size = size_caller(geom)
+                        color_var.SetElementSize(color_size)
+                        color_var.Set(color_caller(color_size))
+
             color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
 
-        volume.GetRadiusAttr().Set(volume_size)
+        # extent = volume.GetExtentAttr()
+        # extent.Set(extent.Get() * volume_size)
 
-        extent = volume.GetExtentAttr()
-        extent.Set(extent.Get() * volume_size)
-
-        spin = volume.AddRotateZOp(opSuffix='spin')
-        spin.Set(time=0, value=0)
-        spin.Set(time=192, value=1440)
-        tilt = volume.AddRotateXOp(opSuffix='tilt')
-        tilt.Set(value=12)
-
-        volume.GetPrim().SetDocumentation("This is the main volume for the Golden Krone")
-
-    cook.spawn_unit(romania, hungary)
-    cook.spawn_unit(romania, castle_dracula)
+    # cook.spawn_unit(romania, hungary)
+    # cook.spawn_unit(romania, castle_dracula)
 
     with cook.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
