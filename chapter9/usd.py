@@ -116,7 +116,7 @@ def main():
     stage.SetStartTimeCode(0)
     stage.SetEndTimeCode(192)
 
-    def _unit_variant_context(variant_set):
+    def variant_context(variant_set, layer):
         from pxr import Usd, Tf
         with contextlib.suppress(Tf.ErrorException):
             return color_set.GetVariantEditContext()
@@ -127,15 +127,24 @@ def main():
         # Currently, we require layer to be in the stage's local LayerStack (see UsdStage::HasLocalLayer()), and will issue an error and return an invalid EditTarget if layer is not.
         # We may relax this restriction in the future, if need arises, but it introduces several complications in specification and behavior.
         # ----- From Pixar End -----
-
-        # In the meantime, build own edit target (relying on our known structure)
         prim = variant_set.GetPrim()
+        # if not layer:
+        #     # Contract:, build own edit target (relying on our known structure)
+        #     while prim:   Rely on AssetInfo convention to discover our unit layer
+        #         if asset_id := Usd.ModelAPI(prim).GetAssetIdentifier():
+        #             # TODO: use actual layer rather than resolved path with AR context from stage
+        #             layer = Sdf.Layer.FindOrOpen(asset_id)
+        #             break
+        #         prim = prim.GetParent()
+        #     else:
+        #         # no asset identifier was found + variant set not on layer stack. can't continue!
+        #         raise ValueError(f"Can't find what layer to target for {prim=}")
         name = variant_set.GetName()
         selection = variant_set.GetVariantSelection()
-        logger.warning(f"Searching target for {prim=} with variant {name=}, {selection=}")
+        logger.warning(f"Searching target for {prim=} with variant {name=}, {selection=} on {layer=}")
 
         def is_valid_target(node):
-            return node.path.GetVariantSelection() == (name, selection) and Usd.ModelAPI(prim).GetAssetIdentifier().resolvedPath == node.layerStack.identifier.rootLayer.realPath
+            return node.path.GetVariantSelection() == (name, selection) and layer == node.layerStack.identifier.rootLayer
 
         query_filter = Usd.PrimCompositionQuery.Filter()
         query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Variant
@@ -167,9 +176,8 @@ def main():
         query = Usd.PrimCompositionQuery(prim)
         query.filter = query_filter
         for arc in query.GetCompositionArcs():
-            target_node = arc.GetTargetNode()
-            if target_predicate(target_node):
-                target = Usd.EditTarget(target_node.layerStack.identifier.rootLayer, target_node)
+            if target_predicate(node := arc.GetTargetNode()):
+                target = Usd.EditTarget(node.layerStack.identifier.rootLayer, node)
                 return Usd.EditContext(prim.GetStage(), target)
         raise ValueError(f"Could not find appropriate node for edit target for {prim} matching {target_predicate}")
 
@@ -259,17 +267,18 @@ def main():
         golden_asset_name.part = "color"
         # golden_asset_name.suffix = "usdc"
         golden_color = cook.fetch_stage(str(golden_asset_name))
+        # For default color, multiple prims will be using it, so best UX to define the
+        # color first, then add it to existing prims rather than the inverse.
         default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
         golden_color.SetDefaultPrim(default_color)
         UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
         volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
         ground.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
-        sets = golden_krone.GetVariantSets()
-        color_set = sets.AddVariantSet("color")
+        color_set = golden_krone.GetVariantSets().AddVariantSet("color")
         for option_name, (interpolation, size_caller, color_caller) in color_options.items():
             color_set.AddVariant(option_name)
             color_set.SetVariantSelection(option_name)
-            with _unit_variant_context(color_set):
+            with variant_context(color_set, cook.unit_asset(golden_krone)):
                 golden_color_path = Sdf.Path.absoluteRootPath.AppendPath(option_name)
                 golden_color.DefinePrim(golden_color_path)
                 golden_color_layer = golden_color.GetRootLayer()
@@ -281,8 +290,7 @@ def main():
                         color_size = size_caller(geom)
                         color_var.SetElementSize(color_size)
                         color_var.Set(color_caller(color_size))
-
-            color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
+        color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
 
         # extent = volume.GetExtentAttr()
         # extent.Set(extent.Get() * volume_size)
