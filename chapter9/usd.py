@@ -5,6 +5,7 @@ import colorsys
 from pathlib import Path
 
 import numpy as np
+# print(np.__version__)
 from pxr import Sdf, UsdGeom, Usd
 
 from grill import cook
@@ -131,49 +132,46 @@ def main():
         prim = variant_set.GetPrim()
         name = variant_set.GetName()
         selection = variant_set.GetVariantSelection()
+        logger.warning(f"Searching target for {prim=} with variant {name=}, {selection=}")
+
+        def is_valid_target(node):
+            return node.path.GetVariantSelection() == (name, selection) and Usd.ModelAPI(prim).GetAssetIdentifier().resolvedPath == node.layerStack.identifier.rootLayer.realPath
+
         query_filter = Usd.PrimCompositionQuery.Filter()
         query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Variant
         query_filter.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
-        query = Usd.PrimCompositionQuery(color_set.GetPrim())
-        query.filter = query_filter
-        for arc in query.GetCompositionArcs():
-            target_node = arc.GetTargetNode()
-            target_root_layer = target_node.layerStack.identifier.rootLayer
-            if (
-                    target_node.path.GetVariantSelection() == (name, selection) and
-                    Usd.ModelAPI(prim).GetAssetIdentifier().resolvedPath == target_root_layer.realPath
-            ):
-                target = Usd.EditTarget(target_root_layer, target_node)
-                return Usd.EditContext(prim.GetStage(), target)
-        from pprint import pformat
-        raise RuntimeError(f"Something went wrong {pformat(locals())}")
+        return _edit_context(color_set.GetPrim(), query_filter, is_valid_target)
 
-    def payload_context(obj: Usd.Prim, layer):
-        # We need to explicitly construct our edit target since our layer is not on the layer stack of the stage.
+    def payload_context(obj: Usd.Prim, layer, path: Sdf.Path):
+        # We construct our edit target since our layer is not on the layer stack of the stage.
         # TODO: this is specific about "localised edits" for an asset. Dispatch no longer looking solid?
         # Warning: this targets the origin prim spec as the "entry point" edit target for a unit of a taxon.
         # This means some operations like specializes, inherits or internal reference / payloads
         # might not be able to be resolved (you will se an error like:
         # 'Cannot map </Catalogue/OtherPlace/CastleDracula> to current edit target.'
-        _ASSET_UNIT_QUERY_FILTER = Usd.PrimCompositionQuery.Filter()
-        _ASSET_UNIT_QUERY_FILTER.dependencyTypeFilter = Usd.PrimCompositionQuery.DependencyTypeFilter.Direct
-        _ASSET_UNIT_QUERY_FILTER.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
+        logger.warning(f"Searching for {layer}")
+
+        def is_valid_target(node):
+            return node.path == path and node.layerStack.identifier.rootLayer == layer
 
         query_filter = Usd.PrimCompositionQuery.Filter()
         query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Payload
         query_filter.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
+        return _edit_context(obj, query_filter, is_valid_target)
 
-        query = Usd.PrimCompositionQuery(obj)
+    def _edit_context(prim, query_filter, target_predicate):
+        """Composition arcs target layer stacks. This is a convenience function to
+        get an edit context from a query filter + a filter predicate, using the root layer
+        of the matching target node as the edit target layer.
+        """
+        query = Usd.PrimCompositionQuery(prim)
         query.filter = query_filter
-        logger.debug(f"Searching for {layer}")
         for arc in query.GetCompositionArcs():
             target_node = arc.GetTargetNode()
-            target_root_layer = target_node.layerStack.identifier.rootLayer
-            # contract: we consider the "unit" target node the one matching origin path and the given layer
-            if target_root_layer == layer:
-                target = Usd.EditTarget(layer, target_node)
-                return Usd.EditContext(obj.GetStage(), target)
-        raise ValueError(f"Could not find appropriate node for edit target for {obj} matching {layer}")
+            if target_predicate(target_node):
+                target = Usd.EditTarget(target_node.layerStack.identifier.rootLayer, target_node)
+                return Usd.EditContext(prim.GetStage(), target)
+        raise ValueError(f"Could not find appropriate node for edit target for {prim} matching {target_predicate}")
 
     def _random_colors(amount):
         return np.random.dirichlet(np.ones(3), size=amount)
@@ -187,14 +185,14 @@ def main():
         #               `-> add variant sets -> add color to created prims A, B (same python objects)
         golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
         golden_asset_name.part = "Geom"
-        golden_asset_name.suffix = "usdc"
+        # golden_asset_name.suffix = "usdc"
         golden_geom = cook.fetch_stage(str(golden_asset_name))
         golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
         golden_krone.GetPayloads().AddPayload(golden_geom.GetRootLayer().identifier)
 
         volume_path = "Volume"
         ground_path = "Ground"
-        with payload_context(golden_krone, golden_geom.GetRootLayer()):
+        with payload_context(golden_krone, golden_geom.GetRootLayer(), cook._UNIT_ORIGIN_PATH):
             ground = UsdGeom.Mesh.Define(stage, golden_krone.GetPath().AppendPath(ground_path))
             volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath(volume_path))
             ground.GetPrim().SetDocumentation("This is the main ground where the Golden Krone exists")
@@ -259,7 +257,7 @@ def main():
 
         golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
         golden_asset_name.part = "color"
-        golden_asset_name.suffix = "usdc"
+        # golden_asset_name.suffix = "usdc"
         golden_color = cook.fetch_stage(str(golden_asset_name))
         default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
         golden_color.SetDefaultPrim(default_color)
@@ -276,7 +274,7 @@ def main():
                 golden_color.DefinePrim(golden_color_path)
                 golden_color_layer = golden_color.GetRootLayer()
                 golden_krone.GetPayloads().AddPayload(golden_color_layer.identifier, golden_color_path)
-                with payload_context(golden_krone, golden_color_layer):
+                with payload_context(golden_krone, golden_color_layer, golden_color_path):
                     for geom in volume, ground:
                         color_var = geom.GetDisplayColorPrimvar()
                         color_var.SetInterpolation(interpolation)
