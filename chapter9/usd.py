@@ -1,23 +1,24 @@
-import contextlib
+import enum
 import logging
 import datetime
 import colorsys
 from pathlib import Path
 
 import numpy as np
-# print(np.__version__)
 from pxr import Sdf, UsdGeom, Usd
 
-from grill import cook
+from grill import cook, names, usd as gusd
 from grill.tokens import ids
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+names.UsdAsset.DEFAULT_SUFFIX = "usd"
+
 
 def main():
     token = cook.Repository.set(Path(__file__).parent / "assets")
-    stage = cook.fetch_stage(cook.UsdAsset.get_default(code='dracula'))
+    stage = cook.fetch_stage(names.UsdAsset.get_default(code='dracula'))
 
     # 1. Taxonomy Definition
     # 1.1 Object kingdom is for "all things that exist" in the universe.
@@ -74,8 +75,8 @@ def main():
     budapest, bistritz, munich, london = cook.create_many(
         city, ('Budapest', 'Bistritz', 'Munich', 'London'), ('Buda-Pesth', 'Bistritz')
     )
-    golden_krone = cook.create(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
-    castle_dracula = cook.create(other_place, 'CastleDracula', label='Castle Dracula')
+    golden_krone = cook.create_unit(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
+    castle_dracula = cook.create_unit(other_place, 'CastleDracula', label='Castle Dracula')
     # 2.1 Create attributes as needed
     with cook.unit_context(castle_dracula):
         doors_strength = castle_dracula.CreateAttribute('doors_strength', Sdf.ValueTypeNames.IntArray, custom=False)
@@ -83,17 +84,17 @@ def main():
 
     romania, hungary, *__ = cook.create_many(country, ('Romania', 'Hungary', 'France', 'Slovakia'))
 
-    jonathan = cook.create(person, 'JonathanHarker', label='Jonathan Harker')
+    jonathan = cook.create_unit(person, 'JonathanHarker', label='Jonathan Harker')
     with cook.unit_context(jonathan):
         jonathan.GetAttribute("strength").Set(5)
 
-    emil = cook.create(player, "EmilSinclair", label="Emil Sinclair")
-    dracula = cook.create(vampire, 'CountDracula', label='Count Dracula')
+    emil = cook.create_unit(player, "EmilSinclair", label="Emil Sinclair")
+    dracula = cook.create_unit(vampire, 'CountDracula', label='Count Dracula')
     for each in cook.create_many(minor_vampire, *zip(*[(f'Woman{i}', f'Woman {i}') for i in range(4)])):
         dracula.GetRelationship("slaves").AddTarget(each.GetPath())
 
-    mina = cook.create(non_player, 'MinaMurray', label='Mina Murray')
-    lucy = cook.create(non_player, 'LucyWestenra', label='Lucy Westenra')
+    mina = cook.create_unit(non_player, 'MinaMurray', label='Mina Murray')
+    lucy = cook.create_unit(non_player, 'LucyWestenra', label='Lucy Westenra')
     arthur, renfield, *__ = cook.create_many(non_player, ('ArthurHolmwood', 'Renfield', 'JohnSeward', 'QuinceyMorris'))
     arthur.GetRelationship('lover').AddTarget(lucy.GetPath())
     lucy.GetRelationship("lover").AddTarget(arthur.GetPath())
@@ -116,95 +117,41 @@ def main():
     stage.SetStartTimeCode(0)
     stage.SetEndTimeCode(192)
 
-    def variant_context(variant_set, layer):
-        from pxr import Usd, Tf
-        with contextlib.suppress(Tf.ErrorException):
-            return color_set.GetVariantEditContext()
-        # ----- From Pixar Start -----
-        # pxr.Tf.ErrorException:
-        # 	Error in '...::UsdVariantSet::GetVariantEditTarget' ...: 'Layer <identifier> is not a local layer of stage rooted at layer <identifier>'
-        # https://graphics.pixar.com/usd/docs/api/class_usd_variant_set.html#a83f3adf614736a0b43fa1dd5271a9528
-        # Currently, we require layer to be in the stage's local LayerStack (see UsdStage::HasLocalLayer()), and will issue an error and return an invalid EditTarget if layer is not.
-        # We may relax this restriction in the future, if need arises, but it introduces several complications in specification and behavior.
-        # ----- From Pixar End -----
-        prim = variant_set.GetPrim()
-        # if not layer:
-        #     # Contract:, build own edit target (relying on our known structure)
-        #     while prim:   Rely on AssetInfo convention to discover our unit layer
-        #         if asset_id := Usd.ModelAPI(prim).GetAssetIdentifier():
-        #             # TODO: use actual layer rather than resolved path with AR context from stage
-        #             layer = Sdf.Layer.FindOrOpen(asset_id)
-        #             break
-        #         prim = prim.GetParent()
-        #     else:
-        #         # no asset identifier was found + variant set not on layer stack. can't continue!
-        #         raise ValueError(f"Can't find what layer to target for {prim=}")
-        name = variant_set.GetName()
-        selection = variant_set.GetVariantSelection()
-        logger.warning(f"Searching target for {prim=} with variant {name=}, {selection=} on {layer=}")
-
-        def is_valid_target(node):
-            return node.path.GetVariantSelection() == (name, selection) and layer == node.layerStack.identifier.rootLayer
-
-        query_filter = Usd.PrimCompositionQuery.Filter()
-        query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Variant
-        query_filter.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
-        return _edit_context(color_set.GetPrim(), query_filter, is_valid_target)
-
-    def payload_context(obj: Usd.Prim, layer, path: Sdf.Path):
-        # We construct our edit target since our layer is not on the layer stack of the stage.
-        # TODO: this is specific about "localised edits" for an asset. Dispatch no longer looking solid?
-        # Warning: this targets the origin prim spec as the "entry point" edit target for a unit of a taxon.
-        # This means some operations like specializes, inherits or internal reference / payloads
-        # might not be able to be resolved (you will se an error like:
-        # 'Cannot map </Catalogue/OtherPlace/CastleDracula> to current edit target.'
-        logger.warning(f"Searching for {layer}")
-
-        def is_valid_target(node):
-            return node.path == path and node.layerStack.identifier.rootLayer == layer
-
-        query_filter = Usd.PrimCompositionQuery.Filter()
-        query_filter.arcTypeFilter = Usd.PrimCompositionQuery.ArcTypeFilter.Payload
-        query_filter.hasSpecsFilter = Usd.PrimCompositionQuery.HasSpecsFilter.HasSpecs
-        return _edit_context(obj, query_filter, is_valid_target)
-
-    def _edit_context(prim, query_filter, target_predicate):
-        """Composition arcs target layer stacks. This is a convenience function to
-        get an edit context from a query filter + a filter predicate, using the root layer
-        of the matching target node as the edit target layer.
-        """
-        query = Usd.PrimCompositionQuery(prim)
-        query.filter = query_filter
-        for arc in query.GetCompositionArcs():
-            if target_predicate(node := arc.GetTargetNode()):
-                target = Usd.EditTarget(node.layerStack.identifier.rootLayer, node)
-                return Usd.EditContext(prim.GetStage(), target)
-        raise ValueError(f"Could not find appropriate node for edit target for {prim} matching {target_predicate}")
-
     def _random_colors(amount):
         return np.random.dirichlet(np.ones(3), size=amount)
 
     def _color_spectrum(amount):
         return [colorsys.hsv_to_rgb(i / amount, 1, .75) for i in range(amount)]
 
+    golden_asset_name = names.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
+    # golden_asset_name.suffix = "usd"
     with cook.unit_context(golden_krone):
         # idea: chain contexts to a specific prim, composition arc and a layer?
         # unit context X -> add geom payload -> add prims A, B
         #               `-> add variant sets -> add color to created prims A, B (same python objects)
-        golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
-        golden_asset_name.part = "Geom"
-        # golden_asset_name.suffix = "usdc"
-        golden_geom = cook.fetch_stage(str(golden_asset_name))
+        golden_geom = cook.fetch_stage(golden_asset_name.get(part="Geom"))
         golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
-        golden_krone.GetPayloads().AddPayload(golden_geom.GetRootLayer().identifier)
+        payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
+        golden_krone.GetPayloads().AddPayload(payload)
 
-        volume_path = "Volume"
-        ground_path = "Ground"
-        with payload_context(golden_krone, golden_geom.GetRootLayer(), cook._UNIT_ORIGIN_PATH):
-            ground = UsdGeom.Mesh.Define(stage, golden_krone.GetPath().AppendPath(ground_path))
-            volume = UsdGeom.Sphere.Define(stage, golden_krone.GetPath().AppendPath(volume_path))
-            ground.GetPrim().SetDocumentation("This is the main ground where the Golden Krone exists")
-            volume.GetPrim().SetDocumentation("This is the main volume for the Golden Krone")
+        # volume_path = UsdGeom.Mesh, "Volume", "Main volume for Golden Krone"
+        # ground_path = UsdGeom.Sphere, "Ground", "Main ground where Golden Krone exists"
+        with gusd.edit_context(payload, golden_krone):
+            def _define(schema, path, doc):
+                geom = schema.Define(stage, golden_krone.GetPath().AppendPath(path))
+                geom.GetPrim().SetDocumentation(doc)
+                return geom
+
+            volume, ground, top_back_left, top_front_left, top_back_right, top_front_right = [
+                _define(cls, path, doc) for cls, path, doc in (
+                    (UsdGeom.Mesh, "Volume", "Main volume for Golden Krone"),
+                    (UsdGeom.Sphere, "Ground", "Main ground where Golden Krone exists"),
+                    (UsdGeom.Cube, "TopBackLeft", "Golden Krone's top back left section"),
+                    (UsdGeom.Capsule, "TopFrontLeft", "Golden Krone's top from left section"),
+                    (UsdGeom.Cylinder, "TopBackRight", "Golden Krone's top back right section"),
+                    (UsdGeom.Cone, "TopFrontRight", "Golden Krone's top front right section"),
+                )
+            ]
             # https://github.com/marcomusy/vedo/issues/86
             # https://blender.stackexchange.com/questions/230534/fastest-way-to-skin-a-grid
             width = 10
@@ -239,55 +186,91 @@ def main():
             spin.Set(time=192, value=1440)
             tilt = volume.AddRotateXOp(opSuffix='tilt')
             tilt.Set(value=12)
+            top_back_right.AddTranslateOp().Set(value=(volume_size, volume_size * 3, -volume_size))
+            top_front_right.AddTranslateOp().Set(value=(volume_size, volume_size * 3,volume_size))
+            top_back_left.AddTranslateOp().Set(value=(-volume_size, volume_size * 3, -volume_size))
+            top_front_left.AddTranslateOp().Set(value=(-volume_size, volume_size * 3, volume_size))
 
-        sizes = {
-            UsdGeom.Tokens.constant: lambda x: 1,
-            UsdGeom.Tokens.uniform: lambda x: 100 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetFaceVertexCountsAttr().Get()),
-            UsdGeom.Tokens.varying: lambda x: 92 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetPointsAttr().Get()),
-            UsdGeom.Tokens.vertex: lambda x: 92 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetPointsAttr().Get()),
-            UsdGeom.Tokens.faceVarying: lambda x: 380 if UsdGeom.Sphere(x) else len(UsdGeom.Mesh(x).GetFaceVertexIndicesAttr().Get()),
+        class _GeomCount(enum.Enum):  # TODO: find a better name
+            _ignore_ = 'sizes'
+            # One element for the entire Gprim; no interpolation.
+            CONSTANT = UsdGeom.Tokens.constant, {UsdGeom.Gprim: 1}
+            # One element for each face of the mesh; elements are typically not interpolated
+            # but are inherited by other faces derived from a given face (via subdivision, tessellation, etc.).
+            UNIFORM = UsdGeom.Tokens.uniform, {
+                UsdGeom.Mesh: lambda mesh: len(mesh.GetFaceVertexCountsAttr().Get()),
+                UsdGeom.Sphere: 100,  # TODO: there must be a better way of finding these numbers.
+                UsdGeom.Cube: 6,
+                UsdGeom.Capsule: 90,
+                UsdGeom.Cone: 20,
+                UsdGeom.Cylinder: 30,
+            }
+            # One element for each point of the mesh; interpolation of point data is:
+            #   Varying: always linear.
+            #   Vertex: applied according to the subdivisionScheme attribute.
+            VERTEX, VARYING = (UsdGeom.Tokens.vertex, sizes := {
+                UsdGeom.Mesh: lambda mesh: len(mesh.GetPointsAttr().Get()),
+                UsdGeom.Sphere: 92,
+                UsdGeom.Cube: 8,
+                UsdGeom.Capsule: 82,
+                UsdGeom.Cone: 31,
+                UsdGeom.Cylinder: 42,
+            }), (UsdGeom.Tokens.varying, sizes)
+            # One element for each of the face-vertices that define the mesh topology;
+            # interpolation of face-vertex data may be smooth or linear, according to the
+            # subdivisionScheme and faceVaryingLinearInterpolation attributes.
+            FACE_VARYING = UsdGeom.Tokens.faceVarying, {
+                UsdGeom.Mesh: lambda mesh: len(mesh.GetFaceVertexIndicesAttr().Get()),
+                UsdGeom.Sphere: 380,
+                UsdGeom.Cube: 24,
+                UsdGeom.Capsule: 340,
+                UsdGeom.Cone: 70,
+                UsdGeom.Cylinder: 100,
+            }
+
+            def size(self, prim):
+                for geom_class, value in self.value[1].items():
+                    if geom := geom_class(prim):
+                        return value(geom) if callable(value) else value
+                raise TypeError(f"Don't know how to count {self} on {prim}")
+
+            def interpolation(self):
+                return self.value[0]
+
+        wavelength_options = [i for i in _GeomCount if i != _GeomCount.CONSTANT]
+        color_options = {
+            "constant": (_GeomCount.CONSTANT, _random_colors),
+            **{f"random_{i.interpolation()}": (i, _random_colors) for i in wavelength_options},
+            **{f"spectrum_{i.interpolation()}": (i, _color_spectrum) for i in wavelength_options},
         }
-        # TODO: This must be a payload
-        color_options = dict(
-            # constant: One element for the entire mesh; no interpolation.
-            constant=(interp := UsdGeom.Tokens.constant, sizes[interp], _random_colors),
-            # uniform: One element for each face of the mesh; elements are typically not interpolated but are inherited by other faces derived from a given face (via subdivision, tessellation, etc.).
-            uniform=(interp := UsdGeom.Tokens.uniform, sizes[interp], _color_spectrum),
-            # varying: One element for each point of the mesh; interpolation of point data is always linear.
-            varying=(interp := UsdGeom.Tokens.varying, sizes[interp], _color_spectrum),
-            # vertex: One element for each point of the mesh; interpolation of point data is applied according to the subdivisionScheme attribute.
-            vertex_random=(interp := UsdGeom.Tokens.vertex, sizes[interp], _random_colors),
-            vertex_spectrum=(interp := UsdGeom.Tokens.vertex, sizes[interp], _color_spectrum),
-            # faceVarying: One element for each of the face-vertices that define the mesh topology; interpolation of face-vertex data may be smooth or linear, according to the subdivisionScheme and faceVaryingLinearInterpolation attributes.
-            face_random=(interp := UsdGeom.Tokens.faceVarying, sizes[interp], _random_colors),
-            face_spectrum=(interp := UsdGeom.Tokens.faceVarying, sizes[interp], _color_spectrum),
-        )
 
-        golden_asset_name = cook.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
-        golden_asset_name.part = "color"
-        # golden_asset_name.suffix = "usdc"
-        golden_color = cook.fetch_stage(str(golden_asset_name))
+        golden_color = cook.fetch_stage(golden_asset_name.get(part="Color"))
         # For default color, multiple prims will be using it, so best UX to define the
         # color first, then add it to existing prims rather than the inverse.
         default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
         golden_color.SetDefaultPrim(default_color)
         UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
-        volume.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
-        ground.GetPrim().GetPayloads().AddPayload(golden_color.GetRootLayer().identifier)
+        golden_color_layer = golden_color.GetRootLayer()
+        geoms_with_color = (volume, ground, top_back_left, top_front_left, top_back_right, top_front_right)
+        for geom in geoms_with_color:
+            geom.GetPrim().GetPayloads().AddPayload(golden_color_layer.identifier)
+
         color_set = golden_krone.GetVariantSets().AddVariantSet("color")
-        for option_name, (interpolation, size_caller, color_caller) in color_options.items():
+
+        for option_name, (primvar_meta, color_caller) in color_options.items():
             color_set.AddVariant(option_name)
             color_set.SetVariantSelection(option_name)
-            with variant_context(color_set, cook.unit_asset(golden_krone)):
+            with gusd.edit_context(color_set, cook.unit_asset(golden_krone)):
                 golden_color_path = Sdf.Path.absoluteRootPath.AppendPath(option_name)
-                golden_color.DefinePrim(golden_color_path)
-                golden_color_layer = golden_color.GetRootLayer()
-                golden_krone.GetPayloads().AddPayload(golden_color_layer.identifier, golden_color_path)
-                with payload_context(golden_krone, golden_color_layer, golden_color_path):
-                    for geom in volume, ground:
+                golden_color.OverridePrim(golden_color_path)
+                payload = Sdf.Payload(golden_color_layer.identifier, golden_color_path)
+                golden_krone.GetPayloads().AddPayload(payload)
+                with gusd.edit_context(payload, golden_krone):
+                    interpolation = primvar_meta.interpolation()
+                    for geom in geoms_with_color:
                         color_var = geom.GetDisplayColorPrimvar()
                         color_var.SetInterpolation(interpolation)
-                        color_size = size_caller(geom)
+                        color_size = primvar_meta.size(geom)
                         color_var.SetElementSize(color_size)
                         color_var.Set(color_caller(color_size))
         color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
@@ -295,8 +278,37 @@ def main():
         # extent = volume.GetExtentAttr()
         # extent.Set(extent.Get() * volume_size)
 
-    # cook.spawn_unit(romania, hungary)
-    # cook.spawn_unit(romania, castle_dracula)
+    cook.spawn_unit(romania, hungary)
+    cook.spawn_unit(romania, castle_dracula)
+    romania_asset_name = names.UsdAsset(Usd.ModelAPI(romania).GetAssetIdentifier().path)
+    with cook.unit_context(romania):
+        romania_geom = cook.fetch_stage(romania_asset_name.get(part="Geom"))
+        romania_geom.SetDefaultPrim(romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
+        romania_payload = Sdf.Payload(romania_geom.GetRootLayer().identifier)
+        romania.GetPayloads().AddPayload(romania_payload)
+        with gusd.edit_context(romania_payload, romania):
+            instancer_path = romania.GetPath().AppendPath("Buildings")
+            buildings = UsdGeom.PointInstancer.Define(stage, instancer_path)
+            X = np.linspace(0, (40*width)-width, 40)
+            Z = np.linspace(0, (30*depth)-depth, 30)
+            Y = np.linspace(0, 250, 30)
+            xx, yy, zz = np.meshgrid(X, Y, Z)
+            points = np.stack((xx.ravel(), yy.ravel(), zz.ravel()), axis=1)
+            buildings.GetPositionsAttr().Set(points)
+            for selection in ("", *color_set.GetVariantNames()):
+                name = golden_krone.GetName()
+                if selection:
+                    name = f"{name}_{selection}"
+                # spawn prototypes under point instancer for ease of authoring
+                prototype = cook.spawn_unit(romania, golden_krone, path=instancer_path.AppendPath(name).MakeRelativePath(romania.GetPath()))
+                relpath = prototype.GetPath().MakeRelativePath(instancer_path)
+                buildings.GetPrototypesRel().AddTarget(relpath)
+                if selection:
+                    prototype.GetVariantSet("color").SetVariantSelection(selection)
+
+            proto_size = len(buildings.GetPrototypesRel().GetTargets())
+            choices = range(proto_size)
+            buildings.GetProtoIndicesAttr().Set(np.random.choice(choices, size=len(points)))
 
     with cook.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
@@ -307,10 +319,10 @@ def main():
         ("TheFirstMate", "FirstMate"),
         ("TheCook", "Cook"),
     ):
-        sailor_prim = cook.create(sailor, name)
+        sailor_prim = cook.create_unit(sailor, name)
         with cook.unit_context(sailor_prim):
             sailor_prim.GetVariantSet("Rank").SetVariantSelection(rank)
-    demeter = cook.create(ship, "TheDemeter")
+    demeter = cook.create_unit(ship, "TheDemeter")
     demeter_sailors = demeter.GetRelationship("sailors")
     for each in cook.itaxa(stage.Traverse(), sailor):
         demeter_sailors.AddTarget(each.GetPath())
@@ -364,7 +376,7 @@ def main():
     # #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
     # #     # Total time: 0:00:06.993190
     # #     # could be faster.
-    # #     write.create(city, f'NewCity{x}', label=f"New City Hello {x}")
+    # #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
     # # amount = 2_500
     # # Total time: 0:00:19.365815
     # # Total time: 0:00:19.604778
@@ -380,12 +392,12 @@ def main():
     # # Total time: 0:00:17.092674
     # # write.create_many(city, (f'NewCity{x}' for x in range(amount)), (f'New City Hello {x}' for x in range(int(amount / 2))))
     #
-    # # write.create(city, f'NewNoContext01', label=f'NewNoContext01')
-    # # write.create(city, f'NewNoContext02', label=f'NewNoContext02')
+    # # write.create_unit(city, f'NewNoContext01', label=f'NewNoContext01')
+    # # write.create_unit(city, f'NewNoContext02', label=f'NewNoContext02')
     # # new_stage = write.fetch_stage(write.UsdAsset.get_anonymous())
     # # try:
     # #     with write.creation_context(new_stage):
-    # #         write.create(city, "Should fail")
+    # #         write.create_unit(city, "Should fail")
     # # except write.CreationContextError:
     # #     pass
     #
@@ -411,7 +423,7 @@ def main():
     #     with write._creation_context(stage):
     #         for name in range(amount):
     #             for taxon in (city, other_place, person):
-    #                 write.create(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
+    #                 write.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
     #
     #
     # def _create_many():
@@ -432,7 +444,7 @@ def main():
     #     # Total time: 0:00:26.282877
     #     for name in range(amount):
     #         for taxon in (city, other_place, person):
-    #             write.create(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
+    #             write.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
     #
     #
     # def _create_new_no_ctx():
@@ -470,7 +482,7 @@ def main():
     #     # Total time: 0:00:06.993190
     #     # 0:00:07.193135
     #     # could be faster.
-    #     write.create(city, f'NewCity{x}', label=f"New City Hello {x}")
+    #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
     amount = 2  # TODO: this kills the layerstack description widget ): update to be prim selection based + filter specific?
 
     # Time with 1_000 (3k created assets):
@@ -487,7 +499,7 @@ def main():
     # Total time: 0:00:20.229527
     # for name in range(amount):
     #     for taxon in (city, other_place, person):
-    #         write.create(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
+    #         write.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
 
     # create_many:
     # 0:00:14.795971
