@@ -1,0 +1,26 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Shade-Color-rnd-main-ModelDefault-lead-base-whole.1.usda@
+        string name = "ModelDefault"
+    }
+    prepend inherits = </Taxonomy/Color>
+    kind = "subcomponent"
+)
+{
+    color3f[] primvars:displayColor = [(0.6, 0.8, 0.9)]
+}
+

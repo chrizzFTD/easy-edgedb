@@ -94,7 +94,7 @@ def main():
         doors_strength = castle_dracula.CreateAttribute('doors_strength', Sdf.ValueTypeNames.IntArray, custom=False)
         doors_strength.Set([6, 19, 10])
 
-    romania, hungary, *__ = cook.create_many(country, ('Romania', 'Hungary', 'France', 'Slovakia'))
+    romania, hungary, france, *__ = cook.create_many(country, ('Romania', 'Hungary', 'France', 'Slovakia'))
 
     jonathan = cook.create_unit(person, 'JonathanHarker', label='Jonathan Harker')
     with cook.unit_context(jonathan):
@@ -149,8 +149,6 @@ def main():
         cook.fetch_stage(golden_asset_name).GetDefaultPrim().GetPrimAtPath("Geom").GetSpecializes().AddSpecialize(model_default_color.GetPath())
         geom_root.GetPayloads().AddPayload(payload)
 
-        # volume_path = UsdGeom.Mesh, "Volume", "Main volume for Golden Krone"
-        # ground_path = UsdGeom.Sphere, "Ground", "Main ground where Golden Krone exists"
         with gusd.edit_context(payload, geom_root):
             def _define(schema, path, doc):
                 geom = schema.Define(stage, geom_root.GetPath().AppendPath(path))
@@ -262,14 +260,8 @@ def main():
         golden_color = cook.fetch_stage(golden_asset_name.get(part="Color"))
         # For default color, multiple prims will be using it, so best UX to define the
         # color first, then add it to existing prims rather than the inverse.
-        # default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
-        # golden_color.SetDefaultPrim(default_color)
-        # UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
         golden_color_layer = golden_color.GetRootLayer()
         geoms_with_color = (volume, ground, top_back_left, top_front_left, top_back_right, top_front_right)
-        # for geom in geoms_with_color:
-        #     # TODO: check with pixar about this not working inherited primvars on point instancer prototypes
-        #     geom.GetPrim().GetReferences().AddReference(golden_color_layer.identifier)
 
         color_set = golden_krone.GetVariantSets().AddVariantSet("color")
 
@@ -294,8 +286,6 @@ def main():
         # extent = volume.GetExtentAttr()
         # extent.Set(extent.Get() * volume_size)
 
-    # cook.spawn_unit(romania, hungary)
-    # cook.spawn_unit(romania, castle_dracula)
     romania_asset_name = names.UsdAsset(Usd.ModelAPI(romania).GetAssetIdentifier().path)
     with cook.unit_context(romania):
         romania_geom = cook.fetch_stage(romania_asset_name.get(part="Geom"))
@@ -311,9 +301,8 @@ def main():
                 name = f"{name}_{selection}"
             # spawn prototypes under point instancer for ease of authoring
             prototype = cook.spawn_unit(romania, golden_krone, path=instancer_path.AppendPath(name).MakeRelativePath(romania.GetPath()))
-            # if selection:
-            #     prototype.GetVariantSet("color").SetVariantSelection(selection)
-            prototype.GetVariantSet("color").SetVariantSelection("constant")
+            if selection:
+                prototype.GetVariantSet("color").SetVariantSelection(selection)
             relpath = prototype.GetPath().MakeRelativePath(instancer_path)
             targets.append(relpath)
         with gusd.edit_context(romania_payload, romania):
@@ -332,6 +321,14 @@ def main():
 
     with cook.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
+
+    for i, top_country in enumerate((hungary, france)):
+        with cook.unit_context(top_country):
+            for path, value in (
+                    ("Deeper/Nested/Romania1", (-100*(i+1), 150*(i+1), 1)),
+                    ("Deeper/Nested/Romania2", (-100*(i+1), -150*(i+1), 1)),
+            ):
+                UsdGeom.Xform(cook.spawn_unit(top_country, romania, path)).AddTranslateOp().Set(value=value)
 
     for name, rank in (
         ("TheCaptain", "Captain"),
