@@ -1,0 +1,287 @@
+#usda 1.0
+
+def "Catalogue" (
+    kind = "group"
+)
+{
+    def "Shade" (
+        kind = "group"
+    )
+    {
+        def "Color" (
+            kind = "group"
+        )
+        {
+            over "ModelDefault" (
+                prepend references = @dracula-3d-Shade-Color-rnd-main-ModelDefault-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+    }
+
+    def "Model" (
+        kind = "group"
+    )
+    {
+        def "City" (
+            kind = "group"
+        )
+        {
+            over "Budapest" (
+                prepend references = @dracula-3d-Model-City-rnd-main-Budapest-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Bistritz" (
+                prepend references = @dracula-3d-Model-City-rnd-main-Bistritz-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Munich" (
+                prepend references = @dracula-3d-Model-City-rnd-main-Munich-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "London" (
+                prepend references = @dracula-3d-Model-City-rnd-main-London-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewCity0" (
+                prepend references = @dracula-3d-Model-City-rnd-main-NewCity0-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewCity1" (
+                prepend references = @dracula-3d-Model-City-rnd-main-NewCity1-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Place" (
+            kind = "group"
+        )
+        {
+            over "GoldenKroneHotel" (
+                prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "OtherPlace" (
+            kind = "group"
+        )
+        {
+            over "CastleDracula" (
+                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-CastleDracula-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewOtherPlace0" (
+                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace0-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewOtherPlace1" (
+                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace1-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Country" (
+            kind = "group"
+        )
+        {
+            over "Romania" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Hungary" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Hungary-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "France" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-France-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Slovakia" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Slovakia-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Person" (
+            kind = "group"
+        )
+        {
+            over "JonathanHarker" (
+                prepend references = @dracula-3d-Model-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewPerson0" (
+                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson0-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewPerson1" (
+                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson1-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Player" (
+            kind = "group"
+        )
+        {
+            over "EmilSinclair" (
+                prepend references = @dracula-3d-Model-Player-rnd-main-EmilSinclair-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Vampire" (
+            kind = "group"
+        )
+        {
+            over "CountDracula" (
+                prepend references = @dracula-3d-Model-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "MinorVampire" (
+            kind = "group"
+        )
+        {
+            over "Woman0" (
+                prepend references = @dracula-3d-Model-MinorVampire-rnd-main-Woman0-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Woman1" (
+                prepend references = @dracula-3d-Model-MinorVampire-rnd-main-Woman1-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Woman2" (
+                prepend references = @dracula-3d-Model-MinorVampire-rnd-main-Woman2-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Woman3" (
+                prepend references = @dracula-3d-Model-MinorVampire-rnd-main-Woman3-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "NonPlayer" (
+            kind = "group"
+        )
+        {
+            over "MinaMurray" (
+                prepend references = @dracula-3d-Model-NonPlayer-rnd-main-MinaMurray-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "LucyWestenra" (
+                prepend references = @dracula-3d-Model-NonPlayer-rnd-main-LucyWestenra-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "ArthurHolmwood" (
+                prepend references = @dracula-3d-Model-NonPlayer-rnd-main-ArthurHolmwood-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Renfield" (
+                prepend references = @dracula-3d-Model-NonPlayer-rnd-main-Renfield-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "JohnSeward" (
+                prepend references = @dracula-3d-Model-NonPlayer-rnd-main-JohnSeward-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "QuinceyMorris" (
+                prepend references = @dracula-3d-Model-NonPlayer-rnd-main-QuinceyMorris-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Sailor" (
+            kind = "group"
+        )
+        {
+            over "TheCaptain" (
+                prepend references = @dracula-3d-Model-Sailor-rnd-main-TheCaptain-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "Petrofsky" (
+                prepend references = @dracula-3d-Model-Sailor-rnd-main-Petrofsky-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "TheFirstMate" (
+                prepend references = @dracula-3d-Model-Sailor-rnd-main-TheFirstMate-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "TheCook" (
+                prepend references = @dracula-3d-Model-Sailor-rnd-main-TheCook-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+
+        def "Ship" (
+            kind = "group"
+        )
+        {
+            over "TheDemeter" (
+                prepend references = @dracula-3d-Model-Ship-rnd-main-TheDemeter-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+    }
+}
+
