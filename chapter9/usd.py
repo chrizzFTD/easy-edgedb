@@ -13,7 +13,7 @@ from grill.tokens import ids
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-names.UsdAsset.DEFAULT_SUFFIX = "usd"
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 
 def main():
@@ -21,12 +21,24 @@ def main():
     stage = cook.fetch_stage(names.UsdAsset.get_default(code='dracula'))
 
     # 1. Taxonomy Definition
+    _shade_fields = {ids.CGAsset.kingdom.name: "Shade"}
+    from pxr import Kind
+    with cook.taxonomy_context(stage):
+        model_default_color = cook.create_unit(
+            cook.define_taxon(stage, "Color", id_fields=_shade_fields),
+            "ModelDefault"
+        )
+        with cook.unit_context(model_default_color):
+            UsdGeom.Gprim(model_default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
+            # TODO: see if component default actually makes sense, for now need to change it
+            Usd.ModelAPI(model_default_color).SetKind(Kind.Tokens.subcomponent)
+
     # 1.1 Object kingdom is for "all things that exist" in the universe.
-    _object_fields = {ids.CGAsset.kingdom.name: "Object"}
+    _model_fields = {ids.CGAsset.kingdom.name: "Model"}
     with cook.taxonomy_context(stage):
         # 1.2 These are the "foundational" objects that other taxa inherit from.
         person, transport, place, ship = [
-            cook.define_taxon(stage, name, id_fields=_object_fields)
+            cook.define_taxon(stage, name, id_fields=_model_fields)
             for name in ("Person", "LandTransport", "Place", "Ship",)
         ]
         for each in (person, place, ship):  # base xformable taxa
@@ -132,20 +144,23 @@ def main():
         golden_geom = cook.fetch_stage(golden_asset_name.get(part="Geom"))
         golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
         payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
-        golden_krone.GetPayloads().AddPayload(payload)
+        geom_root = stage.DefinePrim(golden_krone.GetPath().AppendPath("Geom"))
+        # TODO: please see how to make this easier
+        cook.fetch_stage(golden_asset_name).GetDefaultPrim().GetPrimAtPath("Geom").GetSpecializes().AddSpecialize(model_default_color.GetPath())
+        geom_root.GetPayloads().AddPayload(payload)
 
         # volume_path = UsdGeom.Mesh, "Volume", "Main volume for Golden Krone"
         # ground_path = UsdGeom.Sphere, "Ground", "Main ground where Golden Krone exists"
-        with gusd.edit_context(payload, golden_krone):
+        with gusd.edit_context(payload, geom_root):
             def _define(schema, path, doc):
-                geom = schema.Define(stage, golden_krone.GetPath().AppendPath(path))
+                geom = schema.Define(stage, geom_root.GetPath().AppendPath(path))
                 geom.GetPrim().SetDocumentation(doc)
                 return geom
 
-            volume, ground, top_back_left, top_front_left, top_back_right, top_front_right = [
+            ground, volume, top_back_left, top_front_left, top_back_right, top_front_right = [
                 _define(cls, path, doc) for cls, path, doc in (
-                    (UsdGeom.Mesh, "Volume", "Main volume for Golden Krone"),
-                    (UsdGeom.Sphere, "Ground", "Main ground where Golden Krone exists"),
+                    (UsdGeom.Mesh, "Ground", "Main ground where Golden Krone exists"),
+                    (UsdGeom.Sphere, "Volume", "Main volume for Golden Krone"),
                     (UsdGeom.Cube, "TopBackLeft", "Golden Krone's top back left section"),
                     (UsdGeom.Capsule, "TopFrontLeft", "Golden Krone's top from left section"),
                     (UsdGeom.Cylinder, "TopBackRight", "Golden Krone's top back right section"),
@@ -247,13 +262,14 @@ def main():
         golden_color = cook.fetch_stage(golden_asset_name.get(part="Color"))
         # For default color, multiple prims will be using it, so best UX to define the
         # color first, then add it to existing prims rather than the inverse.
-        default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
-        golden_color.SetDefaultPrim(default_color)
-        UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
+        # default_color = golden_color.OverridePrim(Sdf.Path.absoluteRootPath.AppendPath("default"))
+        # golden_color.SetDefaultPrim(default_color)
+        # UsdGeom.Gprim(default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
         golden_color_layer = golden_color.GetRootLayer()
         geoms_with_color = (volume, ground, top_back_left, top_front_left, top_back_right, top_front_right)
-        for geom in geoms_with_color:
-            geom.GetPrim().GetPayloads().AddPayload(golden_color_layer.identifier)
+        # for geom in geoms_with_color:
+        #     # TODO: check with pixar about this not working inherited primvars on point instancer prototypes
+        #     geom.GetPrim().GetReferences().AddReference(golden_color_layer.identifier)
 
         color_set = golden_krone.GetVariantSets().AddVariantSet("color")
 
@@ -263,9 +279,9 @@ def main():
             with gusd.edit_context(color_set, cook.unit_asset(golden_krone)):
                 golden_color_path = Sdf.Path.absoluteRootPath.AppendPath(option_name)
                 golden_color.OverridePrim(golden_color_path)
-                payload = Sdf.Payload(golden_color_layer.identifier, golden_color_path)
-                golden_krone.GetPayloads().AddPayload(payload)
-                with gusd.edit_context(payload, golden_krone):
+                arc = Sdf.Reference(golden_color_layer.identifier, golden_color_path)
+                golden_krone.GetReferences().AddReference(arc)
+                with gusd.edit_context(arc, golden_krone):
                     interpolation = primvar_meta.interpolation()
                     for geom in geoms_with_color:
                         color_var = geom.GetDisplayColorPrimvar()
@@ -278,16 +294,29 @@ def main():
         # extent = volume.GetExtentAttr()
         # extent.Set(extent.Get() * volume_size)
 
-    cook.spawn_unit(romania, hungary)
-    cook.spawn_unit(romania, castle_dracula)
+    # cook.spawn_unit(romania, hungary)
+    # cook.spawn_unit(romania, castle_dracula)
     romania_asset_name = names.UsdAsset(Usd.ModelAPI(romania).GetAssetIdentifier().path)
     with cook.unit_context(romania):
         romania_geom = cook.fetch_stage(romania_asset_name.get(part="Geom"))
         romania_geom.SetDefaultPrim(romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
         romania_payload = Sdf.Payload(romania_geom.GetRootLayer().identifier)
         romania.GetPayloads().AddPayload(romania_payload)
+        instancer_path = romania.GetPath().AppendPath("Buildings")
+        targets = []
+        # TODO: build another point instancer on another unit, then merge and see what happens
+        for selection in ("", *color_set.GetVariantNames()):
+            name = golden_krone.GetName()
+            if selection:
+                name = f"{name}_{selection}"
+            # spawn prototypes under point instancer for ease of authoring
+            prototype = cook.spawn_unit(romania, golden_krone, path=instancer_path.AppendPath(name).MakeRelativePath(romania.GetPath()))
+            # if selection:
+            #     prototype.GetVariantSet("color").SetVariantSelection(selection)
+            prototype.GetVariantSet("color").SetVariantSelection("constant")
+            relpath = prototype.GetPath().MakeRelativePath(instancer_path)
+            targets.append(relpath)
         with gusd.edit_context(romania_payload, romania):
-            instancer_path = romania.GetPath().AppendPath("Buildings")
             buildings = UsdGeom.PointInstancer.Define(stage, instancer_path)
             X = np.linspace(0, (40*width)-width, 40)
             Z = np.linspace(0, (30*depth)-depth, 30)
@@ -295,17 +324,8 @@ def main():
             xx, yy, zz = np.meshgrid(X, Y, Z)
             points = np.stack((xx.ravel(), yy.ravel(), zz.ravel()), axis=1)
             buildings.GetPositionsAttr().Set(points)
-            for selection in ("", *color_set.GetVariantNames()):
-                name = golden_krone.GetName()
-                if selection:
-                    name = f"{name}_{selection}"
-                # spawn prototypes under point instancer for ease of authoring
-                prototype = cook.spawn_unit(romania, golden_krone, path=instancer_path.AppendPath(name).MakeRelativePath(romania.GetPath()))
-                relpath = prototype.GetPath().MakeRelativePath(instancer_path)
-                buildings.GetPrototypesRel().AddTarget(relpath)
-                if selection:
-                    prototype.GetVariantSet("color").SetVariantSelection(selection)
-
+            for target in targets:
+                buildings.GetPrototypesRel().AddTarget(target)
             proto_size = len(buildings.GetPrototypesRel().GetTargets())
             choices = range(proto_size)
             buildings.GetProtoIndicesAttr().Set(np.random.choice(choices, size=len(points)))
