@@ -63,6 +63,24 @@ def "Catalogue" (
             )
             {
             }
+
+            over "NewCity2" (
+                prepend references = @dracula-3d-Model-City-rnd-main-NewCity2-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewCity3" (
+                prepend references = @dracula-3d-Model-City-rnd-main-NewCity3-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewCity4" (
+                prepend references = @dracula-3d-Model-City-rnd-main-NewCity4-lead-base-whole.1.usda@
+            )
+            {
+            }
         }
 
         def "Place" (
@@ -94,6 +112,24 @@ def "Catalogue" (
 
             over "NewOtherPlace1" (
                 prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace1-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewOtherPlace2" (
+                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace2-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewOtherPlace3" (
+                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace3-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewOtherPlace4" (
+                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace4-lead-base-whole.1.usda@
             )
             {
             }
@@ -146,6 +182,24 @@ def "Catalogue" (
 
             over "NewPerson1" (
                 prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson1-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewPerson2" (
+                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson2-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewPerson3" (
+                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson3-lead-base-whole.1.usda@
+            )
+            {
+            }
+
+            over "NewPerson4" (
+                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson4-lead-base-whole.1.usda@
             )
             {
             }

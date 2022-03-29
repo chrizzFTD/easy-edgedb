@@ -1,0 +1,261 @@
+#usda 1.0
+(
+    defaultPrim = "Taxonomy"
+)
+
+class "Taxonomy"
+{
+    def "Person" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Person"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Person = 0
+                }
+            }
+        }
+    )
+    {
+        int age (
+            doc = "This value must be constrained at the data base / application level since USD does not provide easy constraint mechanisms for values yet."
+        )
+        rel lover
+        rel places_visited
+        int strength (
+            doc = "Used to help answer if a person is able to perform some actions (e.g. can this person open a door?)"
+        )
+    }
+
+    def "LandTransport" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "LandTransport"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int LandTransport = 0
+                }
+            }
+        }
+        prepend variantSets = "Transport"
+    )
+    {
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
+    }
+
+    def "Place" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Place"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Place = 0
+                }
+            }
+        }
+    )
+    {
+        string modern_name
+    }
+
+    def "Ship" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Ship"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Ship = 0
+                }
+            }
+        }
+    )
+    {
+        rel crew
+        rel sailors
+    }
+
+    def "Player" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Player"
+                }
+                dictionary taxa = {
+                    int Player = 0
+                }
+            }
+        }
+        prepend references = [
+            </Taxonomy/Person>,
+            </Taxonomy/LandTransport>
+        ]
+    )
+    {
+    }
+
+    def "NonPlayer" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "NonPlayer"
+                }
+                dictionary taxa = {
+                    int NonPlayer = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+    }
+
+    def "Vampire" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Vampire"
+                }
+                dictionary taxa = {
+                    int Vampire = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+        rel slaves
+    }
+
+    def "MinorVampire" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "MinorVampire"
+                }
+                dictionary taxa = {
+                    int MinorVampire = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+    }
+
+    def "Crewman" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Crewman"
+                }
+                dictionary taxa = {
+                    int Crewman = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+    }
+
+    def "Sailor" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Sailor"
+                }
+                dictionary taxa = {
+                    int Sailor = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+        prepend variantSets = "Rank"
+    )
+    {
+        variantSet "Rank" = {
+            "Captain" {
+
+            }
+            "Cook" {
+
+            }
+            "FirstMate" {
+
+            }
+            "SecondMate" {
+
+            }
+        }
+    }
+
+    def "City" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "City"
+                }
+                dictionary taxa = {
+                    int City = 0
+                }
+            }
+        }
+        kind = "assembly"
+        prepend references = </Taxonomy/Place>
+    )
+    {
+        int population
+    }
+
+    def "Country" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Country"
+                }
+                dictionary taxa = {
+                    int Country = 0
+                }
+            }
+        }
+        kind = "assembly"
+        prepend references = </Taxonomy/Place>
+    )
+    {
+    }
+
+    def "OtherPlace" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "OtherPlace"
+                }
+                dictionary taxa = {
+                    int OtherPlace = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Place>
+    )
+    {
+    }
+}
+

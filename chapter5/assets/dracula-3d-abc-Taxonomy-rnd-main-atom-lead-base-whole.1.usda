@@ -1,0 +1,172 @@
+#usda 1.0
+(
+    defaultPrim = "Taxonomy"
+)
+
+class "Taxonomy"
+{
+    def "Person" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Person"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Person = 0
+                }
+            }
+        }
+    )
+    {
+        int2 age
+        rel lover
+        rel places_visited
+    }
+
+    def "Transport" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Transport"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Transport = 0
+                }
+            }
+        }
+        prepend variantSets = "Transport"
+    )
+    {
+        variantSet "Transport" = {
+            "Feet" {
+
+            }
+            "HorseDrawnCarriage" {
+
+            }
+            "Train" {
+
+            }
+        }
+    }
+
+    def "Place" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Place"
+                    string kingdom = "Object"
+                }
+                dictionary taxa = {
+                    int Place = 0
+                }
+            }
+        }
+    )
+    {
+        string modern_name
+    }
+
+    def "Player" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Player"
+                }
+                dictionary taxa = {
+                    int Player = 0
+                }
+            }
+        }
+        prepend references = [
+            </Taxonomy/Person>,
+            </Taxonomy/Transport>
+        ]
+    )
+    {
+    }
+
+    def "NonPlayer" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "NonPlayer"
+                }
+                dictionary taxa = {
+                    int NonPlayer = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+    }
+
+    def "Vampire" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Vampire"
+                }
+                dictionary taxa = {
+                    int Vampire = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+    }
+
+    def "MinorVampire" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "MinorVampire"
+                }
+                dictionary taxa = {
+                    int MinorVampire = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Person>
+    )
+    {
+        rel master
+    }
+
+    def "City" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "City"
+                }
+                dictionary taxa = {
+                    int City = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Place>
+    )
+    {
+    }
+
+    def "Country" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Country"
+                }
+                dictionary taxa = {
+                    int Country = 0
+                }
+            }
+        }
+        prepend references = </Taxonomy/Place>
+    )
+    {
+    }
+}
+

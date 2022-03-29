@@ -12,7 +12,7 @@ class "Catalogue"
 }
 
 def "Origin" (
-    prepend apiSchemas = ["GeomModelAPI"]
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
         string name = "CountDracula"
@@ -21,6 +21,6 @@ def "Origin" (
     kind = "component"
 )
 {
-    string label = "Count Dracula"
+    uniform token ui:displayName = "Count Dracula"
 }
 

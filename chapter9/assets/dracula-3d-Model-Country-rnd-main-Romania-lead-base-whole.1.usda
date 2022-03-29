@@ -12,7 +12,7 @@ class "Catalogue"
 }
 
 def "Origin" (
-    prepend apiSchemas = ["GeomModelAPI"]
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
         string name = "Romania"
@@ -22,9 +22,9 @@ def "Origin" (
     prepend payload = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-Geom.1.usda@
 )
 {
-    def "Buildings" (
-        kind = "group"
-    )
+    uniform token ui:displayName = "Romania"
+
+    def "Buildings"
     {
         def "GoldenKroneHotel" (
             instanceable = true

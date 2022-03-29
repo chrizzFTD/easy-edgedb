@@ -12,7 +12,7 @@ class "Catalogue"
 }
 
 def "Origin" (
-    prepend apiSchemas = ["GeomModelAPI"]
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Sailor-rnd-main-TheCaptain-lead-base-whole.1.usda@
         string name = "TheCaptain"
@@ -24,5 +24,6 @@ def "Origin" (
     }
 )
 {
+    uniform token ui:displayName = "TheCaptain"
 }
 

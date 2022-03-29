@@ -12,7 +12,7 @@ class "Catalogue"
 }
 
 def "Origin" (
-    prepend apiSchemas = ["GeomModelAPI"]
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-OtherPlace-rnd-main-CastleDracula-lead-base-whole.1.usda@
         string name = "CastleDracula"
@@ -22,6 +22,6 @@ def "Origin" (
 )
 {
     int[] doors_strength = [6, 19, 10]
-    string label = "Castle Dracula"
+    uniform token ui:displayName = "Castle Dracula"
 }
 

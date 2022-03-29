@@ -12,7 +12,7 @@ class "Catalogue"
 }
 
 def "Origin" (
-    prepend apiSchemas = ["GeomModelAPI"]
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-City-rnd-main-Budapest-lead-base-whole.1.usda@
         string name = "Budapest"
@@ -21,7 +21,7 @@ def "Origin" (
     kind = "component"
 )
 {
-    string label = "Buda-Pesth"
     string modern_name = "Budapest!"
+    uniform token ui:displayName = "Buda-Pesth"
 }
 

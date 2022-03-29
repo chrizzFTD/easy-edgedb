@@ -38,11 +38,6 @@ over "Catalogue"
                 prepend rel lover = </Catalogue/Model/NonPlayer/ArthurHolmwood>
             }
 
-            over "Renfield"
-            {
-                int strength = 10
-            }
-
             over "MinaMurray"
             {
                 prepend rel lover = </Catalogue/Model/Person/JonathanHarker>

@@ -1,4 +1,3 @@
-import enum
 import logging
 import datetime
 import colorsys
@@ -41,8 +40,8 @@ def main():
             cook.define_taxon(stage, name, id_fields=_model_fields)
             for name in ("Person", "LandTransport", "Place", "Ship",)
         ]
-        for each in (person, place, ship):  # base xformable taxa
-            UsdGeom.Xform.Define(stage, each.GetPath())
+        for taxon in (person, place, ship):  # base xformable taxa
+            UsdGeom.Xform.Define(stage, taxon.GetPath())
 
         player = cook.define_taxon(stage, "Player", references=(person, transport))
         non_player, vampire, minor_vampire, crewman, sailor = [
@@ -64,6 +63,7 @@ def main():
         age.SetDocumentation("This value must be constrained at the data base / application level since USD does not provide easy constraint mechanisms for values yet.")
         strength = person.CreateAttribute('strength', Sdf.ValueTypeNames.Int, custom=False)
         strength.SetDocumentation("Used to help answer if a person is able to perform some actions (e.g. can this person open a door?)")
+
         place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String, custom=False)
 
         for taxon, relationships in (
@@ -111,7 +111,8 @@ def main():
     arthur.GetRelationship('lover').AddTarget(lucy.GetPath())
     lucy.GetRelationship("lover").AddTarget(arthur.GetPath())
 
-    renfield.GetAttribute("strength").Set(10)
+    with cook.unit_context(renfield):
+        renfield.GetAttribute("strength").Set(10)
 
     mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
     jonathan.GetRelationship("lover").AddTarget(mina.GetPath())
@@ -129,11 +130,11 @@ def main():
     stage.SetStartTimeCode(0)
     stage.SetEndTimeCode(192)
 
-    def _random_colors(amount):
-        return np.random.dirichlet(np.ones(3), size=amount)
+    from PySide6 import QtGui
+    from functools import partial
+    from grill.views._attributes import _random_colors, _color_spectrum
 
-    def _color_spectrum(amount):
-        return [colorsys.hsv_to_rgb(i / amount, 1, .75) for i in range(amount)]
+    _color_spectrum = partial(_color_spectrum, QtGui.QColor.fromHsvF(0, 1, 1), QtGui.QColor.fromHsvF(1, 1, 1))
 
     golden_asset_name = names.UsdAsset(Usd.ModelAPI(golden_krone).GetAssetIdentifier().path)
     # golden_asset_name.suffix = "usd"
@@ -142,11 +143,13 @@ def main():
         # unit context X -> add geom payload -> add prims A, B
         #               `-> add variant sets -> add color to created prims A, B (same python objects)
         golden_geom = cook.fetch_stage(golden_asset_name.get(part="Geom"))
+        # TODO: let's place payload on the root of the unit
         golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
         payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
-        geom_root = stage.DefinePrim(golden_krone.GetPath().AppendPath("Geom"))
-        # TODO: please see how to make this easier
-        cook.fetch_stage(golden_asset_name).GetDefaultPrim().GetPrimAtPath("Geom").GetSpecializes().AddSpecialize(model_default_color.GetPath())
+
+        # Create a "Geom" prim specializing from the model_default_color, which is a subcomponent unit.
+        geom_root = cook.spawn_unit(golden_krone, model_default_color, "Geom")
+        geom_root.SetInstanceable(False)  # by default, spawning a unit makes it instanceable.
         geom_root.GetPayloads().AddPayload(payload)
 
         with gusd.edit_context(payload, geom_root):
@@ -167,8 +170,8 @@ def main():
             ]
             # https://github.com/marcomusy/vedo/issues/86
             # https://blender.stackexchange.com/questions/230534/fastest-way-to-skin-a-grid
-            width = 10
-            depth = 8
+            width = 10  # 10
+            depth = 8  # 8
             x_ = np.linspace(-(width / 2), width / 2, width)
             z_ = np.linspace(depth / 2, - depth / 2, depth)
             X, Z = np.meshgrid(x_, z_)
@@ -204,55 +207,9 @@ def main():
             top_back_left.AddTranslateOp().Set(value=(-volume_size, volume_size * 3, -volume_size))
             top_front_left.AddTranslateOp().Set(value=(-volume_size, volume_size * 3, volume_size))
 
-        class _GeomCount(enum.Enum):  # TODO: find a better name
-            _ignore_ = 'sizes'
-            # One element for the entire Gprim; no interpolation.
-            CONSTANT = UsdGeom.Tokens.constant, {UsdGeom.Gprim: 1}
-            # One element for each face of the mesh; elements are typically not interpolated
-            # but are inherited by other faces derived from a given face (via subdivision, tessellation, etc.).
-            UNIFORM = UsdGeom.Tokens.uniform, {
-                UsdGeom.Mesh: lambda mesh: len(mesh.GetFaceVertexCountsAttr().Get()),
-                UsdGeom.Sphere: 100,  # TODO: there must be a better way of finding these numbers.
-                UsdGeom.Cube: 6,
-                UsdGeom.Capsule: 90,
-                UsdGeom.Cone: 20,
-                UsdGeom.Cylinder: 30,
-            }
-            # One element for each point of the mesh; interpolation of point data is:
-            #   Varying: always linear.
-            #   Vertex: applied according to the subdivisionScheme attribute.
-            VERTEX, VARYING = (UsdGeom.Tokens.vertex, sizes := {
-                UsdGeom.Mesh: lambda mesh: len(mesh.GetPointsAttr().Get()),
-                UsdGeom.Sphere: 92,
-                UsdGeom.Cube: 8,
-                UsdGeom.Capsule: 82,
-                UsdGeom.Cone: 31,
-                UsdGeom.Cylinder: 42,
-            }), (UsdGeom.Tokens.varying, sizes)
-            # One element for each of the face-vertices that define the mesh topology;
-            # interpolation of face-vertex data may be smooth or linear, according to the
-            # subdivisionScheme and faceVaryingLinearInterpolation attributes.
-            FACE_VARYING = UsdGeom.Tokens.faceVarying, {
-                UsdGeom.Mesh: lambda mesh: len(mesh.GetFaceVertexIndicesAttr().Get()),
-                UsdGeom.Sphere: 380,
-                UsdGeom.Cube: 24,
-                UsdGeom.Capsule: 340,
-                UsdGeom.Cone: 70,
-                UsdGeom.Cylinder: 100,
-            }
-
-            def size(self, prim):
-                for geom_class, value in self.value[1].items():
-                    if geom := geom_class(prim):
-                        return value(geom) if callable(value) else value
-                raise TypeError(f"Don't know how to count {self} on {prim}")
-
-            def interpolation(self):
-                return self.value[0]
-
-        wavelength_options = [i for i in _GeomCount if i != _GeomCount.CONSTANT]
+        wavelength_options = [i for i in gusd._GeomPrimvarInfo if i != gusd._GeomPrimvarInfo.CONSTANT]
         color_options = {
-            "constant": (_GeomCount.CONSTANT, _random_colors),
+            "constant": (gusd._GeomPrimvarInfo.CONSTANT, _random_colors),
             **{f"random_{i.interpolation()}": (i, _random_colors) for i in wavelength_options},
             **{f"spectrum_{i.interpolation()}": (i, _color_spectrum) for i in wavelength_options},
         }
@@ -260,7 +217,6 @@ def main():
         golden_color = cook.fetch_stage(golden_asset_name.get(part="Color"))
         # For default color, multiple prims will be using it, so best UX to define the
         # color first, then add it to existing prims rather than the inverse.
-        golden_color_layer = golden_color.GetRootLayer()
         geoms_with_color = (volume, ground, top_back_left, top_front_left, top_back_right, top_front_right)
 
         color_set = golden_krone.GetVariantSets().AddVariantSet("color")
@@ -271,7 +227,7 @@ def main():
             with gusd.edit_context(color_set, cook.unit_asset(golden_krone)):
                 golden_color_path = Sdf.Path.absoluteRootPath.AppendPath(option_name)
                 golden_color.OverridePrim(golden_color_path)
-                arc = Sdf.Reference(golden_color_layer.identifier, golden_color_path)
+                arc = Sdf.Reference(golden_color.GetRootLayer().identifier, golden_color_path)
                 golden_krone.GetReferences().AddReference(arc)
                 with gusd.edit_context(arc, golden_krone):
                     interpolation = primvar_meta.interpolation()
@@ -292,7 +248,7 @@ def main():
         romania_geom.SetDefaultPrim(romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
         romania_payload = Sdf.Payload(romania_geom.GetRootLayer().identifier)
         romania.GetPayloads().AddPayload(romania_payload)
-        instancer_path = romania.GetPath().AppendPath("Buildings")
+        instancer_path = (romania_path:=romania.GetPath()).AppendPath("Buildings")
         targets = []
         # TODO: build another point instancer on another unit, then merge and see what happens
         for selection in ("", *color_set.GetVariantNames()):
@@ -300,16 +256,19 @@ def main():
             if selection:
                 name = f"{name}_{selection}"
             # spawn prototypes under point instancer for ease of authoring
-            prototype = cook.spawn_unit(romania, golden_krone, path=instancer_path.AppendPath(name).MakeRelativePath(romania.GetPath()))
+            prototype = cook.spawn_unit(romania, golden_krone, path=instancer_path.AppendPath(name).MakeRelativePath(romania_path))
             if selection:
                 prototype.GetVariantSet("color").SetVariantSelection(selection)
             relpath = prototype.GetPath().MakeRelativePath(instancer_path)
             targets.append(relpath)
         with gusd.edit_context(romania_payload, romania):
             buildings = UsdGeom.PointInstancer.Define(stage, instancer_path)
-            X = np.linspace(0, (40*width)-width, 40)
-            Z = np.linspace(0, (30*depth)-depth, 30)
-            Y = np.linspace(0, 250, 30)
+            X_size = 20 # 40
+            Z_size = 15 # 30
+            Y_size = 100 # 250
+            X = np.linspace(0, (X_size*width)-width, X_size)
+            Z = np.linspace(0, (Z_size*depth)-depth, Z_size)
+            Y = np.linspace(0, Y_size, Z_size)
             xx, yy, zz = np.meshgrid(X, Y, Z)
             points = np.stack((xx.ravel(), yy.ravel(), zz.ravel()), axis=1)
             buildings.GetPositionsAttr().Set(points)
@@ -355,17 +314,15 @@ def main():
     """
     But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
     """
-    # list(write._iter_taxa(stage, place))
 
-    for each, places in {
-        # jonathan: city_root.GetChildren(),
-        jonathan: [munich, budapest, bistritz, london, romania, castle_dracula],
-        emil: cook.itaxa(stage.Traverse(), city),
-        dracula: [romania],
-        mina: [castle_dracula, romania],
-        sailor: [london],  # can propagate updates to a whole taxon group
-        non_player: [london],  # can propagate updates to a whole taxon group
-    }.items():
+    for each, places in (
+        (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
+        (emil, cook.itaxa(stage.Traverse(), city)),
+        (dracula, [romania]),
+        (mina, [castle_dracula, romania]),
+        (sailor, [london]),  # can propagate updates to a whole taxon group
+        (non_player, [london]),  # can propagate updates to a whole taxon group
+    ):
         visit_rel = each.GetRelationship('places_visited')
         for place in places:
             visit_rel.AddTarget(place.GetPath())
@@ -500,7 +457,26 @@ def main():
     #     # 0:00:07.193135
     #     # could be faster.
     #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
-    amount = 2  # TODO: this kills the layerstack description widget ): update to be prim selection based + filter specific?
+    amount = 5
+    # 2022 03 24: With the update to include the catalogue on all units, amount = 1_000 (3k units):
+    # No sublayered catalogue: Total time: 0:00:21.288368
+    # Sublayered catalogue: Total time: 0:02:04.093982
+    # Sublayered cataloguee + SdfChangeBlock + No Cache: Total time: 0:00:10.672880
+
+    # amount = 500 (1.5k units):
+    # No sublayered catalogue: Total time: 0:00:08.725509
+    # Sublayered catalogue: Total time: 0:00:35.310143
+    # Sublayered cataloguee + SdfChangeBlock + No Cache: Total time: 0:00:05.617066
+
+    # amount = 250 (750 units):
+    # No sublayered catalogue: Total time: 0:00:03.501835
+    # Sublayered catalogue: Total time: 0:00:12.058600
+    # Sublayered cataloguee + SdfChangeBlock: Total time: 0:00:04.041061
+
+    # amount = 125 (375 units):
+    # No sublayered catalogue: Total time: 0:00:01.934740
+    # Sublayered catalogue: Total time: 0:00:04.428612
+
 
     # Time with 1_000 (3k created assets):
     # create:
@@ -516,7 +492,7 @@ def main():
     # Total time: 0:00:20.229527
     # for name in range(amount):
     #     for taxon in (city, other_place, person):
-    #         write.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
+    #         cook.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
 
     # create_many:
     # 0:00:14.795971
@@ -573,11 +549,13 @@ if __name__ == "__main__":
 
     # 3. With the set `{'W', 'J', 'C'}`, how would you display all the `Person` types with a name that contains any of these capital letters?
     letters = {'W', 'J', 'C'}
-    # pprint([i for i in write._iter_taxa(stage, 'Person') if letters.intersection(each.GetName())])
+    # from pprint import pprint
+    # pprint([i for i in cook.itaxa(prims, 'Person') if letters.intersection(i.GetName())])
 
     # 5. How would you add ' the Great' to every Person type?
+    from pxr import UsdUI
     for each in cook.itaxa(prims, 'Person'):
-        print(each)
-        label = each.GetAttribute('label')
-        label.Set(label.Get() or "" + ' the Great')
-        # print(label.Get())
+        ui = UsdUI.SceneGraphPrimAPI(each)
+        display_name = ui.GetDisplayNameAttr()
+        display_name.Set(display_name.Get() + ' the Great')
+

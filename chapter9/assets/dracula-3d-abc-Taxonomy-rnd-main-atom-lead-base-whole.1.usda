@@ -19,7 +19,6 @@ class "Taxonomy"
         }
     )
     {
-        string label
     }
 
     def Xform "Person" (
@@ -39,7 +38,6 @@ class "Taxonomy"
         int age (
             doc = "This value must be constrained at the data base / application level since USD does not provide easy constraint mechanisms for values yet."
         )
-        string label
         rel lover
         rel places_visited
         int strength (
@@ -62,7 +60,6 @@ class "Taxonomy"
         prepend variantSets = "Transport"
     )
     {
-        string label
         variantSet "Transport" = {
             "Feet" {
 
@@ -90,7 +87,6 @@ class "Taxonomy"
         }
     )
     {
-        string label
         string modern_name
     }
 
@@ -109,7 +105,6 @@ class "Taxonomy"
     )
     {
         rel crew
-        string label
         rel sailors
     }
 
@@ -130,7 +125,6 @@ class "Taxonomy"
         ]
     )
     {
-        string label
     }
 
     def "NonPlayer" (
@@ -147,7 +141,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
     }
 
     def "Vampire" (
@@ -164,7 +157,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
         rel slaves
     }
 
@@ -182,7 +174,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
     }
 
     def "Crewman" (
@@ -199,7 +190,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
     }
 
     def "Sailor" (
@@ -217,7 +207,6 @@ class "Taxonomy"
         prepend variantSets = "Rank"
     )
     {
-        string label
         variantSet "Rank" = {
             "Captain" {
 
@@ -248,7 +237,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        string label
         int population
     }
 
@@ -266,7 +254,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        string label
     }
 
     def "OtherPlace" (
@@ -283,7 +270,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        string label
     }
 }
 

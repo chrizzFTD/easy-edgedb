@@ -12,7 +12,7 @@ class "Catalogue"
 }
 
 def "Origin" (
-    prepend apiSchemas = ["GeomModelAPI"]
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
         string name = "GoldenKroneHotel"
@@ -22,9 +22,10 @@ def "Origin" (
     prepend variantSets = "color"
 )
 {
-    string label = "Golden Krone Hotel"
+    uniform token ui:displayName = "Golden Krone Hotel"
 
     def "Geom" (
+        instanceable = false
         prepend payload = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Geom.1.usda@
         prepend specializes = </Catalogue/Shade/Color/ModelDefault>
     )
