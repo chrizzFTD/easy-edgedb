@@ -51,36 +51,6 @@ def "Catalogue" (
             )
             {
             }
-
-            over "NewCity0" (
-                prepend references = @dracula-3d-Model-City-rnd-main-NewCity0-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity1" (
-                prepend references = @dracula-3d-Model-City-rnd-main-NewCity1-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity2" (
-                prepend references = @dracula-3d-Model-City-rnd-main-NewCity2-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity3" (
-                prepend references = @dracula-3d-Model-City-rnd-main-NewCity3-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity4" (
-                prepend references = @dracula-3d-Model-City-rnd-main-NewCity4-lead-base-whole.1.usda@
-            )
-            {
-            }
         }
 
         def "Place" (
@@ -100,36 +70,6 @@ def "Catalogue" (
         {
             over "CastleDracula" (
                 prepend references = @dracula-3d-Model-OtherPlace-rnd-main-CastleDracula-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewOtherPlace0" (
-                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace0-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewOtherPlace1" (
-                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace1-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewOtherPlace2" (
-                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace2-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewOtherPlace3" (
-                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace3-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewOtherPlace4" (
-                prepend references = @dracula-3d-Model-OtherPlace-rnd-main-NewOtherPlace4-lead-base-whole.1.usda@
             )
             {
             }
@@ -170,36 +110,6 @@ def "Catalogue" (
         {
             over "JonathanHarker" (
                 prepend references = @dracula-3d-Model-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewPerson0" (
-                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson0-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewPerson1" (
-                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson1-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewPerson2" (
-                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson2-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewPerson3" (
-                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson3-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewPerson4" (
-                prepend references = @dracula-3d-Model-Person-rnd-main-NewPerson4-lead-base-whole.1.usda@
             )
             {
             }
