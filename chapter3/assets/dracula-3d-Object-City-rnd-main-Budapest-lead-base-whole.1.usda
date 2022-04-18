@@ -1,0 +1,27 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-City-rnd-main-Budapest-lead-base-whole.1.usda@
+        string name = "Budapest"
+    }
+    prepend inherits = </Taxonomy/City>
+    kind = "component"
+)
+{
+    custom string modern_name = "Budapest!"
+    uniform token ui:displayName = "Buda-Pesth"
+}
+

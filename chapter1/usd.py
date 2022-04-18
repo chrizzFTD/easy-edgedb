@@ -9,26 +9,26 @@ Some kind of Person type. We need it to have a name, and also a way to track the
 """
 from pathlib import Path
 
-from grill import write
+from grill import cook
 from pxr import Sdf, Usd
 
-write.repo.set(Path(__file__).parent / "assets")
+cook.Repository.set(Path(__file__).parent / "assets")
 
-stage = write.fetch_stage(write.UsdAsset.get_default(code='dracula'))
+stage = cook.fetch_stage(cook.UsdAsset.get_default(code='dracula'))
 
 # we can define a category with or without an edit context
-city = write.define_taxon(stage, "City")
+city = cook.define_taxon(stage, "City")
 
-with write.taxonomy_context(stage):
-    person = write.define_taxon(stage, "Person")
+with cook.taxonomy_context(stage):
+    person = cook.define_taxon(stage, "Person")
     # but to edit a category definition we must be in the proper context
     city.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
     person.CreateRelationship('places_visited')
 
-write.create(city, 'Munich')
-budapest = write.create(city, 'Budapest', label='Buda-Pesth')
-bistritz = write.create(city, 'Bistritz', label='Bistritz')
-jonathan = write.create(person, 'JonathanHarker', label='Jonathan Harker')
+cook.create_unit(city, 'Munich')
+budapest = cook.create_unit(city, 'Budapest', label='Buda-Pesth')
+bistritz = cook.create_unit(city, 'Bistritz', label='Bistritz')
+jonathan = cook.create_unit(person, 'JonathanHarker', label='Jonathan Harker')
 
 """
 
@@ -52,10 +52,10 @@ INSERT Person {
 };
 """
 
-with write.unit_context(bistritz):
+with cook.unit_context(bistritz):
     bistritz.GetAttribute("modern_name").Set('Bistrița')
 
-with write.unit_context(budapest):
+with cook.unit_context(budapest):
     budapest.GetAttribute("modern_name").Set('Budapest!')
 
 """
@@ -63,8 +63,7 @@ If you just want to return a single part of a type without the object structure,
 
 {'Budapest', 'Bistrița'}
 """
-city_root = stage.GetPseudoRoot().GetPrimAtPath(city.GetName())
-print([p for p in Usd.PrimRange(city_root) if p.GetAttribute("modern_name").Get()])
+print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
@@ -72,7 +71,7 @@ But we want to have Jonathan be connected to the cities he has traveled to. We'l
 """
 
 jonathanVisitRel = jonathan.GetRelationship('places_visited')
-for city in city_root.GetChildren():
+for city in cook.itaxa(stage.Traverse(), city):
     jonathanVisitRel.AddTarget(city.GetPath())
 
 stage.Save()

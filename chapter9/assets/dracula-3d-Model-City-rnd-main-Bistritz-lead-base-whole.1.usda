@@ -1,0 +1,73 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-City-rnd-main-Bistritz-lead-base-whole.1.usda@
+        string name = "Bistritz"
+    }
+    prepend inherits = </Taxonomy/City>
+    kind = "assembly"
+)
+{
+    string modern_name = "Bistrița"
+    uniform token ui:displayName = "Bistritz"
+
+    def "GoldenKroneHotel" (
+        instanceable = true
+        prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+    )
+    {
+        double3 xformOp:translate = (2, 15, 6)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Deeper" (
+        kind = "group"
+    )
+    {
+        def "Nested" (
+            kind = "group"
+        )
+        {
+            def "Golden1" (
+                instanceable = true
+                prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            )
+            {
+                double3 xformOp:translate = (-4, 5, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Golden2" (
+                instanceable = true
+                prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            )
+            {
+                double3 xformOp:translate = (-4, -10, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Golden3" (
+                instanceable = true
+                prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            )
+            {
+                double3 xformOp:translate = (0, 10, -2)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+    }
+}
+

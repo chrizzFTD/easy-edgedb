@@ -10,86 +10,84 @@
 
 over "Catalogue"
 {
-    over "Vampire"
+    over "Model"
     {
-        over "CountDracula"
+        over "Vampire"
         {
-            prepend rel places_visited = </Catalogue/Country/Romania>
-            prepend rel slaves = [
-                </Catalogue/MinorVampire/Woman0>,
-                </Catalogue/MinorVampire/Woman1>,
-                </Catalogue/MinorVampire/Woman2>,
-                </Catalogue/MinorVampire/Woman3>,
-            ]
-        }
-    }
-
-    over "NonPlayer"
-    {
-        over "ArthurHolmwood"
-        {
-            prepend rel lover = </Catalogue/NonPlayer/LucyWestenra>
+            over "CountDracula"
+            {
+                prepend rel places_visited = </Catalogue/Model/Country/Romania>
+                prepend rel slaves = [
+                    </Catalogue/Model/MinorVampire/Woman0>,
+                    </Catalogue/Model/MinorVampire/Woman1>,
+                    </Catalogue/Model/MinorVampire/Woman2>,
+                    </Catalogue/Model/MinorVampire/Woman3>,
+                ]
+            }
         }
 
-        over "LucyWestenra"
+        over "NonPlayer"
         {
-            prepend rel lover = </Catalogue/NonPlayer/ArthurHolmwood>
+            over "ArthurHolmwood"
+            {
+                prepend rel lover = </Catalogue/Model/NonPlayer/LucyWestenra>
+            }
+
+            over "LucyWestenra"
+            {
+                prepend rel lover = </Catalogue/Model/NonPlayer/ArthurHolmwood>
+            }
+
+            over "MinaMurray"
+            {
+                prepend rel lover = </Catalogue/Model/Person/JonathanHarker>
+                prepend rel places_visited = [
+                    </Catalogue/Model/OtherPlace/CastleDracula>,
+                    </Catalogue/Model/Country/Romania>,
+                ]
+            }
         }
 
-        over "Renfield"
+        over "Person"
         {
-            int strength = 10
+            over "JonathanHarker"
+            {
+                prepend rel lover = </Catalogue/Model/NonPlayer/MinaMurray>
+                prepend rel places_visited = [
+                    </Catalogue/Model/City/Munich>,
+                    </Catalogue/Model/City/Budapest>,
+                    </Catalogue/Model/City/Bistritz>,
+                    </Catalogue/Model/City/London>,
+                    </Catalogue/Model/Country/Romania>,
+                    </Catalogue/Model/OtherPlace/CastleDracula>,
+                ]
+            }
         }
 
-        over "MinaMurray"
+        over "Ship"
         {
-            prepend rel lover = </Catalogue/Person/JonathanHarker>
-            prepend rel places_visited = [
-                </Catalogue/OtherPlace/CastleDracula>,
-                </Catalogue/Country/Romania>,
-            ]
+            over "TheDemeter"
+            {
+                prepend rel sailors = [
+                    </Catalogue/Model/Sailor/TheCaptain>,
+                    </Catalogue/Model/Sailor/Petrofsky>,
+                    </Catalogue/Model/Sailor/TheFirstMate>,
+                    </Catalogue/Model/Sailor/TheCook>,
+                ]
+            }
         }
-    }
 
-    over "Person"
-    {
-        over "JonathanHarker"
+        over "Player"
         {
-            prepend rel lover = </Catalogue/NonPlayer/MinaMurray>
-            prepend rel places_visited = [
-                </Catalogue/City/Munich>,
-                </Catalogue/City/Budapest>,
-                </Catalogue/City/Bistritz>,
-                </Catalogue/City/London>,
-                </Catalogue/Country/Romania>,
-                </Catalogue/OtherPlace/CastleDracula>,
-            ]
-        }
-    }
-
-    over "Ship"
-    {
-        over "TheDemeter"
-        {
-            prepend rel sailors = [
-                </Catalogue/Sailor/TheCaptain>,
-                </Catalogue/Sailor/Petrofsky>,
-                </Catalogue/Sailor/TheFirstMate>,
-                </Catalogue/Sailor/TheCook>,
-            ]
-        }
-    }
-
-    over "Player"
-    {
-        over "EmilSinclair"
-        {
-            prepend rel places_visited = [
-                </Catalogue/City/Budapest>,
-                </Catalogue/City/Bistritz>,
-                </Catalogue/City/Munich>,
-                </Catalogue/City/London>,
-            ]
+            over "EmilSinclair"
+            {
+                prepend rel places_visited = [
+                    </Catalogue/Model/City/Budapest>,
+                    </Catalogue/Model/City/Bistritz>,
+                    </Catalogue/Model/City/Munich>,
+                    </Catalogue/Model/City/London>,
+                ]
+            }
         }
     }
 }
@@ -98,12 +96,12 @@ over "Taxonomy"
 {
     over "Sailor"
     {
-        prepend rel places_visited = </Catalogue/City/London>
+        prepend rel places_visited = </Catalogue/Model/City/London>
     }
 
     over "NonPlayer"
     {
-        prepend rel places_visited = </Catalogue/City/London>
+        prepend rel places_visited = </Catalogue/Model/City/London>
     }
 }
 

@@ -1,47 +1,24 @@
 #usda 1.0
 (
     subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
         @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
     ]
 )
 
-def "City" (
-    kind = "assembly"
-)
+over "Catalogue"
 {
-    over "Munich" (
-        prepend payload = @dracula-3d-abc-City-rnd-main-Munich-lead-base-whole.1.usda@
-    )
+    over "Person"
     {
-    }
-
-    over "Budapest" (
-        prepend payload = @dracula-3d-abc-City-rnd-main-Budapest-lead-base-whole.1.usda@
-    )
-    {
-    }
-
-    over "Bistritz" (
-        prepend payload = @dracula-3d-abc-City-rnd-main-Bistritz-lead-base-whole.1.usda@
-    )
-    {
-    }
-}
-
-def "Person" (
-    kind = "assembly"
-)
-{
-    over "JonathanHarker" (
-        prepend payload = @dracula-3d-abc-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
-    )
-    {
-        custom rel places_visited
-        prepend rel places_visited = [
-            </City/Munich>,
-            </City/Budapest>,
-            </City/Bistritz>,
-        ]
+        over "JonathanHarker"
+        {
+            custom rel places_visited
+            prepend rel places_visited = [
+                </Catalogue/City/Munich>,
+                </Catalogue/City/Budapest>,
+                </Catalogue/City/Bistritz>,
+            ]
+        }
     }
 }
 

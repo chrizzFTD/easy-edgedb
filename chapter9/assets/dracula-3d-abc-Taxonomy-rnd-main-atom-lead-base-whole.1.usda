@@ -5,12 +5,28 @@
 
 class "Taxonomy"
 {
+    def "Color" (
+        assetInfo = {
+            dictionary grill = {
+                dictionary fields = {
+                    string cluster = "Color"
+                    string kingdom = "Shade"
+                }
+                dictionary taxa = {
+                    int Color = 0
+                }
+            }
+        }
+    )
+    {
+    }
+
     def Xform "Person" (
         assetInfo = {
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Person"
-                    string kingdom = "Object"
+                    string kingdom = "Model"
                 }
                 dictionary taxa = {
                     int Person = 0
@@ -22,7 +38,6 @@ class "Taxonomy"
         int age (
             doc = "This value must be constrained at the data base / application level since USD does not provide easy constraint mechanisms for values yet."
         )
-        string label
         rel lover
         rel places_visited
         int strength (
@@ -35,7 +50,7 @@ class "Taxonomy"
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "LandTransport"
-                    string kingdom = "Object"
+                    string kingdom = "Model"
                 }
                 dictionary taxa = {
                     int LandTransport = 0
@@ -45,7 +60,6 @@ class "Taxonomy"
         prepend variantSets = "Transport"
     )
     {
-        string label
         variantSet "Transport" = {
             "Feet" {
 
@@ -64,7 +78,7 @@ class "Taxonomy"
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Place"
-                    string kingdom = "Object"
+                    string kingdom = "Model"
                 }
                 dictionary taxa = {
                     int Place = 0
@@ -73,7 +87,6 @@ class "Taxonomy"
         }
     )
     {
-        string label
         string modern_name
     }
 
@@ -82,7 +95,7 @@ class "Taxonomy"
             dictionary grill = {
                 dictionary fields = {
                     string cluster = "Ship"
-                    string kingdom = "Object"
+                    string kingdom = "Model"
                 }
                 dictionary taxa = {
                     int Ship = 0
@@ -92,7 +105,6 @@ class "Taxonomy"
     )
     {
         rel crew
-        string label
         rel sailors
     }
 
@@ -113,7 +125,6 @@ class "Taxonomy"
         ]
     )
     {
-        string label
     }
 
     def "NonPlayer" (
@@ -130,7 +141,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
     }
 
     def "Vampire" (
@@ -147,7 +157,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
         rel slaves
     }
 
@@ -165,7 +174,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
     }
 
     def "Crewman" (
@@ -182,7 +190,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        string label
     }
 
     def "Sailor" (
@@ -200,7 +207,6 @@ class "Taxonomy"
         prepend variantSets = "Rank"
     )
     {
-        string label
         variantSet "Rank" = {
             "Captain" {
 
@@ -231,7 +237,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        string label
         int population
     }
 
@@ -249,7 +254,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        string label
     }
 
     def "OtherPlace" (
@@ -266,7 +270,6 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        string label
     }
 }
 

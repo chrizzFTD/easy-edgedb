@@ -1,0 +1,127 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+        string name = "Romania"
+    }
+    prepend inherits = </Taxonomy/Country>
+    kind = "assembly"
+    prepend payload = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-Geom.1.usda@
+)
+{
+    uniform token ui:displayName = "Romania"
+
+    def "Buildings"
+    {
+        def "GoldenKroneHotel" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_constant" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "constant"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_faceVarying" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "random_faceVarying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_uniform" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "random_uniform"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_varying" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "random_varying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_vertex" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "random_vertex"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_faceVarying" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "spectrum_faceVarying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_uniform" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "spectrum_uniform"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_varying" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "spectrum_varying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_vertex" (
+            instanceable = true
+            prepend specializes = </Catalogue/Model/Place/GoldenKroneHotel>
+            variants = {
+                string color = "spectrum_vertex"
+            }
+        )
+        {
+        }
+    }
+}
+
