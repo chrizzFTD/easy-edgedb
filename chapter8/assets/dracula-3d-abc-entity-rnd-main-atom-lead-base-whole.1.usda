@@ -1,0 +1,79 @@
+#usda 1.0
+(
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+over "Catalogue"
+{
+    over "Object"
+    {
+        over "Vampire"
+        {
+            over "CountDracula"
+            {
+                prepend rel places_visited = </Catalogue/Object/Country/Romania>
+                prepend rel slaves = [
+                    </Catalogue/Object/MinorVampire/Woman0>,
+                    </Catalogue/Object/MinorVampire/Woman1>,
+                    </Catalogue/Object/MinorVampire/Woman2>,
+                    </Catalogue/Object/MinorVampire/Woman3>,
+                ]
+            }
+        }
+
+        over "NonPlayer"
+        {
+            over "MinaMurray"
+            {
+                prepend rel lover = </Catalogue/Object/Person/JonathanHarker>
+                prepend rel places_visited = </Catalogue/Object/City/London>
+            }
+        }
+
+        over "Person"
+        {
+            over "JonathanHarker"
+            {
+                prepend rel lover = </Catalogue/Object/NonPlayer/MinaMurray>
+                prepend rel places_visited = [
+                    </Catalogue/Object/City/Munich>,
+                    </Catalogue/Object/City/Budapest>,
+                    </Catalogue/Object/City/Bistritz>,
+                    </Catalogue/Object/City/London>,
+                    </Catalogue/Object/Country/Romania>,
+                    </Catalogue/Object/OtherPlace/CastleDracula>,
+                ]
+            }
+        }
+
+        over "Ship"
+        {
+            over "TheDemeter"
+            {
+                prepend rel sailors = [
+                    </Catalogue/Object/Sailor/TheCaptain>,
+                    </Catalogue/Object/Sailor/Petrofsky>,
+                    </Catalogue/Object/Sailor/TheFirstMate>,
+                    </Catalogue/Object/Sailor/TheCook>,
+                ]
+            }
+        }
+
+        over "Player"
+        {
+            over "EmilSinclair"
+            {
+                prepend rel places_visited = [
+                    </Catalogue/Object/City/Budapest>,
+                    </Catalogue/Object/City/Bistritz>,
+                    </Catalogue/Object/City/Munich>,
+                    </Catalogue/Object/City/London>,
+                ]
+            }
+        }
+    }
+}
+

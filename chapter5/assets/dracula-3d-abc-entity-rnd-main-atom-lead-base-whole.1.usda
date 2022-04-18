@@ -1,0 +1,65 @@
+#usda 1.0
+(
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+over "Catalogue"
+{
+    over "Object"
+    {
+        over "MinorVampire"
+        {
+            over "Woman01"
+            {
+                prepend rel master = </Catalogue/Object/Vampire/CountDracula>
+            }
+        }
+
+        over "NonPlayer"
+        {
+            over "MinaMurray"
+            {
+                prepend rel lover = </Catalogue/Object/Person/JonathanHarker>
+                prepend rel places_visited = </Catalogue/Object/City/London>
+            }
+        }
+
+        over "Person"
+        {
+            over "JonathanHarker"
+            {
+                prepend rel places_visited = [
+                    </Catalogue/Object/City/Munich>,
+                    </Catalogue/Object/City/Budapest>,
+                    </Catalogue/Object/City/Bistritz>,
+                    </Catalogue/Object/City/London>,
+                ]
+            }
+        }
+
+        over "Player"
+        {
+            over "EmilSinclair"
+            {
+                prepend rel places_visited = [
+                    </Catalogue/Object/City/Munich>,
+                    </Catalogue/Object/City/Budapest>,
+                    </Catalogue/Object/City/Bistritz>,
+                    </Catalogue/Object/City/London>,
+                ]
+            }
+        }
+
+        over "Vampire"
+        {
+            over "CountDracula"
+            {
+                prepend rel places_visited = </Catalogue/Object/Country/Romania>
+            }
+        }
+    }
+}
+

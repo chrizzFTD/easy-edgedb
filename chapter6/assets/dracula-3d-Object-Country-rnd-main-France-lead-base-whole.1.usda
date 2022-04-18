@@ -1,0 +1,26 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+    subLayers = [
+        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
+        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
+    ]
+)
+
+class "Catalogue"
+{
+}
+
+def "Origin" (
+    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-Country-rnd-main-France-lead-base-whole.1.usda@
+        string name = "France"
+    }
+    prepend inherits = </Taxonomy/Country>
+    kind = "component"
+)
+{
+    uniform token ui:displayName = "France"
+}
+
