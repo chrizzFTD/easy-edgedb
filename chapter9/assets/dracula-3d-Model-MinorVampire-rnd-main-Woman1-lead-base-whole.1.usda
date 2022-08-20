@@ -1,10 +1,6 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
 class "Catalogue"
@@ -17,8 +13,10 @@ def "Origin" (
         asset identifier = @dracula-3d-Model-MinorVampire-rnd-main-Woman1-lead-base-whole.1.usda@
         string name = "Woman1"
     }
-    prepend inherits = </Taxonomy/MinorVampire>
+    prepend inherits = </Inherited/Model/MinorVampire/Woman1>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/MinorVampire>
+    prepend specializes = </Specialized/Model/MinorVampire/Woman1>
 )
 {
     uniform token ui:displayName = "Woman 1"
