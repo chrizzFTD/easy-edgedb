@@ -1,6 +1,5 @@
 import logging
 import datetime
-import colorsys
 from pathlib import Path
 
 import numpy as np
@@ -287,7 +286,9 @@ def main():
                     ("Deeper/Nested/Romania1", (-100*(i+1), 150*(i+1), 1)),
                     ("Deeper/Nested/Romania2", (-100*(i+1), -150*(i+1), 1)),
             ):
-                UsdGeom.Xform(cook.spawn_unit(top_country, romania, path)).AddTranslateOp().Set(value=value)
+                unit = cook.spawn_unit(top_country, romania, path)
+                UsdGeom.Xform(unit).AddTranslateOp().Set(value=value)
+                unit.SetInstanceable(True)
 
     for name, rank in (
         ("TheCaptain", "Captain"),
@@ -505,8 +506,8 @@ def main():
     # Total time: 0:00:16.548665
     # Total time: 0:00:17.422662
     # Total time: 0:00:16.560353
-    for taxon in (city, other_place, person):
-        cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
+    # for taxon in (city, other_place, person):
+    #     cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
 
 
     # We know that Jonathan can't break out of the castle, but let's try to show it using a query. To do that, he needs to have a strength greater than that of a door. Or in other words, he needs a greater strength than the weakest door.

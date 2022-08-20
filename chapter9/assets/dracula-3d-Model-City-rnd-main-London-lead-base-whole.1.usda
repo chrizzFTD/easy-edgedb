@@ -1,10 +1,6 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
 class "Catalogue"
@@ -17,8 +13,10 @@ def "Origin" (
         asset identifier = @dracula-3d-Model-City-rnd-main-London-lead-base-whole.1.usda@
         string name = "London"
     }
-    prepend inherits = </Taxonomy/City>
+    prepend inherits = </Inherited/Model/City/London>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
+    prepend specializes = </Specialized/Model/City/London>
 )
 {
     uniform token ui:displayName = "London"
