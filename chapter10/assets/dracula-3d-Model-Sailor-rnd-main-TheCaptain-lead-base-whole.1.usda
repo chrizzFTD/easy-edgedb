@@ -1,0 +1,23 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-Sailor-rnd-main-TheCaptain-lead-base-whole.1.usda@
+        string name = "TheCaptain"
+    }
+    displayName = "TheCaptain"
+    prepend inherits = </Inherited/Model/Sailor/TheCaptain>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Sailor>
+    prepend specializes = </Specialized/Model/Sailor/TheCaptain>
+    variants = {
+        string Rank = "Captain"
+    }
+)
+{
+}
+

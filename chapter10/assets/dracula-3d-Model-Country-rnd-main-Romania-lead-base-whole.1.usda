@@ -1,0 +1,42 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+        string name = "Romania"
+    }
+    displayName = "Romania"
+    prepend inherits = </Inherited/Model/Country/Romania>
+    kind = "assembly"
+    prepend payload = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-Geom.1.usda@
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Country>
+    prepend specializes = </Specialized/Model/Country/Romania>
+)
+{
+    def "Buildings" (
+        kind = "group"
+    )
+    {
+        def "GoldenKroneHotel" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_constant" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "constant"
+            }
+        )
+        {
+        }
+    }
+}
+

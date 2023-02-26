@@ -1,0 +1,22 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def BasisCurves "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+        string name = "BasisS"
+    }
+    displayName = "🎲 Basis S"
+    prepend inherits = </Inherited/Geom/Shape/BasisS>
+    kind = "subcomponent"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Shape>
+    prepend specializes = </Specialized/Geom/Shape/BasisS>
+)
+{
+    int[] curveVertexCounts = [7]
+    point3f[] points = [(0, 0, 0), (2, 1, 0), (2, 2, 0), (1, 2.5, 0), (0, 3, 0), (0, 4, 0), (2, 5, 0)]
+}
+

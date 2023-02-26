@@ -1,0 +1,65 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-Country-rnd-main-Specializes-lead-base-whole.1.usda@
+        string name = "Specializes"
+    }
+    displayName = "Specializes"
+    prepend inherits = </Inherited/Model/Country/Specializes>
+    kind = "assembly"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Country>
+    prepend specializes = </Specialized/Model/Country/Specializes>
+)
+{
+    def "Deeper" (
+        kind = "group"
+    )
+    {
+        def "Nested" (
+            kind = "group"
+        )
+        {
+            def "Romania1" (
+                instanceable = true
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (-200, 314, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Romania2" (
+                instanceable = true
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (200, 314, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Romania3" (
+                instanceable = true
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (-200, -314, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Romania4" (
+                instanceable = true
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (200, -314, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+    }
+}
+

@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-MinorVampire-rnd-main-Woman1-lead-base-whole.1.usda@
+        string name = "Woman1"
+    }
+    displayName = "🧛‍♀️ Woman 1"
+    prepend inherits = </Inherited/Model/MinorVampire/Woman1>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/MinorVampire>
+    prepend specializes = </Specialized/Model/MinorVampire/Woman1>
+)
+{
+}
+

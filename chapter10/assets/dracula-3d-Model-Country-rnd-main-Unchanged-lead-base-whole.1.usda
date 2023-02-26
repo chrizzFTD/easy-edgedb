@@ -1,0 +1,78 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-Country-rnd-main-Unchanged-lead-base-whole.1.usda@
+        string name = "Unchanged"
+    }
+    displayName = "Unchanged"
+    prepend inherits = </Inherited/Model/Country/Unchanged>
+    kind = "assembly"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Country>
+    prepend specializes = </Specialized/Model/Country/Unchanged>
+)
+{
+    def "Deeper" (
+        kind = "group"
+    )
+    {
+        def "Nested" (
+            kind = "group"
+        )
+        {
+            def "Romania1" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (-300, 471, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Romania2" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (300, 471, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Romania3" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (-300, -471, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def "Romania4" (
+                prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
+            )
+            {
+                double3 xformOp:translate = (300, -471, 1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+    }
+}
+
+over "Specialized"
+{
+    over "Model"
+    {
+        over "Place"
+        {
+            over "GoldenKroneHotel" (
+                variants = {
+                    string color = "spectrum_vertex"
+                }
+            )
+            {
+            }
+        }
+    }
+}
+
