@@ -393,15 +393,12 @@ def main():
         # TODO: build another point instancer on another unit, then merge and see what happens
         selections = ("", *color_set.GetVariantNames())
         selections = ("", "constant")  # DEBUG PURPOSES FOR PIXAR REPORT
-        prototypes = cook.spawn_many(
-            romania,
-            golden_krone,
-            [
-                instancer_path.AppendPath(
-                    (name := golden_krone.GetName()) if not selection else f"{name}_{selection}"
-                ).MakeRelativePath(romania_path) for selection in selections
-            ]
-        )
+        prototypes_paths = [
+            instancer_path.AppendPath(
+                (name := golden_krone.GetName()) if not selection else f"{name}_{selection}"
+            ).MakeRelativePath(romania_path) for selection in selections
+        ]
+        prototypes = cook.spawn_many(romania, golden_krone, prototypes_paths)
         with Sdf.ChangeBlock():
             for prototype, selection in zip(prototypes, selections, strict=True):
                 if selection:
@@ -454,10 +451,12 @@ def main():
 
             specializing = bool(i == 0 or i == 2)
             if specializing:
-                local_stage = Usd.Stage.Open(cook.unit_asset(top_country))
-                # specializes (and inherits) arcs act on the local layer stack, so if we want to modify on the
-                # "unit context" of the component, we need to do it on the stage of such component itself.
-                specialized = local_stage.OverridePrim("/Specialized/Model/Place/GoldenKroneHotel")
+                specialized_prim = instances[0].GetPrimAtPath(prototypes_paths[0])
+                edit_method = specialized_prim.GetSpecializes() if i == 0 else specialized_prim.GetInherits()
+                broadcast_color = "spectrum_vertex" if i == 0 else "random_vertex"
+                with gusd.edit_context(edit_method, cook.unit_asset(top_country)):
+                    specialized_prim.GetVariantSet("color").SetVariantSelection(broadcast_color)
+
             # with contextlib.nullcontext():
             with Sdf.ChangeBlock():
                 for r_inst, value in zip(instances, transforms, strict=True):
@@ -474,7 +473,7 @@ def main():
                         # local_stage = Usd.Stage.Open(cook.unit_asset(top_country))
                         # # specializes path to component level can't be mapped via edit target
                         # specialized = local_stage.OverridePrim("/Specialized/Model/Place/GoldenKroneHotel")
-                        specialized.GetVariantSet("color").SetVariantSelection("spectrum_vertex")
+                        # specialized.GetVariantSet("color").SetVariantSelection("spectrum_vertex")
                         ####### Uncomment these lines to ensure specialized takes effect in deterministic ways when instancing!!!! ######
                         # local_stage.CreateClassPrim("/__temp")
                         # r_inst.GetReferences().AddInternalReference("/__temp")
@@ -760,7 +759,10 @@ if __name__ == "__main__":
     # 5. How would you add ' the Great' to every Person type?
     # from pxr import UsdUI
     for each in cook.itaxa(prims, 'Person'):
-        each.SetDisplayName(each.GetName() + ' the Great')
+        try:
+            each.SetDisplayName(each.GetName() + ' the Great')
+        except AttributeError:  # USD-22.8+
+            pass
         # ui = UsdUI.SceneGraphPrimAPI(each)
         # display_name = ui.GetDisplayNameAttr()
         # display_name.Set(display_name.Get() + ' the Great')
