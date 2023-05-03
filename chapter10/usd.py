@@ -452,9 +452,9 @@ def main():
             specializing = bool(i == 0 or i == 2)
             if specializing:
                 specialized_prim = instances[0].GetPrimAtPath(prototypes_paths[0])
-                edit_method = specialized_prim.GetSpecializes() if i == 0 else specialized_prim.GetInherits()
+                edit_method = cook.specialize_unit if i == 0 else cook.inherit_unit
                 broadcast_color = "spectrum_vertex" if i == 0 else "random_vertex"
-                with gusd.edit_context(edit_method, cook.unit_asset(top_country)):
+                with edit_method(specialized_prim, top_country):
                     specialized_prim.GetVariantSet("color").SetVariantSelection(broadcast_color)
 
             # with contextlib.nullcontext():
