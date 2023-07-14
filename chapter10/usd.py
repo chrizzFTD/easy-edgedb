@@ -1,6 +1,3 @@
-import contextlib
-import sys
-sys.path.append(r"B:\write\code\git\grill")
 # https://stackoverflow.com/a/72788936
 # https://youtrack.jetbrains.com/issue/PY-50959
 import logging
@@ -19,6 +16,7 @@ from grill import cook, names, usd as gusd
 from grill.tokens import ids
 
 _notice_counter = itertools.count()
+
 
 def _notify(notice, sender):
     # return
@@ -174,7 +172,7 @@ def main():
         doors_strength = castle_dracula.CreateAttribute('doors_strength', Sdf.ValueTypeNames.IntArray, custom=False)
         doors_strength.Set([6, 19, 10])
 
-    romania, hungary, france, unchanged, *__ = cook.create_many(country, ('Romania', 'Inherits', 'Specializes', 'Unchanged', 'Slovakia'))
+    romania, inherits_country, specializes_country, unchanged, *__ = cook.create_many(country, ('Romania', 'Inherits', 'Specializes', 'Unchanged', 'Slovakia'))
 
     jonathan = cook.create_unit(person, 'JonathanHarker', label='👨 Jonathan Harker')
     with cook.unit_context(jonathan):
@@ -248,7 +246,8 @@ def main():
         with gusd.edit_context(payload, geom_root):
             bezier_types = ("bezier", "bspline", "catmullRom")
             widths_interpolation_types = tuple(i for i in gusd._GeomPrimvarInfo if i not in {gusd._GeomPrimvarInfo.UNIFORM, gusd._GeomPrimvarInfo.FACE_VARYING})
-            normal_interpolation_types = gusd._GeomPrimvarInfo.VERTEX, gusd._GeomPrimvarInfo.VARYING
+            # normal_interpolation_types = gusd._GeomPrimvarInfo.VERTEX, gusd._GeomPrimvarInfo.VARYING
+            normal_interpolation_types = gusd._GeomPrimvarInfo.VARYING,
             volume_size = 2
             def set_curve_attrs(curve, xform, type, basis_id, width_interpolation_id, max_width):
                 UsdGeom.XformCommonAPI(curve).SetTranslate(xform)
@@ -275,7 +274,8 @@ def main():
                     set_curve_attrs(
                         curve,
                         xform=(- (width - (width/1.7)), volume_size*0, each - (depth/2.0)),
-                        type="linear" if each % 2 else "cubic",
+                        type="linear" if each % 2 else "cubic",  # Tried linear but it brings too many artifacts with PRMan
+                        # type="cubic",  # Tried linear but it brings too many artifacts with PRMan
                         basis_id=each % len(bezier_types),
                         width_interpolation_id=each % len(widths_interpolation_types),
                         max_width=1-(each/depth)
@@ -287,7 +287,7 @@ def main():
                     normal_interpolation_size = normal_interpolation_types[normal_interpolation_idx].size(curve)
                     normals_attr = curve.GetNormalsAttr()
                     curve.SetNormalsInterpolation(normal_interpolation_name)
-                    normals_attr.Set([(1, 0.3, -0.3) for _ in range(normal_interpolation_size)])
+                    normals_attr.Set([(-1, -0.3, 0.3) for _ in range(normal_interpolation_size)])
 
             curves = cook.spawn_many(
                 golden_krone, basis_s,
@@ -301,6 +301,7 @@ def main():
                         curve,
                         xform=(width - (width/1.33), volume_size*0, each - (depth/2.0)),
                         type="cubic" if each % 2 else "linear",
+                        # type="cubic",  # Tried linear but it brings too many artifacts with PRMan
                         basis_id=(each + 1) % len(bezier_types),
                         width_interpolation_id=(each + 2) % len(widths_interpolation_types),
                         max_width=each / depth
@@ -308,16 +309,15 @@ def main():
                     # Don't set normals only here to create "tubes"
 
             ground = UsdGeom.Mesh(cook.spawn_unit(golden_krone, geom_plane, geom_root.GetPath().AppendChild("Ground"), label="Ground"))
-            # ground = stage.OverridePrim("Ground")
+            ground.GetDoubleSidedAttr().Set(True)
             ground.GetPrim().SetDocumentation("Main ground where Golden Krone exists")
-            # ground.GetReferences().AddReference(geom_colored_plane)
+
             def _define(schema, path, doc):
                 geom = schema.Define(stage, geom_root.GetPath().AppendPath(path))
                 geom.GetPrim().SetDocumentation(doc)
                 return geom
             volume, top_back_left, top_front_left, top_back_right, top_front_right = [
                 _define(cls, path, doc) for cls, path, doc in (
-                    # (UsdGeom.Mesh, "Ground", "Main ground where Golden Krone exists"),
                     (UsdGeom.Sphere, "Volume", "Main volume for Golden Krone"),
                     (UsdGeom.Cube, "TopBackLeft", "Golden Krone's top back left section"),
                     (UsdGeom.Capsule, "TopFrontLeft", "Golden Krone's top from left section"),
@@ -392,7 +392,7 @@ def main():
         targets = []
         # TODO: build another point instancer on another unit, then merge and see what happens
         selections = ("", *color_set.GetVariantNames())
-        selections = ("", "constant")  # DEBUG PURPOSES FOR PIXAR REPORT
+        # selections = ("", "constant")  # DEBUG PURPOSES FOR PIXAR REPORT
         prototypes_paths = [
             instancer_path.AppendPath(
                 (name := golden_krone.GetName()) if not selection else f"{name}_{selection}"
@@ -433,7 +433,7 @@ def main():
     instancer_tx = int(5 * X_size)
     instancer_ty = int(1.5 * Y_size)
 
-    for i, top_country in enumerate((hungary, france, unchanged)):
+    for i, top_country in enumerate((inherits_country, specializes_country, unchanged)):
         with cook.unit_context(top_country):
             paths = (
                 "Deeper/Nested/Romania1",
@@ -449,11 +449,11 @@ def main():
             )
             instances = cook.spawn_many(top_country, romania, paths)
 
-            specializing = bool(i == 0 or i == 2)
+            specializing = bool(i == 0 or i == 1)
             if specializing:
                 specialized_prim = instances[0].GetPrimAtPath(prototypes_paths[0])
-                edit_method = cook.specialize_unit if i == 0 else cook.inherit_unit
-                broadcast_color = "spectrum_vertex" if i == 0 else "random_vertex"
+                edit_method = cook.specialize_unit if i == 1 else cook.inherit_unit
+                broadcast_color = "spectrum_vertex" if i == 1 else "random_vertex"
                 with edit_method(specialized_prim, top_country):
                     specialized_prim.GetVariantSet("color").SetVariantSelection(broadcast_color)
 
