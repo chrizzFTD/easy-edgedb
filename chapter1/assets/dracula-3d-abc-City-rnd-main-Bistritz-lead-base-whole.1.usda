@@ -1,27 +1,21 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-abc-City-rnd-main-Bistritz-lead-base-whole.1.usda@
         string name = "Bistritz"
     }
-    prepend inherits = </Taxonomy/City>
+    displayName = "Bistritz"
+    prepend inherits = </Inherited/City/Bistritz>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
+    prepend specializes = </Specialized/City/Bistritz>
 )
 {
     custom string modern_name = "Bistrița"
-    uniform token ui:displayName = "Bistritz"
 }
 

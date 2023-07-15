@@ -25,7 +25,6 @@ def "Origin" (
         )
         {
             def "Romania1" (
-                instanceable = true
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
@@ -34,7 +33,6 @@ def "Origin" (
             }
 
             def "Romania2" (
-                instanceable = true
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
@@ -43,7 +41,6 @@ def "Origin" (
             }
 
             def "Romania3" (
-                instanceable = true
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
@@ -52,12 +49,28 @@ def "Origin" (
             }
 
             def "Romania4" (
-                instanceable = true
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
                 double3 xformOp:translate = (200, -314, 1)
                 uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+    }
+}
+
+over "Specialized"
+{
+    over "Model"
+    {
+        over "Place"
+        {
+            over "GoldenKroneHotel" (
+                variants = {
+                    string color = "spectrum_vertex"
+                }
+            )
+            {
             }
         }
     }

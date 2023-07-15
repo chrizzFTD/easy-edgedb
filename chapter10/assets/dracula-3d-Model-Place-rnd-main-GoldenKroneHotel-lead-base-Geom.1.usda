@@ -11,8 +11,8 @@ def "Origin"
     )
     {
         uniform token basis = "bezier"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
-            interpolation = "vertex"
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+            interpolation = "varying"
         )
         uniform token type = "cubic"
         float[] widths = [1] (
@@ -28,7 +28,7 @@ def "Origin"
     )
     {
         uniform token basis = "bspline"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
         uniform token type = "linear"
@@ -45,8 +45,8 @@ def "Origin"
     )
     {
         uniform token basis = "catmullRom"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
-            interpolation = "vertex"
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+            interpolation = "varying"
         )
         uniform token type = "cubic"
         float[] widths = [0, 0.10714286, 0.21428572, 0.32142857, 0.42857143, 0.53571427, 0.64285713] (
@@ -62,7 +62,7 @@ def "Origin"
     )
     {
         uniform token basis = "bezier"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
         uniform token type = "linear"
@@ -79,8 +79,8 @@ def "Origin"
     )
     {
         uniform token basis = "bspline"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
-            interpolation = "vertex"
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+            interpolation = "varying"
         )
         uniform token type = "cubic"
         float[] widths = [0, 0.1, 0.2, 0.3, 0.4] (
@@ -96,7 +96,7 @@ def "Origin"
     )
     {
         uniform token basis = "catmullRom"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
         uniform token type = "linear"
@@ -113,8 +113,8 @@ def "Origin"
     )
     {
         uniform token basis = "bezier"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
-            interpolation = "vertex"
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+            interpolation = "varying"
         )
         uniform token type = "cubic"
         float[] widths = [0.25] (
@@ -130,7 +130,7 @@ def "Origin"
     )
     {
         uniform token basis = "bspline"
-        normal3f[] normals = [(1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3), (1, 0.3, -0.3)] (
+        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
         uniform token type = "linear"
@@ -259,6 +259,7 @@ def "Origin"
         prepend references = @dracula-3d-Geom-Shape-rnd-main-GroundPlane-lead-base-whole.1.usda@
     )
     {
+        uniform bool doubleSided = 1
     }
 
     def Sphere "Volume" (

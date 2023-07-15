@@ -37,6 +37,86 @@ def "Origin" (
         )
         {
         }
+
+        def "GoldenKroneHotel_random_faceVarying" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "random_faceVarying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_uniform" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "random_uniform"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_varying" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "random_varying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_random_vertex" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "random_vertex"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_faceVarying" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "spectrum_faceVarying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_uniform" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "spectrum_uniform"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_varying" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "spectrum_varying"
+            }
+        )
+        {
+        }
+
+        def "GoldenKroneHotel_spectrum_vertex" (
+            instanceable = true
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            variants = {
+                string color = "spectrum_vertex"
+            }
+        )
+        {
+        }
     }
 }
 

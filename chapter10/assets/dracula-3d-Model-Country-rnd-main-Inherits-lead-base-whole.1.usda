@@ -59,7 +59,7 @@ def "Origin" (
     }
 }
 
-over "Specialized"
+over "Inherited"
 {
     over "Model"
     {
@@ -67,7 +67,7 @@ over "Specialized"
         {
             over "GoldenKroneHotel" (
                 variants = {
-                    string color = "spectrum_vertex"
+                    string color = "random_vertex"
                 }
             )
             {
