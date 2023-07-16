@@ -11,6 +11,7 @@ def "Origin"
     )
     {
         uniform token basis = "bezier"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -28,6 +29,7 @@ def "Origin"
     )
     {
         uniform token basis = "bspline"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -45,6 +47,7 @@ def "Origin"
     )
     {
         uniform token basis = "catmullRom"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -62,6 +65,7 @@ def "Origin"
     )
     {
         uniform token basis = "bezier"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -79,6 +83,7 @@ def "Origin"
     )
     {
         uniform token basis = "bspline"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -96,6 +101,7 @@ def "Origin"
     )
     {
         uniform token basis = "catmullRom"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -113,6 +119,7 @@ def "Origin"
     )
     {
         uniform token basis = "bezier"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )
@@ -130,6 +137,7 @@ def "Origin"
     )
     {
         uniform token basis = "bspline"
+        uniform bool doubleSided = 1
         normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
             interpolation = "varying"
         )

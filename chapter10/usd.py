@@ -287,6 +287,7 @@ def main():
                     normal_interpolation_size = normal_interpolation_types[normal_interpolation_idx].size(curve)
                     normals_attr = curve.GetNormalsAttr()
                     curve.SetNormalsInterpolation(normal_interpolation_name)
+                    curve.GetDoubleSidedAttr().Set(True)
                     normals_attr.Set([(-1, -0.3, 0.3) for _ in range(normal_interpolation_size)])
 
             curves = cook.spawn_many(
