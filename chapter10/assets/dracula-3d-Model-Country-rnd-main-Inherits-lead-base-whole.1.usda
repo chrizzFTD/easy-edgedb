@@ -28,7 +28,7 @@ def "Origin" (
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
-                double3 xformOp:translate = (-100, 157, 1)
+                double3 xformOp:translate = (-20, 31, 1)
                 uniform token[] xformOpOrder = ["xformOp:translate"]
             }
 
@@ -36,7 +36,7 @@ def "Origin" (
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
-                double3 xformOp:translate = (100, 157, 1)
+                double3 xformOp:translate = (20, 31, 1)
                 uniform token[] xformOpOrder = ["xformOp:translate"]
             }
 
@@ -44,7 +44,7 @@ def "Origin" (
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
-                double3 xformOp:translate = (-100, -157, 1)
+                double3 xformOp:translate = (-20, -31, 1)
                 uniform token[] xformOpOrder = ["xformOp:translate"]
             }
 
@@ -52,7 +52,7 @@ def "Origin" (
                 prepend references = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
             )
             {
-                double3 xformOp:translate = (100, -157, 1)
+                double3 xformOp:translate = (20, -31, 1)
                 uniform token[] xformOpOrder = ["xformOp:translate"]
             }
         }

@@ -55,11 +55,35 @@ class "Taxonomy"
     )
     {
         int age (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                }
+            }
             doc = "This value must be constrained at the data base / application level since USD does not provide easy constraint mechanisms for values yet."
         )
-        rel lover
-        rel places_visited
+        rel lover (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                    string target_taxon = "Person"
+                }
+            }
+        )
+        rel places_visited (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                    string target_taxon = "Place"
+                }
+            }
+        )
         int strength (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                }
+            }
             doc = "Used to help answer if a person is able to perform some actions (e.g. can this person open a door?)"
         )
     }
@@ -108,7 +132,13 @@ class "Taxonomy"
         prepend inherits = </Inherited/Taxonomy/Place>
     )
     {
-        string modern_name
+        string modern_name (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                }
+            }
+        )
     }
 
     def Xform "Ship" (
@@ -126,8 +156,22 @@ class "Taxonomy"
         prepend inherits = </Inherited/Taxonomy/Ship>
     )
     {
-        rel crew
-        rel sailors
+        rel crew (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                    string target_taxon = "Crewman"
+                }
+            }
+        )
+        rel sailors (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                    string target_taxon = "Sailor"
+                }
+            }
+        )
     }
 
     def "Player" (
@@ -182,7 +226,14 @@ class "Taxonomy"
         prepend references = </Taxonomy/Person>
     )
     {
-        rel slaves
+        rel slaves (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                    string target_taxon = "Vampire"
+                }
+            }
+        )
     }
 
     def "MinorVampire" (
@@ -266,7 +317,13 @@ class "Taxonomy"
         prepend references = </Taxonomy/Place>
     )
     {
-        int population
+        int population (
+            assetInfo = {
+                dictionary grill = {
+                    bool database = 1
+                }
+            }
+        )
     }
 
     def "Country" (

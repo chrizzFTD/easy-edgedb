@@ -423,10 +423,12 @@ def main():
 
         with gusd.edit_context(romania_payload, romania):
             buildings = UsdGeom.PointInstancer.Define(stage, instancer_path)
-            X_size = 20 # 40
-            Z_size = 15 # 30
-            # X_size = 6 # 40
-            # Z_size = 4  # 30
+            # X_size = 20 # 40
+            # Z_size = 15 # 30
+            X_size = 6 # 40
+            Z_size = 4  # 30
+            X_size = 4 # 40
+            Z_size = 3  # 30
             # Y_size = 10  # 250
             Y_size = Z_size * 7  # 250
             X = np.linspace(0, (X_size*width)-width, X_size)
@@ -937,5 +939,5 @@ if __name__ == "__main__":
     Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
     """)
 
-    queries = _types_to_create_query(stage)
-    edgedb_commit(queries)
+    # queries = _types_to_create_query(stage)
+    # edgedb_commit(queries)
