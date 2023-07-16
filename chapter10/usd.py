@@ -5,6 +5,7 @@ import datetime
 import itertools
 from pathlib import Path
 
+import networkx
 import numpy as np
 try:
     from pxr import Usd
@@ -19,7 +20,7 @@ _notice_counter = itertools.count()
 
 
 def _notify(notice, sender):
-    # return
+    return
     """
     0:00:00.961997
     1320: Changed: []
@@ -39,6 +40,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 names.UsdAsset.DEFAULT_SUFFIX = "usda"
+
+def _tag_persistent(obj):
+    obj.SetAssetInfoByKey("grill:database", True)
+
+
+def _tag_persistent_target(obj, target):
+    obj.SetAssetInfoByKey("grill:target_taxon", target.GetName())
 
 
 def _make_plane(mesh, width, depth):
@@ -129,24 +137,30 @@ def main():
 
         with Sdf.ChangeBlock():
             # 1.3 Add required taxa properties
-            city.CreateAttribute('population', Sdf.ValueTypeNames.Int, custom=False)
+            pop_attr = city.CreateAttribute('population', Sdf.ValueTypeNames.Int, custom=False)
+            _tag_persistent(pop_attr)
 
             # TODO: how to add constraints? Useful to catch errors before they hit the database
             #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
             age = person.CreateAttribute('age', Sdf.ValueTypeNames.Int, custom=False)
+            _tag_persistent(age)
             age.SetDocumentation("This value must be constrained at the data base / application level since USD does not provide easy constraint mechanisms for values yet.")
             strength = person.CreateAttribute('strength', Sdf.ValueTypeNames.Int, custom=False)
             strength.SetDocumentation("Used to help answer if a person is able to perform some actions (e.g. can this person open a door?)")
-
-            place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String, custom=False)
+            _tag_persistent(strength)
+            mn_attr = place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String, custom=False)
+            _tag_persistent(mn_attr)
 
             for taxon, relationships in (
-                (person, ('lover', 'places_visited')),
-                (vampire, ('slaves',)),  # it needs to be a vampire
-                (ship, ('sailors', 'crew')),
+                (person, (('lover', person), ('places_visited', place))),
+                (vampire, (('slaves', vampire),)),  # it needs to be a vampire
+                (ship, (('sailors', sailor), ('crew', crewman))),
             ):
-                for relationship in relationships:
-                    taxon.CreateRelationship(relationship, custom=False)
+                for rel_name, target_taxon in relationships:
+                    rel = taxon.CreateRelationship(rel_name, custom=False)
+                    _tag_persistent(rel)
+                    _tag_persistent_target(rel, target_taxon)
+
 
             for taxon, set_name, variants in (
                 (transport, "Transport", ("Feet", "Train", "HorseDrawnCarriage")),
@@ -717,6 +731,144 @@ def main():
     return stage
 
 
+import edgedb
+import os
+for env_var in ("EDGEDB_INSTANCE", "EDGEDB_SECRET_KEY"):
+    value = os.getenv(env_var)
+    if not value:
+        raise RuntimeError(f"{env_var} not defined in current environment")
+    print(f"{env_var}={value}")
+
+
+def _types_to_create_query(stage):
+    print(f"-->>> Creating types for {stage}")
+    root = stage.GetPrimAtPath(cook._TAXONOMY_ROOT_PATH)
+    taxa = [prim for prim in root.GetFilteredChildren(Usd.PrimAllPrimsPredicate) if prim.GetAssetInfoByKey(cook._ASSETINFO_TAXON_KEY)]
+    graph, ids = cook.taxonomy_graph(taxa, "")
+    properties = dict()  # {taxon: {name: type}}
+    types_to_commit = dict()
+    from collections import ChainMap
+    for each in networkx.topological_sort(graph):
+        print(each)
+        taxon_info = dict()
+        name = graph.nodes[each]['label']
+        taxon = root.GetPrimAtPath(name)
+        print(f"{taxon=}")
+        taxon_properties = dict()
+        taxon_relationships = dict()
+        ancestor_names = [graph.nodes[ancestor]['label'] for ancestor in networkx.ancestors(graph, each)]
+        ancestors_properties = ChainMap(*(properties[ancestor] for ancestor in ancestor_names))
+        # ancestors_rels = ChainMap(*(properties[ancestor] for ancestor in ancestor_names))
+        if ancestor_names:
+            taxon_info['extending'] = ancestor_names
+        print(f"{ancestors_properties.keys()=}")
+        for prop in taxon.GetProperties():
+            if not prop.GetAssetInfoByKey("grill:database"):
+                continue
+            prop_name = prop.GetBaseName()
+            if prop_name in ancestors_properties:
+                continue
+            if isinstance(prop, Usd.Attribute):
+                taxon_properties[prop.GetBaseName()] = prop.GetTypeName()
+            elif isinstance(prop, Usd.Relationship):
+                target = prop.GetAssetInfoByKey("grill:target_taxon")
+                taxon_relationships[prop.GetBaseName()] = target
+            else:
+                raise RuntimeError(f"Don't know how to handle {type(prop)} {prop}")
+        taxon_info['properties'] = taxon_properties
+        taxon_info['links'] = taxon_relationships
+        properties[taxon.GetName()] = ChainMap(taxon_properties, taxon_relationships)
+        print(graph[each])
+        types_to_commit[taxon.GetName()] = taxon_info
+        print(networkx.ancestors(graph, each))
+        print('===================')
+
+    db_types = {
+        Sdf.ValueTypeNames.Int: 'int16',
+        Sdf.ValueTypeNames.String: 'str',
+    }
+    alter_string = ""
+    query_string = ""
+    for type_name, type_info in types_to_commit.items():
+        extending = type_info.get("extending", [])
+        extending = f' extending {", ".join(extending)}' if extending else ''
+        statement = f'create type {type_name}{extending}'
+        if not extending:
+            properties = 'create required property name -> str;\n'
+        else:
+            properties = ''
+        if not set(type_info['properties'].values()).issubset(set(db_types.keys())):
+            missing = set(type_info['properties'].values())-set(db_types.items())
+            from pprint import pp
+            pp([str(tn) for tn in set(type_info['properties'].values())])
+            raise RuntimeError(f"Missing: {', '.join(str(x) for x in missing)}")
+        properties += '\n'.join(f'create property {name} -> {db_types[type_name]};' for name, type_name in type_info['properties'].items())
+        links = '\n'.join(f'create multi link {name} -> {whom};' for name, whom in type_info['links'].items())
+        query_string += '''%s {
+            %s
+        };
+        ''' % (statement, properties)
+        if type_info['links']:
+            alter_statement = f'alter type {type_name}'
+            alter_string += '''%s {
+            %s
+            };
+            ''' % (alter_statement, links)
+    return query_string, alter_string
+
+
+def edgedb_commit(query):
+    query, alter = query
+    print("connecting")
+    client = edgedb.create_client()
+    client.ensure_connected()
+    print("connected")
+    print("QUERY")
+    print(query)
+    if alter:
+        print(alter)
+    # result = client.query('''
+    #     select "Jonathan Harker";
+    # ''')
+    # print(result)
+    # print(result)
+    # result = client.execute('''
+    #     ALTER TYPE NPC {
+    #         DROP LINK cities;
+    #     };
+    # ''')
+    # result = client.execute('''
+    #     drop type NPC;
+    #     drop type City;
+    # ''')
+    # create type TypeName {
+    #   required title: str;
+    #   multi actors: Person;
+    # }
+    # result = client.execute('''
+    #     ALTER TYPE NPC {
+    #         CREATE MULTI LINK places_visited -> City;
+    #     };
+    # ''')
+    # result = client.execute('''
+    #     CREATE TYPE City {
+    #         CREATE REQUIRED PROPERTY name -> str;
+    #         CREATE PROPERTY modern_name -> str;
+    #     };
+    #     CREATE TYPE NPC {
+    #         CREATE REQUIRED PROPERTY name -> str;
+    #         CREATE MULTI LINK places_visited -> City;
+    #     };
+    # ''')
+    result = client.execute(query)
+    print(result)
+    if alter:
+        result = client.execute(alter)
+        print(result)
+    client.close()
+    print("closed")
+
+
 if __name__ == "__main__":
     import shutil
     source_root = Path(__file__).parent
@@ -784,3 +936,6 @@ if __name__ == "__main__":
     All cities have more than 50,000 people: {', '.join(c.GetName() for c in cities if c.GetAttribute('population').Get() or 0 > 50000) },
     Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
     """)
+
+    queries = _types_to_create_query(stage)
+    edgedb_commit(queries)
