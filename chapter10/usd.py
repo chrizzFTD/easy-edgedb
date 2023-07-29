@@ -720,7 +720,7 @@ def main():
     # Total time: 0:00:17.422662
     # Total time: 0:00:16.560353
 
-    # amount=1_000 py310 usd2305
+    # amount=1_000 (3k created assets) py310 usd2305
     # Total time: 0:00:14.611185
     # Total time: 0:00:12.270478
     # Total time: 0:00:11.201041
@@ -731,6 +731,18 @@ def main():
     # Total time: 0:00:11.869251
     # Total time: 0:00:11.040348
     # Total time: 0:00:10.888602
+
+    # amount=1_000 (3k created assets) py311 usd2308
+    # Total time: 0:00:11.963846
+    # Total time: 0:00:12.251765
+    # Total time: 0:00:11.090976
+    # Total time: 0:00:11.210425
+    # Total time: 0:00:11.147159
+    # Total time: 0:00:10.884778
+    # Total time: 0:00:11.038445
+    # Total time: 0:00:11.162981
+    # Total time: 0:00:10.904304
+    # Total time: 0:00:11.050288
     for taxon in (city, other_place, person):
         # continue
         cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
@@ -886,6 +898,7 @@ def edgedb_commit(query):
 
 if __name__ == "__main__":
     import shutil
+    import sys
     source_root = Path(__file__).parent
     build_root = source_root / "assets"
     shutil.rmtree(build_root, True)
