@@ -662,7 +662,7 @@ def main():
     # pr.dump_stats(str(Path(__file__).parent / "stats_create_many_2108.log"))
     # end = datetime.datetime.now()
     # print(f"Total time: {end - start}")
-    # amount = 1_000
+    amount = 1_000
     # write.create_many(city, (f'NewCity{x}' for x in range(amount)), (f'New City Hello {x}' for x in range(int(amount / 2))))
     # for x in range(amount):
     #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
@@ -670,7 +670,7 @@ def main():
     #     # 0:00:07.193135
     #     # could be faster.
     #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
-    amount = 1
+    # amount = 1
     # 2022 03 24: With the update to include the catalogue on all units, amount = 1_000 (3k units):
     # No sublayered catalogue: Total time: 0:00:21.288368
     # Sublayered catalogue: Total time: 0:02:04.093982
@@ -719,8 +719,20 @@ def main():
     # Total time: 0:00:16.548665
     # Total time: 0:00:17.422662
     # Total time: 0:00:16.560353
+
+    # amount=1_000 py310 usd2305
+    # Total time: 0:00:14.611185
+    # Total time: 0:00:12.270478
+    # Total time: 0:00:11.201041
+    # Total time: 0:00:10.867913
+    # Total time: 0:00:10.984876
+    # Total time: 0:00:10.881332
+    # Total time: 0:00:11.211897
+    # Total time: 0:00:11.869251
+    # Total time: 0:00:11.040348
+    # Total time: 0:00:10.888602
     for taxon in (city, other_place, person):
-        continue
+        # continue
         cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
 
 
@@ -746,7 +758,7 @@ def _types_to_create_query(stage):
     print(f"-->>> Creating types for {stage}")
     root = stage.GetPrimAtPath(cook._TAXONOMY_ROOT_PATH)
     taxa = [prim for prim in root.GetFilteredChildren(Usd.PrimAllPrimsPredicate) if prim.GetAssetInfoByKey(cook._ASSETINFO_TAXON_KEY)]
-    graph, ids = cook.taxonomy_graph(taxa, "")
+    graph = cook.taxonomy_graph(taxa, "")
     properties = dict()  # {taxon: {name: type}}
     types_to_commit = dict()
     from collections import ChainMap
@@ -820,6 +832,7 @@ def _types_to_create_query(stage):
 
 
 def edgedb_commit(query):
+    return
     query, alter = query
     print("connecting")
     client = edgedb.create_client()
