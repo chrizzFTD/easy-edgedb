@@ -1,5 +1,9 @@
 # https://stackoverflow.com/a/72788936
 # https://youtrack.jetbrains.com/issue/PY-50959
+# conda create -n edb312 python=3.12
+# conda activate edb312
+# python -m pip install grill-names>=2.6.0 networkx numpy pyside6 printree edgedb
+import contextlib
 import logging
 import datetime
 import itertools
@@ -7,10 +11,7 @@ from pathlib import Path
 
 import networkx
 import numpy as np
-try:
-    from pxr import Usd
-except:
-    from pxr import Usd
+
 from pxr import Sdf, UsdGeom, Usd, Kind
 
 from grill import cook, names, usd as gusd
@@ -18,9 +19,9 @@ from grill.tokens import ids
 
 _notice_counter = itertools.count()
 
-
+# Sdf.ChangeBlock = contextlib.nullcontext
 def _notify(notice, sender):
-    return
+    # return
     """
     0:00:00.961997
     1320: Changed: []
@@ -31,9 +32,26 @@ def _notify(notice, sender):
     0:00:00.776181  (20% faster)
     309: Changed: []
     309: Changed: [Sdf.Path('/Catalogue/Model/Player/EmilSinclair')]
+
+    23 11 26
+
+    Start:
+        322: notice.GetChangedInfoOnlyPaths()=[]
+        322: notice.GetResyncedPaths()=[Sdf.Path('/Catalogue/Model/Person/NewPerson0')]
+            Total time: 0:00:01.077525
+
+    End:
+        231: notice.GetChangedInfoOnlyPaths()=[]
+        231: notice.GetResyncedPaths()=[Sdf.Path('/Catalogue/Model/Person/NewPerson0')]
+            Total time: 0:00:00.810436
+
+    --- Without SdfChangeBlock, this would be ---
+        1641: notice.GetChangedInfoOnlyPaths()=[Sdf.Path('/Catalogue/Model/Person/NewPerson0')]
+        1641: notice.GetResyncedPaths()=[]
+            Total time: 0:00:01.154914
     """
-    print(f"{(no:=next(_notice_counter))}: {notice.GetChangedInfoOnlyPaths()=}")
-    print(f"{no}: {notice.GetResyncedPaths()=}")
+    # print(f"{(no:=next(_notice_counter))}: {notice.GetChangedInfoOnlyPaths()=}")
+    # print(f"{no}: {notice.GetResyncedPaths()=}")
 
 
 logging.basicConfig(level=logging.INFO)
@@ -94,14 +112,15 @@ def main():
             with cook.unit_context(unit):
                 Usd.ModelAPI(unit).SetKind(Kind.Tokens.subcomponent)
 
-    with cook.unit_context(model_default_color):
-        UsdGeom.Gprim(model_default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
+        with cook.unit_context(model_default_color):
+            UsdGeom.Gprim(model_default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
 
     curve_points = [(0, 0, 0), (2, 1, 0), (2, 2, 0), (1, 2.5, 0), (0, 3, 0), (0, 4, 0), (2, 5, 0)]
     with cook.unit_context(basis_s):
         basis = UsdGeom.BasisCurves.Define(stage, basis_s.GetPath())
-        basis.GetPointsAttr().Set(curve_points)
-        basis.GetCurveVertexCountsAttr().Set([len(curve_points)])
+        with Sdf.ChangeBlock():
+            basis.GetPointsAttr().Set(curve_points)
+            basis.GetCurveVertexCountsAttr().Set([len(curve_points)])
 
     # We are going to be re-using the plane
     width = 10  # 10
@@ -109,9 +128,10 @@ def main():
     with cook.unit_context(geom_plane):
         #UsdGeom.Gprim(geom_colored_plane).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
         mesh = UsdGeom.Mesh.Define(stage, geom_plane.GetPath())
-        _make_plane(mesh, width, depth)
-        # # TODO: see if component default actually makes sense, for now need to change it
-        Usd.ModelAPI(geom_plane).SetKind(Kind.Tokens.subcomponent)
+        with Sdf.ChangeBlock():
+            _make_plane(mesh, width, depth)
+            # # TODO: see if component default actually makes sense, for now need to change it
+            Usd.ModelAPI(geom_plane).SetKind(Kind.Tokens.subcomponent)
 
     # 1.1 Model kingdom is for "all things that exist" in the universe.
     _model_fields = {ids.CGAsset.kingdom.name: "Model"}
@@ -175,9 +195,10 @@ def main():
     budapest, bistritz, munich, london = cook.create_many(
         city, ('Budapest', 'Bistritz', 'Munich', 'London'), ('⛪ Buda-Pesth', '🏰 Bistritz')
     )
-    for city_, population in (budapest, 402706), (london, 3500000), (munich, 230023), (bistritz, 9100):
-        with cook.unit_context(city_):
-            city_.GetAttribute("population").Set(population)
+    with Sdf.ChangeBlock():
+        for city_, population in (budapest, 402706), (london, 3500000), (munich, 230023), (bistritz, 9100):
+            with cook.unit_context(city_):
+                city_.GetAttribute("population").Set(population)
 
     golden_krone = cook.create_unit(place, 'GoldenKroneHotel', label='🏨 Golden Krone Hotel')
     castle_dracula = cook.create_unit(other_place, 'CastleDracula', label='🏰 Castle Dracula')
@@ -194,8 +215,10 @@ def main():
 
     emil = cook.create_unit(player, "EmilSinclair", label="🧔 Emil Sinclair")
     dracula = cook.create_unit(vampire, 'CountDracula', label='🧛 Count Dracula')
-    for each in cook.create_many(minor_vampire, *zip(*[(f'Woman{i}', f'🧛‍♀️ Woman {i}') for i in range(1, 5)])):
-        dracula.GetRelationship("slaves").AddTarget(each.GetPath())
+    minor_vampires = cook.create_many(minor_vampire, *zip(*[(f'Woman{i}', f'🧛‍♀️ Woman {i}') for i in range(1, 5)]))
+    with Sdf.ChangeBlock():
+        for each in minor_vampires:
+            dracula.GetRelationship("slaves").AddTarget(each.GetPath())
 
     # mina = cook.create_unit(non_player, 'MinaMurray', label='👩 Mina Murray')
     # lucy = cook.create_unit(non_player, 'LucyWestenra', label='👩‍🦰 Lucy Westenra')
@@ -204,22 +227,23 @@ def main():
         ('MinaMurray', 'LucyWestenra', 'ArthurHolmwood', 'Renfield', 'JohnSeward', 'QuinceyMorris'),
         ('👩 Mina Murray', '👩‍🦰 Lucy Westenra')
     )
-    arthur.GetRelationship('lover').AddTarget(lucy.GetPath())
-    lucy.GetRelationship("lover").AddTarget(arthur.GetPath())
+    with Sdf.ChangeBlock():
+        arthur.GetRelationship('lover').AddTarget(lucy.GetPath())
+        lucy.GetRelationship("lover").AddTarget(arthur.GetPath())
 
-    with cook.unit_context(renfield):
-        renfield.GetAttribute("strength").Set(10)
+        with cook.unit_context(renfield):
+            renfield.GetAttribute("strength").Set(10)
 
-    mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
-    jonathan.GetRelationship("lover").AddTarget(mina.GetPath())
+        mina.GetRelationship("lover").AddTarget(jonathan.GetPath())
+        jonathan.GetRelationship("lover").AddTarget(mina.GetPath())
     with cook.unit_context(bistritz):
-        bistritz.GetAttribute("modern_name").Set('Bistrița')
         spawned = cook.spawn_many(
             bistritz,
             golden_krone,
             (golden_krone.GetName(), "Deeper/Nested/Golden1", "Deeper/Nested/Golden2", "Deeper/Nested/Golden3")
         )
         with Sdf.ChangeBlock():
+            bistritz.GetAttribute("modern_name").Set('Bistrița')
             for each, transform in zip(
                     spawned,
                     ((2, 15, 6), (-4, 5, 1), (-4, -10, 1), (0, 10, -5)),
@@ -232,8 +256,9 @@ def main():
         # specialized = b_stage.OverridePrim("/Specialized/Model/Place/GoldenKroneHotel")
         # specialized.GetVariantSet("color").SetVariantSelection("spectrum_uniform")
 
-    stage.SetStartTimeCode(0)
-    stage.SetEndTimeCode(192)
+    with Sdf.ChangeBlock():
+        stage.SetStartTimeCode(0)
+        stage.SetEndTimeCode(192)
 
     from PySide6 import QtGui
     from functools import partial
@@ -249,13 +274,15 @@ def main():
         #               `-> add variant sets -> add color to created prims A, B (same python objects)
         golden_geom = cook.fetch_stage(golden_asset_name.get(part="Geom"))
         # TODO: let's place payload on the root of the unit
-        golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
+        golde_geom_default_prim = golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH)
         payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
 
         # Create a "Geom" prim specializing from the model_default_color, which is a subcomponent unit.
         geom_root = cook.spawn_unit(golden_krone, model_default_color, "Geom", label="Geom")
         # geom_root.SetInstanceable(False)  # by default, spawning a unit makes it instanceable.
-        geom_root.GetPayloads().AddPayload(payload)
+        with Sdf.ChangeBlock():
+            golden_geom.SetDefaultPrim(golde_geom_default_prim)
+            geom_root.GetPayloads().AddPayload(payload)
 
         with gusd.edit_context(payload, geom_root):
             bezier_types = ("bezier", "bspline", "catmullRom")
@@ -263,6 +290,7 @@ def main():
             # normal_interpolation_types = gusd._GeomPrimvarInfo.VERTEX, gusd._GeomPrimvarInfo.VARYING
             normal_interpolation_types = gusd._GeomPrimvarInfo.VARYING,
             volume_size = 2
+
             def set_curve_attrs(curve, xform, type, basis_id, width_interpolation_id, max_width):
                 UsdGeom.XformCommonAPI(curve).SetTranslate(xform)
                 curve.GetTypeAttr().Set(type)
@@ -309,8 +337,8 @@ def main():
                 paths=[geom_root.GetPath().AppendChild(f"BasisL{each}") for each in range(depth)],
                 labels=[f"Basis L {each}" for each in range(depth)],
             )
-            for each, curve in zip(range(depth), curves):
-                with Sdf.ChangeBlock():
+            with Sdf.ChangeBlock():
+                for each, curve in zip(range(depth), curves):
                     curve = UsdGeom.BasisCurves(curve)
                     set_curve_attrs(
                         curve,
@@ -324,8 +352,9 @@ def main():
                     # Don't set normals only here to create "tubes"
 
             ground = UsdGeom.Mesh(cook.spawn_unit(golden_krone, geom_plane, geom_root.GetPath().AppendChild("Ground"), label="Ground"))
-            ground.GetDoubleSidedAttr().Set(True)
-            ground.GetPrim().SetDocumentation("Main ground where Golden Krone exists")
+            with Sdf.ChangeBlock():
+                ground.GetDoubleSidedAttr().Set(True)
+                ground.GetPrim().SetDocumentation("Main ground where Golden Krone exists")
 
             def _define(schema, path, doc):
                 geom = schema.Define(stage, geom_root.GetPath().AppendPath(path))
@@ -345,18 +374,19 @@ def main():
             # width = 10  # 10
             # depth = 8  # 8
             # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
-            volume.GetRadiusAttr().Set(volume_size)
-            # TODO: these should be value clips?
-            xform = UsdGeom.XformCommonAPI(volume)
-            xform.SetTranslate((0, volume_size, 0))
-            tilt = 12  # "tilt" on the x-axis
-            spin = 1440  # "spin" on the z-axis
-            xform.SetRotate((tilt,0,0), time=0)
-            xform.SetRotate((tilt,0,spin), time=192)
-            UsdGeom.XformCommonAPI(top_back_right).SetTranslate((volume_size, volume_size * 3, -volume_size))
-            UsdGeom.XformCommonAPI(top_front_right).SetTranslate((volume_size, volume_size * 3, volume_size))
-            UsdGeom.XformCommonAPI(top_back_left).SetTranslate((-volume_size, volume_size * 3, -volume_size))
-            UsdGeom.XformCommonAPI(top_front_left).SetTranslate((-volume_size, volume_size * 3, volume_size))
+            with Sdf.ChangeBlock():
+                volume.GetRadiusAttr().Set(volume_size)
+                # TODO: these should be value clips?
+                xform = UsdGeom.XformCommonAPI(volume)
+                xform.SetTranslate((0, volume_size, 0))
+                tilt = 12  # "tilt" on the x-axis
+                spin = 1440  # "spin" on the z-axis
+                xform.SetRotate((tilt,0,0), time=0)
+                xform.SetRotate((tilt,0,spin), time=192)
+                UsdGeom.XformCommonAPI(top_back_right).SetTranslate((volume_size, volume_size * 3, -volume_size))
+                UsdGeom.XformCommonAPI(top_front_right).SetTranslate((volume_size, volume_size * 3, volume_size))
+                UsdGeom.XformCommonAPI(top_back_left).SetTranslate((-volume_size, volume_size * 3, -volume_size))
+                UsdGeom.XformCommonAPI(top_front_left).SetTranslate((-volume_size, volume_size * 3, volume_size))
 
         wavelength_options = [i for i in gusd._GeomPrimvarInfo if i != gusd._GeomPrimvarInfo.CONSTANT]
         color_options = {
@@ -400,9 +430,11 @@ def main():
     romania_asset_name = names.UsdAsset(Usd.ModelAPI(romania).GetAssetIdentifier().path)
     with cook.unit_context(romania):
         romania_geom = cook.fetch_stage(romania_asset_name.get(part="Geom"))
-        romania_geom.SetDefaultPrim(romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
+        romania_geom_default_prim = romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH)
         romania_payload = Sdf.Payload(romania_geom.GetRootLayer().identifier)
-        romania.GetPayloads().AddPayload(romania_payload)
+        # with Sdf.ChangeBlock():
+        #     romania_geom.SetDefaultPrim(romania_geom_default_prim)
+        #     romania.GetPayloads().AddPayload(romania_payload)
         instancer_path = (romania_path:=romania.GetPath()).AppendPath("Buildings")
         targets = []
         # TODO: build another point instancer on another unit, then merge and see what happens
@@ -415,6 +447,8 @@ def main():
         ]
         prototypes = cook.spawn_many(romania, golden_krone, prototypes_paths)
         with Sdf.ChangeBlock():
+            romania_geom.SetDefaultPrim(romania_geom_default_prim)
+            romania.GetPayloads().AddPayload(romania_payload)
             for prototype, selection in zip(prototypes, selections, strict=True):
                 if selection:
                     prototype.GetVariantSet("color").SetVariantSelection(selection)
@@ -469,17 +503,16 @@ def main():
             specializing = bool(i == 0 or i == 1)
             if specializing:
                 specialized_prim = instances[0].GetPrimAtPath(prototypes_paths[0])
-                edit_method = cook.specialize_unit if i == 1 else cook.inherit_unit
+                edit_method = cook.specialized_context if i == 1 else cook.inherited_context
                 broadcast_color = "spectrum_vertex" if i == 1 else "random_vertex"
-                with edit_method(specialized_prim, top_country):
-                    specialized_prim.GetVariantSet("color").SetVariantSelection(broadcast_color)
 
-            # with contextlib.nullcontext():
             with Sdf.ChangeBlock():
                 for r_inst, value in zip(instances, transforms, strict=True):
                     UsdGeom.XformCommonAPI(r_inst).SetTranslate(value)
                     # Workflow: if we're going to broadcast changes, don't instance the point instancer.
                     if specializing:
+                        with edit_method(specialized_prim, top_country):
+                            specialized_prim.GetVariantSet("color").SetVariantSelection(broadcast_color)
                         ########################
                         # Note: when making changes on instances, try to always use variant sets to reduce total prototype count
                         # (using specializes or inhertis create additional localized opinions which increase amount of prototypes)
@@ -501,47 +534,47 @@ def main():
                         ...
                         r_inst.SetInstanceable(True)
 
-
-    for name, rank in (
-        ("TheCaptain", "Captain"),
-        ("Petrofsky", "FirstMate"),
-        ("TheFirstMate", "FirstMate"),
-        ("TheCook", "Cook"),
-    ):
-        sailor_prim = cook.create_unit(sailor, name)
-        with cook.unit_context(sailor_prim):
-            sailor_prim.GetVariantSet("Rank").SetVariantSelection(rank)
+    sailors = {
+        "TheCaptain": "Captain",
+        "Petrofsky": "FirstMate",
+        "TheFirstMate": "FirstMate",
+        "TheCook": "Cook",
+    }
+    sailor_prims = cook.create_many(sailor, sailors)
     demeter = cook.create_unit(ship, "TheDemeter")
     demeter_sailors = demeter.GetRelationship("sailors")
-    for each in cook.itaxa(stage.Traverse(), sailor):
-        demeter_sailors.AddTarget(each.GetPath())
+    with Sdf.ChangeBlock():
+        for sailor_prim, rank in zip(sailor_prims, sailors.values()):
+            with cook.unit_context(sailor_prim):
+                sailor_prim.GetVariantSet("Rank").SetVariantSelection(rank)
+            demeter_sailors.AddTarget(sailor_prim.GetPath())
 
-    """
-    If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
+        """
+        If you just want to return a single part of a type without the object structure, you can use . after the type name. For example, SELECT City.modern_name will give this output:
+    
+        {'Budapest', 'Bistrița'}
+        """
+        print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
+        # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
-    {'Budapest', 'Bistrița'}
-    """
-    print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
-    # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
+        """
+        But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
+        """
 
-    """
-    But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
-    """
+        for each, places in (
+            (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
+            (emil, cook.itaxa(stage.Traverse(), city)),
+            (dracula, [romania]),
+            (mina, [castle_dracula, romania]),
+            (sailor, [london]),  # can propagate updates to a whole taxon group <- NOT ANYMORE
+            (non_player, [london]),  # can propagate updates to a whole taxon group
+        ):
+            visit_rel = each.GetRelationship('places_visited')
+            for place in places:
+                visit_rel.AddTarget(place.GetPath())
 
-    for each, places in (
-        (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
-        (emil, cook.itaxa(stage.Traverse(), city)),
-        (dracula, [romania]),
-        (mina, [castle_dracula, romania]),
-        (sailor, [london]),  # can propagate updates to a whole taxon group <- NOT ANYMORE
-        (non_player, [london]),  # can propagate updates to a whole taxon group
-    ):
-        visit_rel = each.GetRelationship('places_visited')
-        for place in places:
-            visit_rel.AddTarget(place.GetPath())
-
-    with cook.unit_context(emil):
-        emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
+        with cook.unit_context(emil):
+            emil.GetVariantSet("Transport").SetVariantSelection("HorseDrawnCarriage")
 
     # DELETING
     # try deleting the countries, this works as long as definitions are on the current edit target
@@ -743,6 +776,18 @@ def main():
     # Total time: 0:00:11.162981
     # Total time: 0:00:10.904304
     # Total time: 0:00:11.050288
+
+    # amount=1_000 (3k created assets) py312 usd2311
+    # Total time: 0:00:09.801498
+    # Total time: 0:00:09.602227
+    # Total time: 0:00:09.510000
+    # Total time: 0:00:10.411110
+    # Total time: 0:00:09.503902
+    # Total time: 0:00:09.763127
+    # Total time: 0:00:09.861560
+    # Total time: 0:00:09.523213
+    # Total time: 0:00:09.586478
+    # Total time: 0:00:09.438108
     for taxon in (city, other_place, person):
         # continue
         cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
@@ -907,10 +952,9 @@ if __name__ == "__main__":
     import cProfile
 
     start = datetime.datetime.now()
-    pr = cProfile.Profile()
-    pr.enable()
-    stage = pr.runcall(main)
-    pr.disable()
+    with cProfile.Profile() as pr:
+        stage = main()
+
     pr.dump_stats(str(Path(__file__).parent / "stats_no_init_name.log"))
     end = datetime.datetime.now()
     print(f"Total time: {end - start}")
