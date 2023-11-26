@@ -703,7 +703,7 @@ def main():
     #     # 0:00:07.193135
     #     # could be faster.
     #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
-    # amount = 1
+    amount = 1
     # 2022 03 24: With the update to include the catalogue on all units, amount = 1_000 (3k units):
     # No sublayered catalogue: Total time: 0:00:21.288368
     # Sublayered catalogue: Total time: 0:02:04.093982
