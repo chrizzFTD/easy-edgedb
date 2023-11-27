@@ -48,9 +48,8 @@ cook.UsdAsset = MiniAsset
 def main():
     token = cook.Repository.set(Path(__file__).parent / "broadcast")
     stage = cook.fetch_stage(MiniAsset.get_default())
-    # 1. Taxonomy Definition
-    width = 10  # 10
-    depth = 8  # 8
+    width = 10
+    depth = 8
 
     # 1.1 Model kingdom is for "all things that exist" in the universe.
     _model_fields = {ids.CGAsset.kingdom.name: "Model"}
@@ -69,45 +68,22 @@ def main():
     building = cook.create_unit(buildings, 'Multi_Story_Building')
     block_with_inherited_windows, block_with_specialized_windows, block = cook.create_many(country, ('Block_With_Inherited_Windows', 'Block_With_Specialized_Windows', 'Block'))
 
-    from PySide6 import QtGui
-    from functools import partial
-    from grill.views._attributes import _color_spectrum
-
     with cook.unit_context(window):
-        # idea: chain contexts to a specific prim, composition arc and a layer?
-        # unit context X -> add geom payload -> add prims A, B
-        #               `-> add variant sets -> add color to created prims A, B (same python objects)
-        # golden_geom = cook.fetch_stage(window_asset_name.get(part="Geom"))
-        # # TODO: let's element payload on the root of the unit
-        # golden_geom.SetDefaultPrim(golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
-        # payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
-
-        # Create a "Geom" prim specializing from the model_default_color, which is a subcomponent unit.
-        # geom_root = cook.spawn_unit(golden_krone, model_default_color, "Geom", label="Geom")
         geom_root = stage.DefinePrim(window.GetPath().AppendChild("Geom"))
         UsdGeom.Gprim(geom_root).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
-        # geom_root.GetPayloads().AddPayload(payload)
 
-        # with gusd.edit_context(payload, geom_root):
         mesh = UsdGeom.Mesh.Define(stage, geom_root.GetPath().AppendChild("Grid"))
         _make_plane(mesh, width, depth)
         mesh.GetDoubleSidedAttr().Set(True)
         mesh.GetPrim().SetDocumentation("Main mesh where Golden Krone exists")
 
         xform = UsdGeom.XformCommonAPI(mesh)
-        # xform.SetTranslate((0, volume_size, 0))
-        # tilt = 12  # "tilt" on the x-axis
-        # spin = 1440  # "spin" on the z-axis
         xform.SetRotate((90,0,90))
 
         color_options = {
-            "red": (gusd._GeomPrimvarInfo.CONSTANT, partial(_color_spectrum, QtGui.QColor.fromRgb(255, 0, 0), QtGui.QColor.fromHsvF(255, 0, 0))),
-            "blue": (gusd._GeomPrimvarInfo.CONSTANT, partial(_color_spectrum, QtGui.QColor.fromRgb(0, 0, 255), QtGui.QColor.fromHsvF(0, 0, 255))),
+            "red": (gusd._GeomPrimvarInfo.CONSTANT, lambda x: [(1,0,0)]),
+            "blue": (gusd._GeomPrimvarInfo.CONSTANT, lambda x: [(0,0,1)]),
         }
-
-        # golden_color = cook.fetch_stage(window_asset_name.get(part="Color"))
-        # For default color, multiple prims will be using it, so best UX to define the
-        # color first, then add it to existing prims rather than the inverse.
         geoms_with_color = [gprim for prim in Usd.PrimRange(geom_root) if (gprim := UsdGeom.Gprim(prim))]
 
         color_set = window.GetVariantSets().AddVariantSet("color")
@@ -134,20 +110,14 @@ def main():
                     color_var.Set(color_caller(color_size))
         color_set.ClearVariantSelection()  # Warning: Stage save only considers currently used layers, so layers that are only behind a variant selection might not be saved.
 
-        # extent = volume.GetExtentAttr()
-        # extent.Set(extent.Get() * volume_size)
-
-    romania_asset_name = MiniAsset(Usd.ModelAPI(building).GetAssetIdentifier().path)
     with cook.unit_context(building):
         # romania_geom = cook.fetch_stage(romania_asset_name.get(part="Geom"))
         # romania_geom.SetDefaultPrim(romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH))
         # romania_payload = Sdf.Payload(romania_geom.GetRootLayer().identifier)
         # building.GetPayloads().AddPayload(romania_payload)
-        instancer_path = (romania_path:=building.GetPath()).AppendPath("Buildings")
+        instancer_path = (romania_path:=building.GetPath()).AppendPath("Windows")
         targets = []
-        # TODO: build another point instancer on another unit, then merge and see what happens
         selections = ("", *color_set.GetVariantNames())
-        # selections = ("", "constant")  # DEBUG PURPOSES FOR PIXAR REPORT
         prototypes_paths = [
             instancer_path.AppendPath(
                 (name := window.GetName()) if not selection else f"{name}_{selection}"
@@ -162,11 +132,11 @@ def main():
                 targets.append(relpath)
 
         buildings = UsdGeom.PointInstancer.Define(stage, instancer_path)
-        X_size = 4 # 40
-        Z_size = 3  # 30
-        Y_size = Z_size * 7  # 250
+        X_size = 4
+        Z_size = 3
+        Y_size = Z_size * 7
         X = np.linspace(0, (X_size*width)-width, X_size)
-        Z = np.linspace(0, (Z_size*depth)-depth, Z_size)
+        Z = np.linspace(0, (Z_size*depth*2)-depth, Z_size)
         Y = np.linspace(0, Y_size, Z_size)
         xx, yy, zz = np.meshgrid(X, Y, Z)
         points = np.stack((xx.ravel(), yy.ravel(), zz.ravel()), axis=1)
@@ -184,10 +154,10 @@ def main():
     for i, top_country in enumerate((block_with_inherited_windows, block_with_specialized_windows, block)):
         with cook.unit_context(top_country):
             paths = (
-                "Deeper/Nested/Romania1",
-                "Deeper/Nested/Romania2",
-                "Deeper/Nested/Romania3",
-                "Deeper/Nested/Romania4",
+                "Building1",
+                "Building2",
+                "Building3",
+                "Building4",
             )
             transforms = (
                 (-instancer_tx * (i + 1), instancer_ty * (i + 1), 1),
@@ -197,7 +167,7 @@ def main():
             )
             instances = cook.spawn_many(top_country, building, paths)
 
-            specializing = bool(i == 0 or i == 1)
+            specializing = i in {0, 1}
             if specializing:
                 specialized_prim = instances[0].GetPrimAtPath(prototypes_paths[0])
                 edit_method = cook.specialized_context if i == 1 else cook.inherited_context
@@ -254,3 +224,7 @@ if __name__ == "__main__":
     end = datetime.datetime.now()
     print(f"Total time: {end - start}")
     stage.Save()
+    # usdzip -a "C:\Users\Christian\OneDrive\write\proyectos\self\g_instances\broadcast\City-Entry-Assembly.1.usda" "C:\Users\Christian\OneDrive\write\proyectos\self\g_instances\broadcast_nested_instances.usdz"
+    # usdzip -a "C:\Users\Christian\OneDrive\read\cg\usd\paint\output_old.usd" "C:\Users\Christian\OneDrive\read\cg\usd\paint\paint2.usdz"
+    # usdzip -a "C:\Users\Christian\OneDrive\read\cg\usd\paint\output_leah.usd" "C:\Users\Christian\OneDrive\read\cg\usd\paint\paint_leah.usdz"
+    # usdzip -a "C:\Users\Christian\OneDrive\read\cg\usd\paint\output_novc2_animated.usd" "C:\Users\Christian\OneDrive\read\cg\usd\paint\paint_novc2.usdz"
