@@ -6,14 +6,14 @@
 def "Origin" (
     prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
-        asset identifier = @dracula-3d-Object-Person-rnd-main-NewPerson0-lead-base-whole.1.usda@
+        asset identifier = @dracula-3d-Model-Person-rnd-main-NewPerson0-lead-base-whole.1.usda@
         string name = "NewPerson0"
     }
     displayName = "New Person Hello 0"
-    prepend inherits = </Inherited/Object/Person/NewPerson0>
+    prepend inherits = </Inherited/Model/Person/NewPerson0>
     kind = "component"
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Person>
-    prepend specializes = </Specialized/Object/Person/NewPerson0>
+    prepend specializes = </Specialized/Model/Person/NewPerson0>
 )
 {
 }

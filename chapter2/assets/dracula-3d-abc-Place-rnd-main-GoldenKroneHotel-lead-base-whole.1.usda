@@ -1,26 +1,20 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-abc-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
         string name = "GoldenKroneHotel"
     }
-    prepend inherits = </Taxonomy/Place>
+    displayName = "Golden Krone Hotel"
+    prepend inherits = </Inherited/Place/GoldenKroneHotel>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Place>
+    prepend specializes = </Specialized/Place/GoldenKroneHotel>
 )
 {
-    uniform token ui:displayName = "Golden Krone Hotel"
 }
 

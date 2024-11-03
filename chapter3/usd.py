@@ -1,12 +1,14 @@
 import logging
 from pathlib import Path
 
-from pxr import Usd, Sdf, Kind
+from pxr import Sdf
 
-from grill import cook
+from grill import cook, names
 from grill.tokens import ids
 
 logger = logging.getLogger(__name__)
+
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 cook.Repository.set(Path(__file__).parent / "assets")
 

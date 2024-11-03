@@ -3,16 +3,13 @@
     defaultPrim = "Origin"
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-whole.1.usda@
         string name = "Romania"
     }
+    displayName = "Romania"
     prepend inherits = </Inherited/Model/Country/Romania>
     kind = "assembly"
     prepend payload = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-Geom.1.usda@
@@ -20,9 +17,9 @@ def "Origin" (
     prepend specializes = </Specialized/Model/Country/Romania>
 )
 {
-    uniform token ui:displayName = "Romania"
-
-    def "Buildings"
+    def "Buildings" (
+        kind = "group"
+    )
     {
         def "GoldenKroneHotel" (
             instanceable = true

@@ -3,22 +3,18 @@
     defaultPrim = "Origin"
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-NonPlayer-rnd-main-JohnSeward-lead-base-whole.1.usda@
         string name = "JohnSeward"
     }
+    displayName = "JohnSeward"
     prepend inherits = </Inherited/Model/NonPlayer/JohnSeward>
     kind = "component"
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/NonPlayer>
     prepend specializes = </Specialized/Model/NonPlayer/JohnSeward>
 )
 {
-    uniform token ui:displayName = "JohnSeward"
 }
 

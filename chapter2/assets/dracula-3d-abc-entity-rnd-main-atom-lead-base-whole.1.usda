@@ -8,6 +8,21 @@
 
 over "Catalogue"
 {
+    over "City"
+    {
+        over "Bistritz" (
+            kind = "assembly"
+        )
+        {
+            def "GoldenKroneHotel" (
+                instanceable = true
+                prepend references = @dracula-3d-abc-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+            )
+            {
+            }
+        }
+    }
+
     over "Person"
     {
         over "JonathanHarker"
