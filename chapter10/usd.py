@@ -1,8 +1,11 @@
 # https://stackoverflow.com/a/72788936
 # https://youtrack.jetbrains.com/issue/PY-50959
-# conda create -n edb312 python=3.12
-# conda activate edb312
-# python -m pip install grill-names>=2.6.0 networkx numpy pyside6 printree edgedb
+# conda create -n edb313 python=3.13
+# conda activate edb313
+# python -m pip install -e A:\write\code\git\grill
+# python -m pip install PySide6 PyOpenGL
+# python -m pip install edgedb  (fails on Windows + Python-3.13)
+# Fix paths in C:\Users\Christian\AppData\Roaming\JetBrains\PyCharmCE2024.1\options\jdk.table.xml
 import contextlib
 import logging
 import datetime
@@ -12,7 +15,7 @@ from pathlib import Path
 import networkx
 import numpy as np
 
-from pxr import Sdf, UsdGeom, Usd, Kind
+from pxr import Sdf, UsdGeom, Usd, Kind, Tf
 
 from grill import cook, names, usd as gusd
 from grill.tokens import ids
@@ -27,13 +30,13 @@ def _notify(notice, sender):
     1320: Changed: []
     1320: Changed: [Sdf.Path('/Catalogue/Model/Player/EmilSinclair')]
 
-    23 02 25: Updated to:
+    2023 02 25: Updated to:
 
     0:00:00.776181  (20% faster)
     309: Changed: []
     309: Changed: [Sdf.Path('/Catalogue/Model/Player/EmilSinclair')]
 
-    23 11 26
+    2023 11 26
 
     Start:
         322: notice.GetChangedInfoOnlyPaths()=[]
@@ -49,7 +52,38 @@ def _notify(notice, sender):
         1641: notice.GetChangedInfoOnlyPaths()=[Sdf.Path('/Catalogue/Model/Person/NewPerson0')]
         1641: notice.GetResyncedPaths()=[]
             Total time: 0:00:01.154914
+
+    2024 02 22
+
+    for amount=1_000:
+        without changeblock:
+            Total time: 0:00:13.799406
+            Total notices 22621
+        with changeblock:
+            Total time: 0:00:09.013849
+            Total notices 232
+
+    2024 04 25
+
+    for amount=1_000:
+        without changeblock:
+            Total time: 0:00:13.041650
+            Total notices 22621
+        with changeblock:
+            Total time: 0:00:08.590089
+            Total notices 232
+
+    2024 10 27
+
+    for amount=1_000:
+        without changeblock:
+            Total time: 0:00:12.923481
+            Total notices 22621
+        with changeblock:
+            Total time: 0:00:08.738305
+            Total notices 232
     """
+    next(_notice_counter)
     # print(f"{(no:=next(_notice_counter))}: {notice.GetChangedInfoOnlyPaths()=}")
     # print(f"{no}: {notice.GetResyncedPaths()=}")
 
@@ -59,6 +93,7 @@ logger = logging.getLogger(__name__)
 
 names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
+
 def _tag_persistent(obj):
     obj.SetAssetInfoByKey("grill:database", True)
 
@@ -67,34 +102,12 @@ def _tag_persistent_target(obj, target):
     obj.SetAssetInfoByKey("grill:target_taxon", target.GetName())
 
 
-def _make_plane(mesh, width, depth):
-    # https://github.com/marcomusy/vedo/issues/86
-    # https://blender.stackexchange.com/questions/230534/fastest-way-to-skin-a-grid
-    x_ = np.linspace(-(width / 2), width / 2, width)
-    z_ = np.linspace(depth / 2, - depth / 2, depth)
-    X, Z = np.meshgrid(x_, z_)
-    x = X.ravel()
-    z = Z.ravel()
-    y = np.zeros_like(x)
-    points = np.stack((x, y, z), axis=1)
-    xmax = x_.size
-    zmax = z_.size
-    faceVertexIndices = np.array([
-        (i + j * xmax, i + j * xmax + 1, i + 1 + (j + 1) * xmax, i + (j + 1) * xmax)
-        for j in range(zmax - 1) for i in range(xmax - 1)
-    ])
-
-    faceVertexCounts = np.full(len(faceVertexIndices), 4)
-    mesh.GetPointsAttr().Set(points)
-    mesh.GetFaceVertexCountsAttr().Set(faceVertexCounts)
-    mesh.GetFaceVertexIndicesAttr().Set(faceVertexIndices)
-
-
 def main():
     token = cook.Repository.set(Path(__file__).parent / "assets")
     stage = cook.fetch_stage(names.UsdAsset.get_default(code='dracula'))
-    from pxr import Tf
+
     notice = Tf.Notice.Register(Usd.Notice.ObjectsChanged, _notify, stage)
+
     # 1. Taxonomy Definition
     with cook.taxonomy_context(stage):
         model_default_color = cook.create_unit(
@@ -107,13 +120,15 @@ def main():
         basis_s, nurbs_s = cook.create_many(shape_taxon, names=["BasisS", "NurbsS"], labels=["🎲 Basis S", "🎲 Nurbs S"])
 
     # TODO: see if component default actually makes sense, for now need to change it
+    # We are going to be re-using the plane
+    width = 10  # 10
+    depth = 8  # 8
     with Sdf.ChangeBlock():
         for unit in geom_plane, basis_s, nurbs_s, model_default_color:
             with cook.unit_context(unit):
                 Usd.ModelAPI(unit).SetKind(Kind.Tokens.subcomponent)
-
-        with cook.unit_context(model_default_color):
-            UsdGeom.Gprim(model_default_color).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
+                if unit == model_default_color:
+                    UsdGeom.Gprim(unit).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
 
     curve_points = [(0, 0, 0), (2, 1, 0), (2, 2, 0), (1, 2.5, 0), (0, 3, 0), (0, 4, 0), (2, 5, 0)]
     with cook.unit_context(basis_s):
@@ -122,16 +137,8 @@ def main():
             basis.GetPointsAttr().Set(curve_points)
             basis.GetCurveVertexCountsAttr().Set([len(curve_points)])
 
-    # We are going to be re-using the plane
-    width = 10  # 10
-    depth = 8  # 8
     with cook.unit_context(geom_plane):
-        #UsdGeom.Gprim(geom_colored_plane).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
-        mesh = UsdGeom.Mesh.Define(stage, geom_plane.GetPath())
-        with Sdf.ChangeBlock():
-            _make_plane(mesh, width, depth)
-            # # TODO: see if component default actually makes sense, for now need to change it
-            Usd.ModelAPI(geom_plane).SetKind(Kind.Tokens.subcomponent)
+        gusd._make_plane(UsdGeom.Mesh.Define(stage, geom_plane.GetPath()), width, depth)
 
     # 1.1 Model kingdom is for "all things that exist" in the universe.
     _model_fields = {ids.CGAsset.kingdom.name: "Model"}
@@ -273,9 +280,252 @@ def main():
         # unit context X -> add geom payload -> add prims A, B
         #               `-> add variant sets -> add color to created prims A, B (same python objects)
         golden_geom = cook.fetch_stage(golden_asset_name.get(part="Geom"))
+        golden_shade = cook.fetch_stage(golden_asset_name.get(part="Shade"))
+#         golden_shade.GetRootLayer().ImportFromString(
+# """#usda 1.0
+# (
+#     defaultPrim = "Origin"
+# )
+#
+# over "Origin" (
+#     prepend apiSchemas = ["MaterialBindingAPI"]
+# )
+# {
+#     rel material:binding = </Origin/materials/mtlxmaterial>
+#
+#     def Scope "materials"
+#     {
+#         def Material "mtlxmaterial" (
+#             customData = {
+#                 int[] HoudiniPrimEditorNodes = [15]
+#             }
+#             prepend inherits = </__class_mtl__/mtlxmaterial>
+#         )
+#         {
+#             token outputs:mtlx:displacement.connect = </Origin/materials/mtlxmaterial/mtlxdisplacement.outputs:out>
+#             token outputs:mtlx:surface.connect = </Origin/materials/mtlxmaterial/mtlxstandard_surface.outputs:out>
+#             token outputs:surface.connect = </Origin/materials/mtlxmaterial/mtlxstandard_preview.outputs:surface>
+#
+#             def Shader "mtlxstandard_surface" (
+#                 customData = {
+#                     bool HoudiniHasAutoPreviewShader = 1
+#                 }
+#             )
+#             {
+#                 uniform token info:id = "ND_standard_surface_surfaceshader"
+#                 float inputs:base (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 1
+#                             string ogl_diff_intensity = "1"
+#                         }
+#                     }
+#                 )
+#                 color3f inputs:base_color (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double3 default_value = (0.8, 0.8, 0.8)
+#                             string ogl_diff = "1"
+#                         }
+#                     }
+#                 )
+#                 color3f inputs:base_color.connect = </Origin/materials/mtlxmaterial/mtlxUsdPrimvarReader1.outputs:out>
+#                 float inputs:coat (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 0
+#                             string ogl_coat_intensity = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:coat_roughness = 0 (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 0.1
+#                             string ogl_coat_rough = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:emission (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 0
+#                             string ogl_emit_intensity = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:emission.connect = </Origin/materials/mtlxmaterial/cubic_red.outputs:out>
+#                 color3f inputs:emission_color (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double3 default_value = (1, 1, 1)
+#                             string ogl_emit = "1"
+#                         }
+#                     }
+#                 )
+#                 color3f inputs:emission_color.connect = </Origin/materials/mtlxmaterial/mtlxUsdPrimvarReader1.outputs:out>
+#                 float inputs:metalness (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 0
+#                             string ogl_metallic = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:sheen_roughness = 0
+#                 float inputs:specular (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 1
+#                             string ogl_spec_intensity = "1"
+#                         }
+#                     }
+#                 )
+#                 color3f inputs:specular_color (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double3 default_value = (1, 1, 1)
+#                             string ogl_spec = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:specular_IOR (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 1.5
+#                             string ogl_ior = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:specular_roughness (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 0.2
+#                             string ogl_rough = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:transmission (
+#                     customData = {
+#                         dictionary HoudiniPreviewTags = {
+#                             double default_value = 0
+#                             string ogl_transparency = "1"
+#                         }
+#                     }
+#                 )
+#                 float inputs:transmission.connect = </Origin/materials/mtlxmaterial/compute_eulers_blue.outputs:out>
+#                 color3f inputs:transmission_color.connect = </Origin/materials/mtlxmaterial/mtlxUsdPrimvarReader1.outputs:out>
+#                 token outputs:out
+#             }
+#
+#             def Shader "mtlxUsdPrimvarReader1"
+#             {
+#                 uniform token info:id = "ND_UsdPrimvarReader_vector3"
+#                 string inputs:varname = "displayColor"
+#                 vector3f outputs:out
+#             }
+#
+#             def Shader "compute_eulers_blue"
+#             {
+#                 uniform token info:id = "ND_add_float"
+#                 float inputs:in1 = 1
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/negative_eulers.outputs:out>
+#                 float inputs:in2 = 1
+#                 float outputs:out
+#             }
+#
+#             def Shader "negative_eulers"
+#             {
+#                 uniform token info:id = "ND_multiply_float"
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/eulers_power.outputs:out>
+#                 float inputs:in2 = -1
+#                 float outputs:out
+#             }
+#
+#             def Shader "eulers_power"
+#             {
+#                 uniform token info:id = "ND_power_float"
+#                 float inputs:in1 = 2.7182
+#                 float inputs:in2.connect = </Origin/materials/mtlxmaterial/negative_blue.outputs:out>
+#                 float outputs:out
+#             }
+#
+#             def Shader "negative_blue"
+#             {
+#                 uniform token info:id = "ND_multiply_float"
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/mult_blue.outputs:out>
+#                 float inputs:in2 = -1
+#                 float outputs:out
+#             }
+#
+#             def Shader "mult_blue"
+#             {
+#                 uniform token info:id = "ND_multiply_float"
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/mtlxseparate3c1.outputs:outb>
+#                 float inputs:in2 = 3.6
+#                 float outputs:out
+#             }
+#
+#             def Shader "mtlxseparate3c1"
+#             {
+#                 uniform token info:id = "ND_separate3_color3"
+#                 color3f inputs:in.connect = </Origin/materials/mtlxmaterial/mtlxUsdPrimvarReader1.outputs:out>
+#                 float outputs:outb
+#                 float outputs:outr
+#             }
+#
+#             def Shader "cubic_red"
+#             {
+#                 uniform token info:id = "ND_power_float"
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/rerange_red.outputs:out>
+#                 float inputs:in2 = 3
+#                 float outputs:out
+#             }
+#
+#             def Shader "rerange_red"
+#             {
+#                 uniform token info:id = "ND_divide_float"
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/limit_red.outputs:out>
+#                 float inputs:in2 = 0.3
+#                 float outputs:out
+#             }
+#
+#             def Shader "limit_red"
+#             {
+#                 uniform token info:id = "ND_add_float"
+#                 float inputs:in1.connect = </Origin/materials/mtlxmaterial/mtlxseparate3c1.outputs:outr>
+#                 float inputs:in2 = -0.7
+#                 float outputs:out
+#             }
+#
+#             def Shader "mtlxdisplacement"
+#             {
+#                 uniform token info:id = "ND_displacement_float"
+#                 token outputs:out
+#             }
+#
+#             def Shader "mtlxstandard_preview" (
+#                 customData = {
+#                     bool HoudiniIsAutoCreatedShader = 1
+#                 }
+#             )
+#             {
+#                 uniform token info:id = "UsdPreviewSurface"
+#                 float inputs:clearcoatRoughness = 0
+#                 color3f inputs:diffuseColor = (0.8, 0.8, 0.8)
+#                 float inputs:roughness = 0.2
+#                 color3f inputs:specularColor = (1, 1, 1)
+#                 token outputs:surface
+#             }
+#         }
+#     }
+# }
+# """
+#         )
         # TODO: let's place payload on the root of the unit
         golde_geom_default_prim = golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH)
         payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
+        # shade_payload = Sdf.Payload(golden_shade.GetRootLayer().identifier)
 
         # Create a "Geom" prim specializing from the model_default_color, which is a subcomponent unit.
         geom_root = cook.spawn_unit(golden_krone, model_default_color, "Geom", label="Geom")
@@ -283,6 +533,7 @@ def main():
         with Sdf.ChangeBlock():
             golden_geom.SetDefaultPrim(golde_geom_default_prim)
             geom_root.GetPayloads().AddPayload(payload)
+            # golden_krone.GetPayloads().AddPayload(shade_payload)
 
         with gusd.edit_context(payload, geom_root):
             bezier_types = ("bezier", "bspline", "catmullRom")
@@ -382,7 +633,10 @@ def main():
                 tilt = 12  # "tilt" on the x-axis
                 spin = 1440  # "spin" on the z-axis
                 xform.SetRotate((tilt,0,0), time=0)
-                xform.SetRotate((tilt,0,spin), time=192)
+                # xform.SetRotate((tilt,0,spin), time=192)
+                # rotate = xform.GetRotate()
+                attr = xform.GetPrim().GetAttribute("xformOp:rotateXYZ")
+                _tag_persistent(attr)
                 UsdGeom.XformCommonAPI(top_back_right).SetTranslate((volume_size, volume_size * 3, -volume_size))
                 UsdGeom.XformCommonAPI(top_front_right).SetTranslate((volume_size, volume_size * 3, volume_size))
                 UsdGeom.XformCommonAPI(top_back_left).SetTranslate((-volume_size, volume_size * 3, -volume_size))
@@ -459,10 +713,10 @@ def main():
             buildings = UsdGeom.PointInstancer.Define(stage, instancer_path)
             # X_size = 20 # 40
             # Z_size = 15 # 30
-            X_size = 6 # 40
-            Z_size = 4  # 30
-            X_size = 4 # 40
-            Z_size = 3  # 30
+            X_size = 10 # 40
+            Z_size = 7  # 30
+            # X_size = 4 # 40
+            # Z_size = 3  # 30
             # Y_size = 10  # 250
             Y_size = Z_size * 7  # 250
             X = np.linspace(0, (X_size*width)-width, X_size)
@@ -695,7 +949,7 @@ def main():
     # pr.dump_stats(str(Path(__file__).parent / "stats_create_many_2108.log"))
     # end = datetime.datetime.now()
     # print(f"Total time: {end - start}")
-    amount = 1_000
+    # amount = 1_000
     # write.create_many(city, (f'NewCity{x}' for x in range(amount)), (f'New City Hello {x}' for x in range(int(amount / 2))))
     # for x in range(amount):
     #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
@@ -777,7 +1031,7 @@ def main():
     # Total time: 0:00:10.904304
     # Total time: 0:00:11.050288
 
-    # amount=1_000 (3k created assets) py312 usd2311
+    amount = 1_000  # (3k created assets) py312 usd2311
     # Total time: 0:00:09.801498
     # Total time: 0:00:09.602227
     # Total time: 0:00:09.510000
@@ -788,6 +1042,32 @@ def main():
     # Total time: 0:00:09.523213
     # Total time: 0:00:09.586478
     # Total time: 0:00:09.438108
+
+    amount = 1_000  # (3k created assets) py312 usd2405
+    # Total time: 0:00:08.687180
+    # Total time: 0:00:08.470964
+    # Total time: 0:00:08.824526
+    # Total time: 0:00:08.485154
+    # Total time: 0:00:08.586358
+    # Total time: 0:00:08.660507
+    # Total time: 0:00:08.505728
+    # Total time: 0:00:08.590089
+    # Total time: 0:00:08.612231
+    # Total time: 0:00:08.628788
+
+    amount = 1_000  # (3k created assets) py313 usd2411
+    # Total time: 0:00:08.665497
+    # Total time: 0:00:08.738305
+    # Total time: 0:00:09.096642
+    # Total time: 0:00:08.756429
+    # Total time: 0:00:08.487397
+    # Total time: 0:00:08.711614
+    # Total time: 0:00:08.817613
+    # Total time: 0:00:09.180873
+    # Total time: 0:00:09.974731
+    # Total time: 0:00:08.701655
+
+    amount = 1
     for taxon in (city, other_place, person):
         # continue
         cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
@@ -802,13 +1082,13 @@ def main():
     return stage
 
 
-import edgedb
+# import edgedb
 import os
-for env_var in ("EDGEDB_INSTANCE", "EDGEDB_SECRET_KEY"):
-    value = os.getenv(env_var)
-    if not value:
-        raise RuntimeError(f"{env_var} not defined in current environment")
-    print(f"{env_var}={value}")
+# for env_var in ("EDGEDB_INSTANCE", "EDGEDB_SECRET_KEY"):
+#     value = os.getenv(env_var)
+#     if not value:
+#         raise RuntimeError(f"{env_var} not defined in current environment")
+#     print(f"{env_var}={value}")
 
 
 def _types_to_create_query(stage):
@@ -1008,6 +1288,23 @@ if __name__ == "__main__":
     All cities have more than 50,000 people: {', '.join(c.GetName() for c in cities if c.GetAttribute('population').Get() or 0 > 50000) },
     Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
     """)
-
+    print(f"Total notices {next(_notice_counter)}")
     # queries = _types_to_create_query(stage)
     # edgedb_commit(queries)
+
+
+# TODO:
+# delimiters for at symbols
+# unicode
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/180_asset_paths.sdf
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/120_sub_attribute_relations.sdf
+
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/202_displayGroups.sdf
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/217_utf8_identifiers.sdf
+
+# string on string on string
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/31_attribute_values.sdf
+
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/46_weirdStringContent.sdf
+
+# https://github.com/PixarAnimationStudios/OpenUSD/blob/79d80a0f4128a17eaff29ef08c1be3c2fcf0151d/pxr/usd/sdf/testenv/testSdfParsing.testenv/baseline/88_attribute_displayUnit.sdf
