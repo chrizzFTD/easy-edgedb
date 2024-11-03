@@ -1,26 +1,20 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-abc-Player-rnd-main-EmilSinclair-lead-base-whole.1.usda@
         string name = "EmilSinclair"
     }
-    prepend inherits = </Taxonomy/Player>
+    displayName = "Emil Sinclair"
+    prepend inherits = </Inherited/Player/EmilSinclair>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Player>
+    prepend specializes = </Specialized/Player/EmilSinclair>
 )
 {
-    uniform token ui:displayName = "Emil Sinclair"
 }
 

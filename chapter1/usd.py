@@ -9,8 +9,10 @@ Some kind of Person type. We need it to have a name, and also a way to track the
 """
 from pathlib import Path
 
-from grill import cook
-from pxr import Sdf, Usd
+from grill import cook, names
+from pxr import Sdf
+
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 cook.Repository.set(Path(__file__).parent / "assets")
 
@@ -75,6 +77,3 @@ for city in cook.itaxa(stage.Traverse(), city):
     jonathanVisitRel.AddTarget(city.GetPath())
 
 stage.Save()
-
-if __name__ == "__main__":
-    ...

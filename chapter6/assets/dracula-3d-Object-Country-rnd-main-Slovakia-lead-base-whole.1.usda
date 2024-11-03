@@ -1,26 +1,20 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-Country-rnd-main-Slovakia-lead-base-whole.1.usda@
         string name = "Slovakia"
     }
-    prepend inherits = </Taxonomy/Country>
+    displayName = "Slovakia"
+    prepend inherits = </Inherited/Object/Country/Slovakia>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Country>
+    prepend specializes = </Specialized/Object/Country/Slovakia>
 )
 {
-    uniform token ui:displayName = "Slovakia"
 }
 

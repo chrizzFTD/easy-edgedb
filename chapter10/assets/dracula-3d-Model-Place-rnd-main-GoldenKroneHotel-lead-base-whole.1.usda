@@ -1,0 +1,75 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+        string name = "GoldenKroneHotel"
+    }
+    displayName = "🏨 Golden Krone Hotel"
+    prepend inherits = </Inherited/Model/Place/GoldenKroneHotel>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Place>
+    prepend specializes = </Specialized/Model/Place/GoldenKroneHotel>
+    prepend variantSets = "color"
+)
+{
+    def "Geom" (
+        displayName = "Geom"
+        prepend payload = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Geom.1.usda@
+        prepend references = @dracula-3d-Shade-Color-rnd-main-ModelDefault-lead-base-whole.1.usda@
+    )
+    {
+    }
+    variantSet "color" = {
+        "constant" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</constant>
+        ) {
+
+        }
+        "random_faceVarying" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</random_faceVarying>
+        ) {
+
+        }
+        "random_uniform" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</random_uniform>
+        ) {
+
+        }
+        "random_varying" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</random_varying>
+        ) {
+
+        }
+        "random_vertex" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</random_vertex>
+        ) {
+
+        }
+        "spectrum_faceVarying" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</spectrum_faceVarying>
+        ) {
+
+        }
+        "spectrum_uniform" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</spectrum_uniform>
+        ) {
+
+        }
+        "spectrum_varying" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</spectrum_varying>
+        ) {
+
+        }
+        "spectrum_vertex" (
+            prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Color.1.usda@</spectrum_vertex>
+        ) {
+
+        }
+    }
+}
+

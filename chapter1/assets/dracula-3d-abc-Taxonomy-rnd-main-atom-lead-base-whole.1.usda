@@ -16,6 +16,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/City>
     )
     {
         custom string modern_name
@@ -32,6 +33,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Person>
     )
     {
         custom rel places_visited

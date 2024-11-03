@@ -16,6 +16,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Person>
     )
     {
         custom rel places_visited
@@ -32,6 +33,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Transport>
         prepend variantSets = "Transport"
     )
     {
@@ -59,6 +61,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Player>
         prepend references = [
             </Taxonomy/Person>,
             </Taxonomy/Transport>
@@ -78,6 +81,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/NonPlayer>
         prepend references = </Taxonomy/Person>
     )
     {
@@ -94,6 +98,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Place>
     )
     {
         custom string modern_name
@@ -110,6 +115,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/City>
         kind = "assembly"
         prepend references = </Taxonomy/Place>
     )

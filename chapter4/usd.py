@@ -2,14 +2,15 @@ import logging
 import datetime
 from pathlib import Path
 
-from pxr import Usd, Sdf, Kind
+from pxr import Sdf
 
-from grill import cook
+from grill import cook, names
 from grill.tokens import ids
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 def main():
     token = cook.Repository.set(Path(__file__).parent / "assets")
@@ -119,10 +120,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     import cProfile
     start = datetime.datetime.now()
-    pr = cProfile.Profile()
-    pr.enable()
-    stage = pr.runcall(main)
-    pr.disable()
+    with cProfile.Profile() as pr:
+        stage = main()
+
     pr.dump_stats(str(Path(__file__).parent / "stats_no_init_name.log"))
 
     end = datetime.datetime.now()

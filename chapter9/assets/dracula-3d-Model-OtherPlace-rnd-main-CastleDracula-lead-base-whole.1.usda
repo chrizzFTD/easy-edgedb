@@ -3,16 +3,13 @@
     defaultPrim = "Origin"
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-OtherPlace-rnd-main-CastleDracula-lead-base-whole.1.usda@
         string name = "CastleDracula"
     }
+    displayName = "Castle Dracula"
     prepend inherits = </Inherited/Model/OtherPlace/CastleDracula>
     kind = "component"
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/OtherPlace>
@@ -20,6 +17,5 @@ def "Origin" (
 )
 {
     int[] doors_strength = [6, 19, 10]
-    uniform token ui:displayName = "Castle Dracula"
 }
 

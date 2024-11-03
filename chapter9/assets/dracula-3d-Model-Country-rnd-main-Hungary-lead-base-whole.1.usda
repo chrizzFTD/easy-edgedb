@@ -3,24 +3,19 @@
     defaultPrim = "Origin"
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Country-rnd-main-Hungary-lead-base-whole.1.usda@
         string name = "Hungary"
     }
+    displayName = "Hungary"
     prepend inherits = </Inherited/Model/Country/Hungary>
     kind = "assembly"
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Country>
     prepend specializes = </Specialized/Model/Country/Hungary>
 )
 {
-    uniform token ui:displayName = "Hungary"
-
     def "Deeper" (
         kind = "group"
     )

@@ -10,6 +10,21 @@ over "Catalogue"
 {
     over "Object"
     {
+        over "City"
+        {
+            over "Bistritz" (
+                kind = "assembly"
+            )
+            {
+                def "GoldenKroneHotel" (
+                    instanceable = true
+                    prepend references = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+                )
+                {
+                }
+            }
+        }
+
         over "Vampire"
         {
             over "CountDracula"

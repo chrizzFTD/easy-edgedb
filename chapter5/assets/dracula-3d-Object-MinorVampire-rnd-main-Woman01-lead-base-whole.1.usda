@@ -1,26 +1,20 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
-    subLayers = [
-        @dracula-3d-Catalogue-entity-rnd-main-atom-lead-base-whole.1.usda@,
-        @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@
-    ]
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Object-MinorVampire-rnd-main-Woman01-lead-base-whole.1.usda@
         string name = "Woman01"
     }
-    prepend inherits = </Taxonomy/MinorVampire>
+    displayName = "Woman 1"
+    prepend inherits = </Inherited/Object/MinorVampire/Woman01>
     kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/MinorVampire>
+    prepend specializes = </Specialized/Object/MinorVampire/Woman01>
 )
 {
-    uniform token ui:displayName = "Woman 1"
 }
 

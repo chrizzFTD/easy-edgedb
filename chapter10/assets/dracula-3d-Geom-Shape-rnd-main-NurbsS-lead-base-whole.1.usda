@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Geom-Shape-rnd-main-NurbsS-lead-base-whole.1.usda@
+        string name = "NurbsS"
+    }
+    displayName = "🎲 Nurbs S"
+    prepend inherits = </Inherited/Geom/Shape/NurbsS>
+    kind = "subcomponent"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Shape>
+    prepend specializes = </Specialized/Geom/Shape/NurbsS>
+)
+{
+}
+

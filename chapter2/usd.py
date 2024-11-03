@@ -9,8 +9,10 @@ Some kind of Person type. We need it to have a name, and also a way to track the
 """
 from pathlib import Path
 
-from grill import cook
+from grill import cook, names
 from pxr import Usd, Sdf, Kind
+
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 cook.Repository.set(Path(__file__).parent / "assets")
 

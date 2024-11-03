@@ -4,12 +4,13 @@ from pathlib import Path
 
 from pxr import Usd, Sdf, Kind
 
-from grill import cook
+from grill import cook, names
 from grill.tokens import ids
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 def main():
     token = cook.Repository.set(Path(__file__).parent / "assets")
@@ -102,8 +103,9 @@ def main():
         # but "important" prims are already provided by the USD model hierarchy.
         cook.spawn_unit(bistritz, golden_krone)
 
-    cook.spawn_unit(romania, castle_dracula)
-    cook.spawn_unit(romania, hungary)
+    with cook.unit_context(romania):
+        cook.spawn_unit(romania, castle_dracula)
+        cook.spawn_unit(romania, hungary)
 
     with cook.unit_context(budapest):
         budapest.GetAttribute("modern_name").Set('Budapest!')
@@ -324,10 +326,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     import cProfile
     start = datetime.datetime.now()
-    pr = cProfile.Profile()
-    pr.enable()
-    stage = pr.runcall(main)
-    pr.disable()
+    with cProfile.Profile() as pr:
+        stage = main()
+
     pr.dump_stats(str(Path(__file__).parent / "stats_no_init_name.log"))
     end = datetime.datetime.now()
     print(f"Total time: {end - start}")
@@ -354,8 +355,9 @@ if __name__ == "__main__":
     # pprint([i for i in write._iter_taxa(stage, 'Person') if letters.intersection(each.GetName())])
 
     # 5. How would you add ' the Great' to every Person type?
-    from pxr import UsdUI
     for each in cook.itaxa(prims, 'Person'):
-        ui = UsdUI.SceneGraphPrimAPI(each)
-        display_name = ui.GetDisplayNameAttr()
-        display_name.Set(display_name.Get() + ' the Great')
+        try:
+            each.SetDisplayName(each.GetName() + ' the Great')
+            print(each.GetDisplayName())
+        except AttributeError:  # USD-22.8+
+            pass

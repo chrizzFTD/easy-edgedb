@@ -4,12 +4,13 @@ from pathlib import Path
 
 from pxr import Usd, Sdf, Kind
 
-from grill import cook
+from grill import cook, names
 from grill.tokens import ids
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+names.UsdAsset.DEFAULT_SUFFIX = "usda"
 
 def main():
     token = cook.Repository.set(Path(__file__).parent / "assets")
@@ -137,10 +138,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     import cProfile
     start = datetime.datetime.now()
-    pr = cProfile.Profile()
-    pr.enable()
-    stage = pr.runcall(main)
-    pr.disable()
+    with cProfile.Profile() as pr:
+        stage = main()
+
     pr.dump_stats(str(Path(__file__).parent / "stats_no_init_name.log"))
 
     end = datetime.datetime.now()
@@ -168,7 +168,9 @@ if __name__ == "__main__":
     # 5. How would you add ' the Great' to every Person type?
     from pxr import UsdUI
     for each in cook.itaxa(stage.Traverse(), 'Person'):
-        ui = UsdUI.SceneGraphPrimAPI(each)
-        display_name = ui.GetDisplayNameAttr()
-        display_name.Set(display_name.Get() + ' the Great')
-        print(display_name.Get())
+        try:
+            each.SetDisplayName(each.GetName() + ' the Great')
+            print(each.GetDisplayName())
+        except AttributeError:  # USD-22.8+
+            pass
+

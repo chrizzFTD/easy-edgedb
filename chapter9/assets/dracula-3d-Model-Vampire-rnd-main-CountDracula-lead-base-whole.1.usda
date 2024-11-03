@@ -3,22 +3,18 @@
     defaultPrim = "Origin"
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
         string name = "CountDracula"
     }
+    displayName = "Count Dracula"
     prepend inherits = </Inherited/Model/Vampire/CountDracula>
     kind = "component"
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Vampire>
     prepend specializes = </Specialized/Model/Vampire/CountDracula>
 )
 {
-    uniform token ui:displayName = "Count Dracula"
 }
 

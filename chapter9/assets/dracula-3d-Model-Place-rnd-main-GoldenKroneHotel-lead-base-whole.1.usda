@@ -3,16 +3,13 @@
     defaultPrim = "Origin"
 )
 
-class "Catalogue"
-{
-}
-
 def "Origin" (
-    prepend apiSchemas = ["SceneGraphPrimAPI", "GeomModelAPI"]
+    prepend apiSchemas = ["GeomModelAPI"]
     assetInfo = {
         asset identifier = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
         string name = "GoldenKroneHotel"
     }
+    displayName = "Golden Krone Hotel"
     prepend inherits = </Inherited/Model/Place/GoldenKroneHotel>
     kind = "component"
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Place>
@@ -20,8 +17,6 @@ def "Origin" (
     prepend variantSets = "color"
 )
 {
-    uniform token ui:displayName = "Golden Krone Hotel"
-
     def "Geom" (
         instanceable = false
         prepend payload = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Geom.1.usda@
