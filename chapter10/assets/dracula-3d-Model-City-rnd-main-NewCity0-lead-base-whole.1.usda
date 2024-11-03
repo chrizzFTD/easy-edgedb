@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-City-rnd-main-NewCity0-lead-base-whole.1.usda@
+        string name = "NewCity0"
+    }
+    displayName = "New City Hello 0"
+    prepend inherits = </Inherited/Model/City/NewCity0>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
+    prepend specializes = </Specialized/Model/City/NewCity0>
+)
+{
+}
+

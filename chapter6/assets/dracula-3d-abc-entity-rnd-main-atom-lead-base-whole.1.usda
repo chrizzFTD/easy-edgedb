@@ -46,6 +46,21 @@ over "Catalogue"
             }
         }
 
+        over "Country"
+        {
+            over "Romania" (
+                kind = "assembly"
+            )
+            {
+                over "CastleDracula" (
+                    instanceable = true
+                    prepend references = @dracula-3d-Object-OtherPlace-rnd-main-CastleDracula-lead-base-whole.1.usda@
+                )
+                {
+                }
+            }
+        }
+
         over "Player"
         {
             over "EmilSinclair"

@@ -1,0 +1,22 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Model-City-rnd-main-Budapest-lead-base-whole.1.usda@
+        string name = "Budapest"
+    }
+    displayName = "⛪ Buda-Pesth"
+    prepend inherits = </Inherited/Model/City/Budapest>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
+    prepend specializes = </Specialized/Model/City/Budapest>
+)
+{
+    string modern_name = "Budapest!"
+    int population = 402706
+}
+

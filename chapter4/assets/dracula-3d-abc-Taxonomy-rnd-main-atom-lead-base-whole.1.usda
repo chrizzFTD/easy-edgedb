@@ -17,6 +17,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Person>
     )
     {
         int2 age
@@ -36,6 +37,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Transport>
         prepend variantSets = "Transport"
     )
     {
@@ -64,6 +66,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Place>
     )
     {
         string modern_name
@@ -80,6 +83,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Player>
         prepend references = [
             </Taxonomy/Person>,
             </Taxonomy/Transport>
@@ -99,6 +103,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/NonPlayer>
         prepend references = </Taxonomy/Person>
     )
     {
@@ -115,6 +120,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Vampire>
         prepend references = </Taxonomy/Person>
     )
     {
@@ -131,6 +137,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/City>
         prepend references = </Taxonomy/Place>
     )
     {
@@ -147,6 +154,7 @@ class "Taxonomy"
                 }
             }
         }
+        prepend inherits = </Inherited/Taxonomy/Country>
         prepend references = </Taxonomy/Place>
     )
     {
