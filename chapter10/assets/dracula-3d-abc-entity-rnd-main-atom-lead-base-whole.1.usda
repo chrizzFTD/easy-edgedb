@@ -76,19 +76,6 @@ over "Catalogue"
                 ]
             }
         }
-
-        over "Player"
-        {
-            over "EmilSinclair"
-            {
-                prepend rel places_visited = [
-                    </Catalogue/Model/City/Budapest>,
-                    </Catalogue/Model/City/Bistritz>,
-                    </Catalogue/Model/City/Munich>,
-                    </Catalogue/Model/City/London>,
-                ]
-            }
-        }
     }
 }
 

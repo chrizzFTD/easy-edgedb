@@ -12,7 +12,7 @@ def "Origin" (
     displayName = "Romania"
     prepend inherits = </Inherited/Model/Country/Romania>
     kind = "assembly"
-    prepend payload = @dracula-3d-Model-Country-rnd-main-Romania-lead-base-Geom.1.usda@
+    prepend payload = @A:/write/code/git/easy-edgedb/chapter10/assets/dracula-3d-Model-Country-rnd-main-Romania-lead-base-Geom.1.usda@
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Country>
     prepend specializes = </Specialized/Model/Country/Romania>
 )

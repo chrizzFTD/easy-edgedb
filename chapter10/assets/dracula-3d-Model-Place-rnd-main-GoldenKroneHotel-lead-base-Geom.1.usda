@@ -1,264 +1,218 @@
 #usda 1.0
 (
     defaultPrim = "Origin"
+    relocates = {
+        </Origin/Basis_L/Basis_M_0>: </Origin/Basis_L/Basis_L_0>, 
+        </Origin/Basis_L/Basis_M_1>: </Origin/Basis_L/Basis_L_1>, 
+        </Origin/Basis_L/Basis_M_2>: </Origin/Basis_L/Basis_L_2>, 
+        </Origin/Basis_L/Basis_M_3>: </Origin/Basis_L/Basis_L_3>, 
+        </Origin/Basis_L/Basis_M_4>: </Origin/Basis_L/Basis_L_4>, 
+        </Origin/Basis_L/Basis_M_5>: </Origin/Basis_L/Basis_L_5>, 
+        </Origin/Basis_L/Basis_M_6>: </Origin/Basis_L/Basis_L_6>, 
+        </Origin/Basis_L/Basis_M_7>: </Origin/Basis_L/Basis_L_7>, 
+        </Origin/Basis_R/Basis_M_0>: </Origin/Basis_R/Basis_R_0>, 
+        </Origin/Basis_R/Basis_M_1>: </Origin/Basis_R/Basis_R_1>, 
+        </Origin/Basis_R/Basis_M_2>: </Origin/Basis_R/Basis_R_2>, 
+        </Origin/Basis_R/Basis_M_3>: </Origin/Basis_R/Basis_R_3>, 
+        </Origin/Basis_R/Basis_M_4>: </Origin/Basis_R/Basis_R_4>, 
+        </Origin/Basis_R/Basis_M_5>: </Origin/Basis_R/Basis_R_5>, 
+        </Origin/Basis_R/Basis_M_6>: </Origin/Basis_R/Basis_R_6>, 
+        </Origin/Basis_R/Basis_M_7>: </Origin/Basis_R/Basis_R_7>
+    }
 )
 
 def "Origin"
 {
-    def "BasisR0" (
-        displayName = "Basis R 0"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    def Xform "Basis_L" (
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisLineup-lead-base-whole.1.usda@
     )
     {
-        uniform token basis = "bezier"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "cubic"
-        float[] widths = [1] (
-            interpolation = "constant"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, -4)
+        double3 xformOp:translate = (-4.333333333333333, 0, 0)
         uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        over "Basis_L_0"
+        {
+            uniform token basis = "bezier"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "cubic"
+            float[] widths = [1] (
+                interpolation = "constant"
+            )
+        }
+
+        over "Basis_L_1"
+        {
+            uniform token basis = "bspline"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "linear"
+            float[] widths = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75] (
+                interpolation = "varying"
+            )
+        }
+
+        over "Basis_L_2"
+        {
+            uniform token basis = "catmullRom"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "cubic"
+            float[] widths = [0, 0.10714286, 0.21428572, 0.32142857, 0.42857143, 0.53571427, 0.64285713] (
+                interpolation = "vertex"
+            )
+        }
+
+        over "Basis_L_3"
+        {
+            uniform token basis = "bezier"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "linear"
+            float[] widths = [0.625] (
+                interpolation = "constant"
+            )
+        }
+
+        over "Basis_L_4"
+        {
+            uniform token basis = "bspline"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "cubic"
+            float[] widths = [0, 0.1, 0.2, 0.3, 0.4] (
+                interpolation = "varying"
+            )
+        }
+
+        over "Basis_L_5"
+        {
+            uniform token basis = "catmullRom"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "linear"
+            float[] widths = [0, 0.05357143, 0.10714286, 0.16071428, 0.21428572, 0.26785713, 0.32142857] (
+                interpolation = "vertex"
+            )
+        }
+
+        over "Basis_L_6"
+        {
+            uniform token basis = "bezier"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "cubic"
+            float[] widths = [0.25] (
+                interpolation = "constant"
+            )
+        }
+
+        over "Basis_L_7"
+        {
+            uniform token basis = "bspline"
+            uniform bool doubleSided = 1
+            normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
+                interpolation = "varying"
+            )
+            uniform token type = "linear"
+            float[] widths = [0, 0.017857144, 0.035714287, 0.05357143, 0.071428575, 0.08928572, 0.10714286] (
+                interpolation = "varying"
+            )
+        }
     }
 
-    def "BasisR1" (
-        displayName = "Basis R 1"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    def Xform "Basis_R" (
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisLineup-lead-base-whole.1.usda@
     )
     {
-        uniform token basis = "bspline"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "linear"
-        float[] widths = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75] (
-            interpolation = "varying"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, -3)
+        double3 xformOp:translate = (2.3333333333333335, 0, 0)
         uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
 
-    def "BasisR2" (
-        displayName = "Basis R 2"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "catmullRom"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "cubic"
-        float[] widths = [0, 0.10714286, 0.21428572, 0.32142857, 0.42857143, 0.53571427, 0.64285713] (
-            interpolation = "vertex"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, -2)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_0"
+        {
+            uniform token basis = "bspline"
+            uniform token type = "linear"
+            float[] widths = [0, 0, 0, 0, 0, 0, 0] (
+                interpolation = "vertex"
+            )
+        }
 
-    def "BasisR3" (
-        displayName = "Basis R 3"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bezier"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "linear"
-        float[] widths = [0.625] (
-            interpolation = "constant"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, -1)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_1"
+        {
+            uniform token basis = "catmullRom"
+            uniform token type = "cubic"
+            float[] widths = [0.125] (
+                interpolation = "constant"
+            )
+        }
 
-    def "BasisR4" (
-        displayName = "Basis R 4"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bspline"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "cubic"
-        float[] widths = [0, 0.1, 0.2, 0.3, 0.4] (
-            interpolation = "varying"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, 0)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_2"
+        {
+            uniform token basis = "bezier"
+            uniform token type = "linear"
+            float[] widths = [0, 0.035714287, 0.071428575, 0.10714286, 0.14285715, 0.17857143, 0.21428572] (
+                interpolation = "varying"
+            )
+        }
 
-    def "BasisR5" (
-        displayName = "Basis R 5"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "catmullRom"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "linear"
-        float[] widths = [0, 0.05357143, 0.10714286, 0.16071428, 0.21428572, 0.26785713, 0.32142857] (
-            interpolation = "vertex"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, 1)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_3"
+        {
+            uniform token basis = "bspline"
+            uniform token type = "cubic"
+            float[] widths = [0, 0.05357143, 0.10714286, 0.16071428, 0.21428572, 0.26785713, 0.32142857] (
+                interpolation = "vertex"
+            )
+        }
 
-    def "BasisR6" (
-        displayName = "Basis R 6"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bezier"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "cubic"
-        float[] widths = [0.25] (
-            interpolation = "constant"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, 2)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_4"
+        {
+            uniform token basis = "catmullRom"
+            uniform token type = "linear"
+            float[] widths = [0.5] (
+                interpolation = "constant"
+            )
+        }
 
-    def "BasisR7" (
-        displayName = "Basis R 7"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bspline"
-        uniform bool doubleSided = 1
-        normal3f[] normals = [(-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3), (-1, -0.3, 0.3)] (
-            interpolation = "varying"
-        )
-        uniform token type = "linear"
-        float[] widths = [0, 0.017857144, 0.035714287, 0.05357143, 0.071428575, 0.08928572, 0.10714286] (
-            interpolation = "varying"
-        )
-        double3 xformOp:translate = (-4.117647058823529, 0, 3)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_5"
+        {
+            uniform token basis = "bezier"
+            uniform token type = "cubic"
+            float[] widths = [0, 0.20833333, 0.41666666] (
+                interpolation = "varying"
+            )
+        }
 
-    def "BasisL0" (
-        displayName = "Basis L 0"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bspline"
-        uniform token type = "linear"
-        float[] widths = [0, 0, 0, 0, 0, 0, 0] (
-            interpolation = "vertex"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, -4)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
+        over "Basis_R_6"
+        {
+            uniform token basis = "bspline"
+            uniform token type = "linear"
+            float[] widths = [0, 0.10714286, 0.21428572, 0.32142857, 0.42857143, 0.53571427, 0.64285713] (
+                interpolation = "vertex"
+            )
+        }
 
-    def "BasisL1" (
-        displayName = "Basis L 1"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "catmullRom"
-        uniform token type = "cubic"
-        float[] widths = [0.125] (
-            interpolation = "constant"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, -3)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
-
-    def "BasisL2" (
-        displayName = "Basis L 2"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bezier"
-        uniform token type = "linear"
-        float[] widths = [0, 0.035714287, 0.071428575, 0.10714286, 0.14285715, 0.17857143, 0.21428572] (
-            interpolation = "varying"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, -2)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
-
-    def "BasisL3" (
-        displayName = "Basis L 3"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bspline"
-        uniform token type = "cubic"
-        float[] widths = [0, 0.05357143, 0.10714286, 0.16071428, 0.21428572, 0.26785713, 0.32142857] (
-            interpolation = "vertex"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, -1)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
-
-    def "BasisL4" (
-        displayName = "Basis L 4"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "catmullRom"
-        uniform token type = "linear"
-        float[] widths = [0.5] (
-            interpolation = "constant"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, 0)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
-
-    def "BasisL5" (
-        displayName = "Basis L 5"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bezier"
-        uniform token type = "cubic"
-        float[] widths = [0, 0.20833333, 0.41666666] (
-            interpolation = "varying"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, 1)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
-
-    def "BasisL6" (
-        displayName = "Basis L 6"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "bspline"
-        uniform token type = "linear"
-        float[] widths = [0, 0.10714286, 0.21428572, 0.32142857, 0.42857143, 0.53571427, 0.64285713] (
-            interpolation = "vertex"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, 2)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-    }
-
-    def "BasisL7" (
-        displayName = "Basis L 7"
-        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
-    )
-    {
-        uniform token basis = "catmullRom"
-        uniform token type = "cubic"
-        float[] widths = [0.875] (
-            interpolation = "constant"
-        )
-        double3 xformOp:translate = (2.481203007518797, 0, 3)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
+        over "Basis_R_7"
+        {
+            uniform token basis = "catmullRom"
+            uniform token type = "cubic"
+            float[] widths = [0.875] (
+                interpolation = "constant"
+            )
+        }
     }
 
     def "Ground" (

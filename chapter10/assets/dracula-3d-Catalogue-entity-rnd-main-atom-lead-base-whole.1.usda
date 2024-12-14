@@ -45,6 +45,12 @@ def "Catalogue" (
             )
             {
             }
+
+            over "BasisLineup" (
+                prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisLineup-lead-base-whole.1.usda@
+            )
+            {
+            }
         }
     }
 
