@@ -733,7 +733,7 @@ over "Origin" (
     with cook.unit_context(romania):
         romania_geom = cook.fetch_stage(romania_asset_name.get(part="Geom"))
         romania_geom_default_prim = romania_geom.DefinePrim(cook._UNIT_ORIGIN_PATH)
-        romania_payload = Sdf.Payload(romania_geom.GetRootLayer().identifier)
+        romania_payload = Sdf.Payload(cook.asset_identifier(romania_geom.GetRootLayer().identifier))
         # with Sdf.ChangeBlock():
         #     romania_geom.SetDefaultPrim(romania_geom_default_prim)
         #     romania.GetPayloads().AddPayload(romania_payload)
