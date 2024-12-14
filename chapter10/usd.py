@@ -77,11 +77,21 @@ def _notify(notice, sender):
 
     for amount=1_000:
         without changeblock:
-            Total time: 0:00:12.923481
+            Total time: 0:00:10.707131
             Total notices 22621
         with changeblock:
-            Total time: 0:00:08.738305
+            Total time: 0:00:06.418158
             Total notices 232
+
+    2024 12 14 - Py-3.13 + USD-24.11, added relocates usage and basis curves lineup
+
+    for amount=1_000:
+        without changeblock:
+            Total time: 0:00:10.674980
+            Total notices 22600
+        with changeblock:
+            Total time: 0:00:06.356973
+            Total notices 278
     """
     next(_notice_counter)
     # print(f"{(no:=next(_notice_counter))}: {notice.GetChangedInfoOnlyPaths()=}")
@@ -119,23 +129,55 @@ def main():
         geom_plane = cook.create_unit(shape_taxon, "GroundPlane", label="🎲 Ground Plane")
         basis_s, nurbs_s = cook.create_many(shape_taxon, names=["BasisS", "NurbsS"], labels=["🎲 Basis S", "🎲 Nurbs S"])
 
+        basis_lineup = cook.create_unit(shape_taxon, "BasisLineup", label="Basis Lineup")
+
     # TODO: see if component default actually makes sense, for now need to change it
     # We are going to be re-using the plane
     width = 10  # 10
     depth = 8  # 8
+
     with Sdf.ChangeBlock():
-        for unit in geom_plane, basis_s, nurbs_s, model_default_color:
+        for unit in geom_plane, basis_s, nurbs_s, model_default_color, basis_lineup:
             with cook.unit_context(unit):
                 Usd.ModelAPI(unit).SetKind(Kind.Tokens.subcomponent)
                 if unit == model_default_color:
                     UsdGeom.Gprim(unit).CreateDisplayColorPrimvar().Set([(0.6, 0.8, 0.9)])
 
     curve_points = [(0, 0, 0), (2, 1, 0), (2, 2, 0), (1, 2.5, 0), (0, 3, 0), (0, 4, 0), (2, 5, 0)]
+    max_x_curve = max([point[0] for point in curve_points])
     with cook.unit_context(basis_s):
         basis = UsdGeom.BasisCurves.Define(stage, basis_s.GetPath())
         with Sdf.ChangeBlock():
             basis.GetPointsAttr().Set(curve_points)
             basis.GetCurveVertexCountsAttr().Set([len(curve_points)])
+
+    def set_curve_attrs(curve, type, basis_id, width_interpolation_id, max_width):
+        # UsdGeom.XformCommonAPI(curve).SetTranslate(xform)
+        with Sdf.ChangeBlock():
+            curve.GetTypeAttr().Set(type)
+            curve.GetBasisAttr().Set(bezier_types[basis_id])
+        width_interpolation_name = widths_interpolation_types[width_interpolation_id].interpolation()
+        width_interpolation_size = widths_interpolation_types[width_interpolation_id].size(curve)
+        with Sdf.ChangeBlock():
+            assert curve.SetWidthsInterpolation(width_interpolation_name)
+            assert curve.GetWidthsAttr().Set(
+                [
+                    (max_width * (i / width_interpolation_size) if width_interpolation_size > 1 else max_width)
+                    for i in range(width_interpolation_size)
+                ]
+            )
+
+    with cook.unit_context(basis_lineup):
+        basis_lineup_curves = cook.spawn_many(
+            basis_lineup, basis_s,
+            paths=[basis_lineup.GetPath().AppendChild(f"Basis_M_{each}") for each in range(depth)],
+            labels=[f"Basis M {each}" for each in range(depth)],
+        )
+        with Sdf.ChangeBlock():
+            for each, curve in zip(range(depth), basis_lineup_curves):
+                curve = UsdGeom.BasisCurves(curve)
+                xform = (0, 0, each - (depth / 2.0))
+                UsdGeom.XformCommonAPI(curve).SetTranslate(xform)
 
     with cook.unit_context(geom_plane):
         gusd._make_plane(UsdGeom.Mesh.Define(stage, geom_plane.GetPath()), width, depth)
@@ -281,15 +323,17 @@ def main():
         #               `-> add variant sets -> add color to created prims A, B (same python objects)
         golden_geom = cook.fetch_stage(golden_asset_name.get(part="Geom"))
         golden_shade = cook.fetch_stage(golden_asset_name.get(part="Shade"))
-#         golden_shade.GetRootLayer().ImportFromString(
-# """#usda 1.0
-# (
-#     defaultPrim = "Origin"
-# )
-#
-# over "Origin" (
-#     prepend apiSchemas = ["MaterialBindingAPI"]
-# )
+        golden_shade.GetRootLayer().ImportFromString(
+"""#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+over "Origin" (
+    prepend apiSchemas = ["MaterialBindingAPI"]
+)
+{}
+""")
 # {
 #     rel material:binding = </Origin/materials/mtlxmaterial>
 #
@@ -524,8 +568,8 @@ def main():
 #         )
         # TODO: let's place payload on the root of the unit
         golde_geom_default_prim = golden_geom.DefinePrim(cook._UNIT_ORIGIN_PATH)
-        payload = Sdf.Payload(golden_geom.GetRootLayer().identifier)
-        # shade_payload = Sdf.Payload(golden_shade.GetRootLayer().identifier)
+        payload = Sdf.Payload(cook.asset_identifier(golden_geom.GetRootLayer().identifier))
+        shade_payload = Sdf.Payload(cook.asset_identifier(golden_shade.GetRootLayer().identifier))
 
         # Create a "Geom" prim specializing from the model_default_color, which is a subcomponent unit.
         geom_root = cook.spawn_unit(golden_krone, model_default_color, "Geom", label="Geom")
@@ -533,48 +577,62 @@ def main():
         with Sdf.ChangeBlock():
             golden_geom.SetDefaultPrim(golde_geom_default_prim)
             geom_root.GetPayloads().AddPayload(payload)
-            # golden_krone.GetPayloads().AddPayload(shade_payload)
+            golden_krone.GetPayloads().AddPayload(shade_payload)
 
         with gusd.edit_context(payload, geom_root):
             bezier_types = ("bezier", "bspline", "catmullRom")
             widths_interpolation_types = tuple(i for i in gusd._GeomPrimvarInfo if i not in {gusd._GeomPrimvarInfo.UNIFORM, gusd._GeomPrimvarInfo.FACE_VARYING})
-            # normal_interpolation_types = gusd._GeomPrimvarInfo.VERTEX, gusd._GeomPrimvarInfo.VARYING
             normal_interpolation_types = gusd._GeomPrimvarInfo.VARYING,
             volume_size = 2
 
-            def set_curve_attrs(curve, xform, type, basis_id, width_interpolation_id, max_width):
-                UsdGeom.XformCommonAPI(curve).SetTranslate(xform)
-                curve.GetTypeAttr().Set(type)
-                curve.GetBasisAttr().Set(bezier_types[basis_id])
-                width_interpolation_name = widths_interpolation_types[width_interpolation_id].interpolation()
-                width_interpolation_size = widths_interpolation_types[width_interpolation_id].size(curve)
-                assert curve.SetWidthsInterpolation(width_interpolation_name)
-                assert curve.GetWidthsAttr().Set(
-                    [
-                        (max_width * (i / width_interpolation_size) if width_interpolation_size > 1 else max_width)
-                        for i in range(width_interpolation_size)
-                    ]
+            left_curve_lineup, right_curve_lineup = cook.spawn_many(golden_krone, basis_lineup, paths=[geom_root.GetPath().AppendChild(side) for side in ("Basis_L", "Basis_R")])
+            with Sdf.ChangeBlock():
+                left_lineup_xform = UsdGeom.Xform.Define(stage, left_curve_lineup.GetPath())
+                right_lineup_xform = UsdGeom.Xform.Define(stage, right_curve_lineup.GetPath())
+            with Sdf.ChangeBlock():
+                # TODO: place lineup relative to the width of the plane, rather than a third of max_x_curve
+                UsdGeom.XformCommonAPI(left_lineup_xform).SetTranslate((-width/2 + max_x_curve/3, 0, 0))
+                UsdGeom.XformCommonAPI(right_lineup_xform).SetTranslate((width/2 - max_x_curve - max_x_curve/3, 0,0))
+
+
+            def _rename_hierarchy(root_prim, to_match: str, replace_with: str):
+                stage = root_prim.GetStage()
+                editor = Usd.NamespaceEditor(stage)
+                for prim in list(Usd.PrimRange(root_prim)):
+                    if to_match not in prim.GetName():
+                        continue
+                    # to_rename[prim.GetPath()] = prim.GetParent().GetPath().AppendChild(prim.GetName().replace(to_match, replace_with))
+                    editor.MovePrimAtPath(prim.GetPath(), prim.GetParent().GetPath().AppendChild(prim.GetName().replace(to_match, replace_with)))
+                    editor.ApplyEdits()
+
+            # Uncomment when namespace editing supports renaming across composition arcs; right now this fails with:
+            #   Edit targets that map paths across composition arcs are not currently supported for namespace editing
+            # child_paths = [child.GetPath() for child in left_curve_lineup.GetChildren()]
+            # editor = Usd.NamespaceEditor(stage)
+            # for child_path in child_paths:
+            #     editor.MovePrimAtPath(child_path, child_path.GetParentPath().AppendChild(f"{child_path.name}_moved"))
+            #     editor.ApplyEdits()
+            # In the meantime
+            for golden_geom_prim in golden_geom.Traverse():
+                if left_curve_lineup.GetName() == golden_geom_prim.GetName():
+                    _rename_hierarchy(golden_geom_prim, "_M_", "_L_")
+                elif right_curve_lineup.GetName() == golden_geom_prim.GetName():
+                    _rename_hierarchy(golden_geom_prim, "_M_", "_R_")
+                else:
+                    continue
+
+            for each, child in enumerate(left_curve_lineup.GetChildren()):
+                curve = UsdGeom.BasisCurves(child)
+                set_curve_attrs(
+                    curve,
+                    type="linear" if each % 2 else "cubic",  # Tried linear but it brings too many artifacts with PRMan
+                    # type="cubic",  # Tried linear but it brings too many artifacts with PRMan
+                    basis_id=each % len(bezier_types),
+                    width_interpolation_id=each % len(widths_interpolation_types),
+                    max_width=1-(each/depth)
                 )
-
-            curves = cook.spawn_many(
-                golden_krone, basis_s,
-                paths=[geom_root.GetPath().AppendChild(f"BasisR{each}") for each in range(depth)],
-                labels=[f"Basis R {each}" for each in range(depth)],
-            )
-            for each, curve in zip(range(depth), curves):
+                # Set normals only here to create "ribbons"
                 with Sdf.ChangeBlock():
-                    curve = UsdGeom.BasisCurves(curve)
-                    set_curve_attrs(
-                        curve,
-                        xform=(- (width - (width/1.7)), volume_size*0, each - (depth/2.0)),
-                        type="linear" if each % 2 else "cubic",  # Tried linear but it brings too many artifacts with PRMan
-                        # type="cubic",  # Tried linear but it brings too many artifacts with PRMan
-                        basis_id=each % len(bezier_types),
-                        width_interpolation_id=each % len(widths_interpolation_types),
-                        max_width=1-(each/depth)
-                    )
-
-                    # Set normals only here to create "ribbons"
                     normal_interpolation_idx = each % len(normal_interpolation_types)
                     normal_interpolation_name = normal_interpolation_types[normal_interpolation_idx].interpolation()
                     normal_interpolation_size = normal_interpolation_types[normal_interpolation_idx].size(curve)
@@ -583,24 +641,17 @@ def main():
                     curve.GetDoubleSidedAttr().Set(True)
                     normals_attr.Set([(-1, -0.3, 0.3) for _ in range(normal_interpolation_size)])
 
-            curves = cook.spawn_many(
-                golden_krone, basis_s,
-                paths=[geom_root.GetPath().AppendChild(f"BasisL{each}") for each in range(depth)],
-                labels=[f"Basis L {each}" for each in range(depth)],
-            )
-            with Sdf.ChangeBlock():
-                for each, curve in zip(range(depth), curves):
-                    curve = UsdGeom.BasisCurves(curve)
-                    set_curve_attrs(
-                        curve,
-                        xform=(width - (width/1.33), volume_size*0, each - (depth/2.0)),
-                        type="cubic" if each % 2 else "linear",
-                        # type="cubic",  # Tried linear but it brings too many artifacts with PRMan
-                        basis_id=(each + 1) % len(bezier_types),
-                        width_interpolation_id=(each + 2) % len(widths_interpolation_types),
-                        max_width=each / depth
-                    )
-                    # Don't set normals only here to create "tubes"
+            for each, curve in enumerate(right_curve_lineup.GetChildren()):
+                curve = UsdGeom.BasisCurves(curve)
+                set_curve_attrs(
+                    curve,
+                    type="cubic" if each % 2 else "linear",
+                    # type="cubic",  # Tried linear but it brings too many artifacts with PRMan
+                    basis_id=(each + 1) % len(bezier_types),
+                    width_interpolation_id=(each + 2) % len(widths_interpolation_types),
+                    max_width=each / depth
+                )
+                # Don't set normals only here to create "tubes"
 
             ground = UsdGeom.Mesh(cook.spawn_unit(golden_krone, geom_plane, geom_root.GetPath().AppendChild("Ground"), label="Ground"))
             with Sdf.ChangeBlock():
@@ -621,9 +672,6 @@ def main():
                 )
             ]
             # # https://github.com/marcomusy/vedo/issues/86
-            # # https://blender.stackexchange.com/questions/230534/fastest-way-to-skin-a-grid
-            # width = 10  # 10
-            # depth = 8  # 8
             # See: https://graphics.pixar.com/usd/docs/Inspecting-and-Authoring-Properties.html
             with Sdf.ChangeBlock():
                 volume.GetRadiusAttr().Set(volume_size)
@@ -663,7 +711,7 @@ def main():
             with Sdf.ChangeBlock(), gusd.edit_context(color_set, cook.unit_asset(golden_krone)):
                 golden_color_path = Sdf.Path.absoluteRootPath.AppendPath(option_name)
                 golden_color.OverridePrim(golden_color_path)
-                arc = Sdf.Reference(golden_color.GetRootLayer().identifier, golden_color_path)
+                arc = Sdf.Reference(cook.asset_identifier(golden_color.GetRootLayer().identifier), golden_color_path)
                 golden_krone.GetReferences().AddReference(arc)
                 with gusd.edit_context(arc, golden_krone):
                     interpolation = primvar_meta.interpolation()
@@ -808,7 +856,7 @@ def main():
     
         {'Budapest', 'Bistrița'}
         """
-        print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
+        # print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
         # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
         """
@@ -817,7 +865,7 @@ def main():
 
         for each, places in (
             (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
-            (emil, cook.itaxa(stage.Traverse(), city)),
+            # (emil, cook.itaxa(stage.Traverse(), city)),
             (dracula, [romania]),
             (mina, [castle_dracula, romania]),
             (sailor, [london]),  # can propagate updates to a whole taxon group <- NOT ANYMORE
@@ -839,237 +887,26 @@ def main():
     # 4 Questions / Unresolved
     # Time type, needed? Has "awake" property  driven by hour ( awake < 7am asleep < 19h awake
 
-    # def create_many(amnt):
-    #     return write.create_many(city, (f'NewCity{x}' for x in range(amnt)), (f'New City Hello {x}' for x in range(amnt)))
-
-    # # def create_many(amnt):
-    # # amount = 2_500
-    # amount = 800
-    # # amount = 1_000
-    # # for x in range(amount):
-    # #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
-    # #     # Total time: 0:00:06.993190
-    # #     # could be faster.
-    # #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
-    # # amount = 2_500
-    # # Total time: 0:00:19.365815
-    # # Total time: 0:00:19.604778
-    # # Total time: 0:00:19.350577
-    # # Total time: 0:00:19.977386
-    # # Total time: 0:00:19.436644
-    #
-    # # amount = 2_500
-    # # Total time: 0:00:17.387868
-    # # Total time: 0:00:17.346169
-    # # Total time: 0:00:17.212084
-    # # Total time: 0:00:17.693500
-    # # Total time: 0:00:17.092674
-    # # write.create_many(city, (f'NewCity{x}' for x in range(amount)), (f'New City Hello {x}' for x in range(int(amount / 2))))
-    #
-    # # write.create_unit(city, f'NewNoContext01', label=f'NewNoContext01')
-    # # write.create_unit(city, f'NewNoContext02', label=f'NewNoContext02')
-    # # new_stage = write.fetch_stage(write.UsdAsset.get_anonymous())
-    # # try:
-    # #     with write.creation_context(new_stage):
-    # #         write.create_unit(city, "Should fail")
-    # # except write.CreationContextError:
-    # #     pass
-    #
-    # def _create_with_ctx():
-    #     # amount = 2_500
-    #     # Total time: 0:00:19.009718
-    #     # Total time: 0:00:19.031431
-    #     # Total time: 0:00:20.025853
-    #     # Total time: 0:00:19.449294
-    #     # Total time: 0:00:19.336220
-    #
-    #     # Total time: 0:00:23.978055
-    #     # Total time: 0:00:24.118364
-    #     # Total time: 0:00:24.191394
-    #     # Total time: 0:00:23.803597
-    #     # Total time: 0:00:23.744562
-    #
-    #     # Total time: 0:00:23.581031
-    #     # Total time: 0:00:23.948312
-    #     # Total time: 0:00:23.947470
-    #     # Total time: 0:00:23.478434
-    #     # Total time: 0:00:23.536022
-    #     with write._creation_context(stage):
-    #         for name in range(amount):
-    #             for taxon in (city, other_place, person):
-    #                 write.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
-    #
-    #
-    # def _create_many():
-    #     # Total time: 0:00:23.241446
-    #     # Total time: 0:00:23.575986
-    #     # Total time: 0:00:23.902217
-    #     # Total time: 0:00:23.480186
-    #     # Total time: 0:00:23.169220
-    #     for taxon in (city, other_place, person):
-    #         write.create_many(taxon, (f'New{taxon.GetName()}{name}' for name in range(amount)), (f'New {taxon.GetName()} Hello {name}' for name in range(amount)))
-
-    # def _create_current_main():
-    #     # amount = 2_500
-    #     # Total time: 0:00:26.855546
-    #     # Total time: 0:00:26.656233
-    #     # Total time: 0:00:26.886336
-    #     # Total time: 0:00:26.358893
-    #     # Total time: 0:00:26.282877
-    #     for name in range(amount):
-    #         for taxon in (city, other_place, person):
-    #             write.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
-    #
-    #
-    # def _create_new_no_ctx():
-    #     # amount = 2_500
-    #     # Total time: 0:00:26.246826
-    #     # Total time: 0:00:25.551721
-    #     # Total time: 0:00:25.652539
-    #     # Total time: 0:00:25.913648
-    #     # Total time: 0:00:26.374476
-    #     for name in range(amount):
-    #         for taxon in (city, other_place, person):
-    #             write.createNEW(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
-
-    # import cProfile
-    # start = datetime.datetime.now()
-    # pr = cProfile.Profile()
-    # pr.enable()
-    # # amount = 2_500
-    # # amount = 2_500
-    # # amount = 1_000
-    # # pr.runcall(_create_with_ctx)
-    # pr.runcall(_create_many)
-    # # # CReating 1_000 new cities takes around 4.5 seconds:
-    # # # Total time: 0:00:04.457498
-    # # pr.runcall(write.create_many, city, (f'NewCity{x}' for x in range(amount)), (f'New City Hello {x}' for x in range(int(amount / 2))))
-    # pr.disable()
-    # # pr.dump_stats(str(Path(__file__).parent / "stats_create_with_ctx.log"))
-    # pr.dump_stats(str(Path(__file__).parent / "stats_create_many_2108.log"))
-    # end = datetime.datetime.now()
-    # print(f"Total time: {end - start}")
-    # amount = 1_000
-    # write.create_many(city, (f'NewCity{x}' for x in range(amount)), (f'New City Hello {x}' for x in range(int(amount / 2))))
-    # for x in range(amount):
-    #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
-    #     # Total time: 0:00:06.993190
-    #     # 0:00:07.193135
-    #     # could be faster.
-    #     write.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
-    amount = 1
-    # 2022 03 24: With the update to include the catalogue on all units, amount = 1_000 (3k units):
-    # No sublayered catalogue: Total time: 0:00:21.288368
-    # Sublayered catalogue: Total time: 0:02:04.093982
-    # Sublayered cataloguee + SdfChangeBlock + No Cache: Total time: 0:00:10.672880
-    # No sublayered cataloge + SdfChangeBlock + No cache: Total time: 0:00:09.642907
-
-    # amount = 500 (1.5k units):
-    # No sublayered catalogue: Total time: 0:00:08.725509
-    # Sublayered catalogue: Total time: 0:00:35.310143
-    # Sublayered cataloguee + SdfChangeBlock + No Cache: Total time: 0:00:05.617066
-
-    # amount = 250 (750 units):
-    # No sublayered catalogue: Total time: 0:00:03.501835
-    # Sublayered catalogue: Total time: 0:00:12.058600
-    # Sublayered cataloguee + SdfChangeBlock: Total time: 0:00:04.041061
-
-    # amount = 125 (375 units):
-    # No sublayered catalogue: Total time: 0:00:01.934740
-    # Sublayered catalogue: Total time: 0:00:04.428612
-
-
-    # Time with 1_000 (3k created assets):
-    # create:
-    # 0:00:16.194140
-    # 0:00:16.295293
-    # 0:00:16.271336
-    # 0:00:16.103667
-    # 0:00:16.274068
-    # Total time: 0:00:21.451523
-    # Total time: 0:00:20.600851
-    # Total time: 0:00:20.353705
-    # Total time: 0:00:21.045403
-    # Total time: 0:00:20.229527
-    # for name in range(amount):
-    #     for taxon in (city, other_place, person):
-    #         cook.create_unit(taxon, f'New{taxon.GetName()}{name}', label=f'New {taxon.GetName()} Hello {name}')
-
-    # create_many:
-    # 0:00:14.795971
-    # 0:00:14.118569
-    # 0:00:13.850693
-    # 0:00:14.003263
-    # 0:00:14.163723
-    # Total time: 0:00:17.356897
-    # Total time: 0:00:16.983126
-    # Total time: 0:00:16.548665
-    # Total time: 0:00:17.422662
+    # 2023-02-26
     # Total time: 0:00:16.560353
 
-    # amount=1_000 (3k created assets) py310 usd2305
-    # Total time: 0:00:14.611185
-    # Total time: 0:00:12.270478
-    # Total time: 0:00:11.201041
+    # 2023-07-29 py310 usd2305
     # Total time: 0:00:10.867913
-    # Total time: 0:00:10.984876
-    # Total time: 0:00:10.881332
-    # Total time: 0:00:11.211897
-    # Total time: 0:00:11.869251
-    # Total time: 0:00:11.040348
-    # Total time: 0:00:10.888602
 
-    # amount=1_000 (3k created assets) py311 usd2308
-    # Total time: 0:00:11.963846
-    # Total time: 0:00:12.251765
-    # Total time: 0:00:11.090976
-    # Total time: 0:00:11.210425
-    # Total time: 0:00:11.147159
+    # 2023-07-29 py311 usd2308
     # Total time: 0:00:10.884778
-    # Total time: 0:00:11.038445
-    # Total time: 0:00:11.162981
-    # Total time: 0:00:10.904304
-    # Total time: 0:00:11.050288
 
-    amount = 1_000  # (3k created assets) py312 usd2311
-    # Total time: 0:00:09.801498
-    # Total time: 0:00:09.602227
-    # Total time: 0:00:09.510000
-    # Total time: 0:00:10.411110
-    # Total time: 0:00:09.503902
-    # Total time: 0:00:09.763127
-    # Total time: 0:00:09.861560
-    # Total time: 0:00:09.523213
-    # Total time: 0:00:09.586478
+    # 2023-11-26 py312 usd2311
     # Total time: 0:00:09.438108
 
-    amount = 1_000  # (3k created assets) py312 usd2405
-    # Total time: 0:00:08.687180
+    # 2024-11-03 py312 usd2405
     # Total time: 0:00:08.470964
-    # Total time: 0:00:08.824526
-    # Total time: 0:00:08.485154
-    # Total time: 0:00:08.586358
-    # Total time: 0:00:08.660507
-    # Total time: 0:00:08.505728
-    # Total time: 0:00:08.590089
-    # Total time: 0:00:08.612231
-    # Total time: 0:00:08.628788
 
-    amount = 1_000  # (3k created assets) py313 usd2411
-    # Total time: 0:00:08.665497
-    # Total time: 0:00:08.738305
-    # Total time: 0:00:09.096642
-    # Total time: 0:00:08.756429
-    # Total time: 0:00:08.487397
-    # Total time: 0:00:08.711614
-    # Total time: 0:00:08.817613
-    # Total time: 0:00:09.180873
-    # Total time: 0:00:09.974731
-    # Total time: 0:00:08.701655
+    # 2024-11-03 py313 usd2411
+    # Total time: 0:00:06.371738
 
     amount = 1
     for taxon in (city, other_place, person):
-        # continue
         cook.create_many(taxon, *zip(*[(f'New{taxon.GetName()}{name}', f'New {taxon.GetName()} Hello {name}') for name in range(amount)]))
 
 
@@ -1248,8 +1085,8 @@ if __name__ == "__main__":
 
     # 2. How would you update Mina's `places_visited` to include Romania if she went to Castle Dracula for a visit?
     prims = stage.Traverse()
-    mina = next(cook.itaxa(prims, "NonPlayer"), None)
-    assert mina is not None
+    # mina = next(cook.itaxa(prims, "NonPlayer"), None)
+    # assert mina is not None
     # mina_places = mina.GetRelationship("places_visited")
     # for each in cook.itaxa(prims, "Place"):
     #     if each.GetName() in {"CastleDracula", "Romania"}:
@@ -1263,11 +1100,11 @@ if __name__ == "__main__":
 
     # 5. How would you add ' the Great' to every Person type?
     # from pxr import UsdUI
-    for each in cook.itaxa(prims, 'Person'):
-        try:
-            each.SetDisplayName(each.GetName() + ' the Great')
-        except AttributeError:  # USD-22.8+
-            pass
+    # for each in cook.itaxa(prims, 'Person'):
+    #     try:
+    #         each.SetDisplayName(each.GetName() + ' the Great')
+    #     except AttributeError:  # USD-22.8+
+    #         pass
         # ui = UsdUI.SceneGraphPrimAPI(each)
         # display_name = ui.GetDisplayNameAttr()
         # display_name.Set(display_name.Get() + ' the Great')
@@ -1282,12 +1119,12 @@ if __name__ == "__main__":
     #   'At least one city has more than 5 million people: ' ++ <str>any(cities > 5000000),
     #   'Standard deviation: ' ++ <str>math::stddev(cities)
     # );
-    cities = tuple(cook.itaxa(prims, 'City'))
-    print(f"""
-    Number of cities: {len(cities)},
-    All cities have more than 50,000 people: {', '.join(c.GetName() for c in cities if c.GetAttribute('population').Get() or 0 > 50000) },
-    Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
-    """)
+    # cities = tuple(cook.itaxa(prims, 'City'))
+    # print(f"""
+    # Number of cities: {len(cities)},
+    # All cities have more than 50,000 people: {', '.join(c.GetName() for c in cities if c.GetAttribute('population').Get() or 0 > 50000) },
+    # Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
+    # """)
     print(f"Total notices {next(_notice_counter)}")
     # queries = _types_to_create_query(stage)
     # edgedb_commit(queries)
