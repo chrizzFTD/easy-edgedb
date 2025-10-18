@@ -35,66 +35,6 @@ def "Catalogue" (
             )
             {
             }
-
-            over "NewCity0" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity0-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity1" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity1-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity2" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity2-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity3" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity3-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity4" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity4-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity5" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity5-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity6" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity6-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity7" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity7-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity8" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity8-lead-base-whole.1.usda@
-            )
-            {
-            }
-
-            over "NewCity9" (
-                prepend references = @dracula-3d-Object-City-rnd-main-NewCity9-lead-base-whole.1.usda@
-            )
-            {
-            }
         }
 
         def "Place" (

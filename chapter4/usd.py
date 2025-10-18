@@ -105,11 +105,11 @@ def main():
     # 4 Questions / Unresolved
     # Time type, needed? Has "awake" property  driven by hour ( awake < 7am asleep < 19h awake
 
-    for x in range(10):
-        # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
-        # Total time: 0:00:05.535153
-        # could be faster.
-        cook.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
+    # for x in range(10):
+    #     # atm creating 1_000 new cities (including each USD file) takes around 7 seconds.
+    #     # Total time: 0:00:05.535153
+    #     # could be faster.
+    #     cook.create_unit(city, f'NewCity{x}', label=f"New City Hello {x}")
 
     stage.Save()
     cook.Repository.reset(token)
