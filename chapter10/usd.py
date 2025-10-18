@@ -620,7 +620,6 @@ over "Origin" {
                 for prim in list(Usd.PrimRange(root_prim)):
                     if to_match not in prim.GetName():
                         continue
-                    # to_rename[prim.GetPath()] = prim.GetParent().GetPath().AppendChild(prim.GetName().replace(to_match, replace_with))
                     editor.MovePrimAtPath(prim.GetPath(), prim.GetParent().GetPath().AppendChild(prim.GetName().replace(to_match, replace_with)))
                     editor.ApplyEdits()
 
@@ -700,7 +699,7 @@ over "Origin" {
                 tilt = 12  # "tilt" on the x-axis
                 spin = 1440  # "spin" on the z-axis
                 xform.SetRotate((tilt,0,0), time=0)
-                # xform.SetRotate((tilt,0,spin), time=192)
+                xform.SetRotate((tilt,0,spin), time=192)
                 # rotate = xform.GetRotate()
                 attr = xform.GetPrim().GetAttribute("xformOp:rotateXYZ")
                 _tag_persistent(attr)
