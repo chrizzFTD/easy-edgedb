@@ -238,6 +238,7 @@ def "Origin"
         )
         float3 xformOp:rotateXYZ.timeSamples = {
             0: (12, 0, 0),
+            192: (12, 0, 1440),
         }
         double3 xformOp:translate = (0, 2, 0)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]

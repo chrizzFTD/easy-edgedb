@@ -887,7 +887,7 @@ over "Origin" {
 
         for each, places in (
             (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
-            # (emil, filter_taxa(stage.Traverse(), city)),
+            (emil, filter_taxa(stage.Traverse(), city)),
             (dracula, [romania]),
             (mina, [castle_dracula, romania]),
             (sailor, [london]),  # can propagate updates to a whole taxon group <- NOT ANYMORE
