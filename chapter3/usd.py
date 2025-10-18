@@ -38,20 +38,19 @@ with cook.taxonomy_context(stage):
     for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
         variant_set.AddVariant(set_name)
 
-    # TODO: how to add constraints? Useful to catch errors before they hit the database
-    #   https://github.com/edgedb/easy-edgedb/blob/master/chapter3/index.md#adding-constraints
-    person.CreateAttribute('age', Sdf.ValueTypeNames.Int2)
+    # Add a maximum limit of 120 for human ages
+    age = person.CreateAttribute('age', Sdf.ValueTypeNames.Int)
+    hard_limits = age.GetHardLimits()
+    hard_limits.SetMaximum(120)
     person.CreateRelationship('places_visited')
 
 cook.create_unit(city, 'Munich')
-budapest = cook.create_unit(city, 'Budapest', label='Buda-Pesth')
-bistritz = cook.create_unit(city, 'Bistritz', label='Bistritz')
+budapest, bistritz = cook.create_many(city, ('Budapest', 'Bistritz'), labels=('Buda-Pesth', 'Bistritz'))
 golden_krone = cook.create_unit(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
 jonathan = cook.create_unit(person, 'JonathanHarker', label='Jonathan Harker')
 emil = cook.create_unit(player, "EmilSinclair", label="Emil Sinclair")
 dracula = cook.create_unit(vampire, 'CountDracula', label='Count Dracula')
-hungary = cook.create_unit(country, 'Hungary')
-romania = cook.create_unit(country, 'Romania')
+hungary, romania = cook.create_many(country, ('Hungary', 'Romania'))
 
 cook.spawn_unit(bistritz, golden_krone)
 
@@ -68,15 +67,16 @@ If you just want to return a single part of a type without the object structure,
 
 {'Budapest', 'Bistrița'}
 """
-print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
+cities = cook.filter_taxa(stage.Traverse(), city)
+print([p for p in cities if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
 But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
 """
 for person, places in {
-    jonathan: cook.itaxa(stage.Traverse(), city),
-    emil: cook.itaxa(stage.Traverse(), city),
+    jonathan: cities,
+    emil: cities,
 }.items():
     visit_rel = person.GetRelationship('places_visited')
     for each in places:
@@ -92,21 +92,11 @@ with cook.unit_context(emil):
 # stage.RemovePrim(country_root.GetPath())
 
 if __name__ == "__main__":
-    # tos()
-    # for prim in stage.Traverse(predicate=Usd.PrimIsModel):  # we'll see only "important" prims
-    #     logger.info(prim)
-    #
-    # # for x in range(5_000):
-    # for x in range(5):
-    #     easyedb.create_unit(stage, city_type, f'NewCity{x}', label=f"New City Hello {x}")
-    #
-    # stage.GetRootLayer().Save()
     stage.Save()
 
     def persist(stage):
         logger.info(f"Extracting information from f{stage} to persist on the database.")
-        for prim in cook.itaxa(stage.Traverse(), city):
+        for prim in cities:
             logger.info(prim)
     persist(stage)
-    # code that uses 'var'; var.get() returns 'new value'. Call at the end.
 
