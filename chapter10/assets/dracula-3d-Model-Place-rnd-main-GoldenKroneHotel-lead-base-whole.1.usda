@@ -12,6 +12,7 @@ def "Origin" (
     displayName = "🏨 Golden Krone Hotel"
     prepend inherits = </Inherited/Model/Place/GoldenKroneHotel>
     kind = "component"
+    prepend payload = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-Shade.1.usda@
     prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Place>
     prepend specializes = </Specialized/Model/Place/GoldenKroneHotel>
     prepend variantSets = "color"

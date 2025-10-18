@@ -1,0 +1,91 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Geom-Shape-rnd-main-BasisLineup-lead-base-whole.1.usda@
+        string name = "BasisLineup"
+    }
+    displayName = "Basis Lineup"
+    prepend inherits = </Inherited/Geom/Shape/BasisLineup>
+    kind = "subcomponent"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Shape>
+    prepend specializes = </Specialized/Geom/Shape/BasisLineup>
+)
+{
+    def "Basis_M_0" (
+        displayName = "Basis M 0"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, -4)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_1" (
+        displayName = "Basis M 1"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, -3)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_2" (
+        displayName = "Basis M 2"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, -2)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_3" (
+        displayName = "Basis M 3"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, -1)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_4" (
+        displayName = "Basis M 4"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_5" (
+        displayName = "Basis M 5"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, 1)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_6" (
+        displayName = "Basis M 6"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, 2)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def "Basis_M_7" (
+        displayName = "Basis M 7"
+        prepend references = @dracula-3d-Geom-Shape-rnd-main-BasisS-lead-base-whole.1.usda@
+    )
+    {
+        double3 xformOp:translate = (0, 0, 3)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+}
+
