@@ -65,7 +65,7 @@ If you just want to return a single part of a type without the object structure,
 
 {'Budapest', 'Bistrița'}
 """
-print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
+print([p for p in cook.filter_taxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
@@ -73,7 +73,7 @@ But we want to have Jonathan be connected to the cities he has traveled to. We'l
 """
 
 jonathanVisitRel = jonathan.GetRelationship('places_visited')
-for city in cook.itaxa(stage.Traverse(), city):
+for city in cook.filter_taxa(stage.Traverse(), city):
     jonathanVisitRel.AddTarget(city.GetPath())
 
 stage.Save()
