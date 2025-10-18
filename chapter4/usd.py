@@ -76,7 +76,7 @@ def main():
 
     {'Budapest', 'Bistrița'}
     """
-    cities = cook.filter_taxa(stage.Traverse(), city)
+    cities = list(cook.filter_taxa(stage.Traverse(), city))
     print([p for p in cities if p.GetAttribute("modern_name").Get()])
     # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 

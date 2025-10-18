@@ -33,6 +33,32 @@ over "Catalogue"
                 prepend rel places_visited = </Catalogue/Object/Country/Romania>
             }
         }
+
+        over "Person"
+        {
+            over "JonathanHarker"
+            {
+                custom rel places_visited
+                prepend rel places_visited = [
+                    </Catalogue/Object/City/Munich>,
+                    </Catalogue/Object/City/Budapest>,
+                    </Catalogue/Object/City/Bistritz>,
+                ]
+            }
+        }
+
+        over "Player"
+        {
+            over "EmilSinclair"
+            {
+                custom rel places_visited
+                prepend rel places_visited = [
+                    </Catalogue/Object/City/Munich>,
+                    </Catalogue/Object/City/Budapest>,
+                    </Catalogue/Object/City/Bistritz>,
+                ]
+            }
+        }
     }
 }
 

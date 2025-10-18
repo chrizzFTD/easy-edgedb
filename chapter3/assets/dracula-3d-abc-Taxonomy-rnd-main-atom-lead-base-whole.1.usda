@@ -23,7 +23,7 @@ class "Taxonomy"
         custom int age (
             limits = {
                 dictionary hard = {
-                    int maximum = 12
+                    int maximum = 120
                 }
             }
         )
