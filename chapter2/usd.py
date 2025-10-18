@@ -32,18 +32,13 @@ with cook.taxonomy_context(stage):
     place.CreateAttribute("modern_name", Sdf.ValueTypeNames.String)
     person.CreateRelationship('places_visited')
 
-    # TODO: what should person and place be? Assemblies vs components.
-    #       For now, only cities are considered assemblies.
     # all places that end up in the database are "important places"
-    Usd.ModelAPI(city).SetKind(Kind.Tokens.assembly)
-
     variant_set = transport.GetVariantSets().AddVariantSet("Transport")
     for set_name in ("Feet", "Train", "HorseDrawnCarriage"):
         variant_set.AddVariant(set_name)
 
 cook.create_unit(city, 'Munich')
-budapest = cook.create_unit(city, 'Budapest', label='Buda-Pesth')
-bistritz = cook.create_unit(city, 'Bistritz', label='Bistritz')
+budapest, bistritz = cook.create_many(city, ('Budapest', 'Bistritz'), labels=('Buda-Pesth', 'Bistritz'))
 golden_krone = cook.create_unit(place, 'GoldenKroneHotel', label='Golden Krone Hotel')
 jonathan = cook.create_unit(person, 'JonathanHarker', label='Jonathan Harker')
 emil = cook.create_unit(player, "EmilSinclair", label="Emil Sinclair")
@@ -65,15 +60,16 @@ If you just want to return a single part of a type without the object structure,
 
 {'Budapest', 'Bistrița'}
 """
-print([p for p in cook.itaxa(stage.Traverse(), city) if p.GetAttribute("modern_name").Get()])
+cities = cook.filter_taxa(stage.Traverse(), city)
+print([p for p in cities if p.GetAttribute("modern_name").Get()])
 # [Usd.Prim(</City/Budapest>), Usd.Prim(</City/Bistritz>)]
 
 """
 But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
 """
 for person, places in {
-    jonathan: cook.itaxa(stage.Traverse(), city),
-    emil: cook.itaxa(stage.Traverse(), city),
+    jonathan: cities,
+    emil: cities,
 }.items():
     visit_rel = person.GetRelationship('places_visited')
     for each in places:
