@@ -92,6 +92,16 @@ def _notify(notice, sender):
         with changeblock:
             Total time: 0:00:06.356973
             Total notices 278
+
+    2025 10 18 - Py-3.13 + USD-25.11
+
+    for amount=1_000:
+        without changeblock:
+            Total time: 0:00:10.568393
+            Total notices 22600
+        with changeblock:
+            Total time: 0:00:06.074809
+            Total notices 278
     """
     next(_notice_counter)
     # print(f"{(no:=next(_notice_counter))}: {notice.GetChangedInfoOnlyPaths()=}")
@@ -329,11 +339,20 @@ def main():
     defaultPrim = "Origin"
 )
 
-over "Origin" (
-    prepend apiSchemas = ["MaterialBindingAPI"]
-)
-{}
-""")
+over "Origin" {
+}
+"""
+        )
+#         golden_shade.GetRootLayer().ImportFromString(
+# """#usda 1.0
+# (
+#     defaultPrim = "Origin"
+# )
+#
+# over "Origin" (
+#     prepend apiSchemas = ["MaterialBindingAPI"]
+# )
+#
 # {
 #     rel material:binding = </Origin/materials/mtlxmaterial>
 #
@@ -904,6 +923,9 @@ over "Origin" (
 
     # 2024-11-03 py313 usd2411
     # Total time: 0:00:06.371738
+
+    # 2025-10-18 py313 usd2511
+    # Total time: 0:00:06.074809
 
     amount = 1
     for taxon in (city, other_place, person):

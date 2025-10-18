@@ -21,7 +21,6 @@ def "Origin" (
 
     def "GoldenKroneHotel" (
         instanceable = true
-        kind = "group"
         prepend references = @dracula-3d-Model-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
     )
     {

@@ -3,9 +3,7 @@
     defaultPrim = "Origin"
 )
 
-over "Origin" (
-    prepend apiSchemas = ["MaterialBindingAPI"]
-)
+over "Origin"
 {
 }
 
