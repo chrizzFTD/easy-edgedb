@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-Vampire-rnd-main-CountDracula-lead-base-whole.1.usda@
+        string name = "CountDracula"
+    }
+    displayName = "Count Dracula"
+    prepend inherits = </Inherited/Object/Vampire/CountDracula>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Vampire>
+    prepend specializes = </Specialized/Object/Vampire/CountDracula>
+)
+{
+}
+

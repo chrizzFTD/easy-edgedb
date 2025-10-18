@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-Person-rnd-main-JonathanHarker-lead-base-whole.1.usda@
+        string name = "JonathanHarker"
+    }
+    displayName = "Jonathan Harker"
+    prepend inherits = </Inherited/Object/Person/JonathanHarker>
+    kind = "component"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/Person>
+    prepend specializes = </Specialized/Object/Person/JonathanHarker>
+)
+{
+}
+

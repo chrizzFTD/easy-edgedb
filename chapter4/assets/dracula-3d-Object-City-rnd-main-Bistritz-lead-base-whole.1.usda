@@ -1,0 +1,28 @@
+#usda 1.0
+(
+    defaultPrim = "Origin"
+)
+
+def "Origin" (
+    prepend apiSchemas = ["GeomModelAPI"]
+    assetInfo = {
+        asset identifier = @dracula-3d-Object-City-rnd-main-Bistritz-lead-base-whole.1.usda@
+        string name = "Bistritz"
+    }
+    displayName = "Bistritz"
+    prepend inherits = </Inherited/Object/City/Bistritz>
+    kind = "assembly"
+    prepend references = @dracula-3d-abc-Taxonomy-rnd-main-atom-lead-base-whole.1.usda@</Taxonomy/City>
+    prepend specializes = </Specialized/Object/City/Bistritz>
+)
+{
+    string modern_name = "Bistrița"
+
+    def "GoldenKroneHotel" (
+        instanceable = true
+        prepend references = @dracula-3d-Object-Place-rnd-main-GoldenKroneHotel-lead-base-whole.1.usda@
+    )
+    {
+    }
+}
+
