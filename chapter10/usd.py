@@ -122,6 +122,12 @@ def _tag_persistent_target(obj, target):
     obj.SetAssetInfoByKey("grill:target_taxon", target.GetName())
 
 
+def filter_taxa(prims, taxon, *taxa):
+    """Yields prims that are part of the given taxa."""
+    taxa_names = {i if isinstance(i, str) else i.GetName() for i in (taxon, *taxa)}
+    return (prim for prim in prims if taxa_names.intersection(prim.GetAssetInfoByKey(cook._ASSETINFO_TAXA_KEY) or {}))
+
+
 def main():
     token = cook.Repository.set(Path(__file__).parent / "assets")
     stage = cook.fetch_stage(names.UsdAsset.get_default(code='dracula'))
@@ -880,11 +886,6 @@ over "Origin" {
         But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
         """
 
-        def filter_taxa(prims, taxon, *taxa):
-            """Yields prims that are part of the given taxa."""
-            taxa_names = {i if isinstance(i, str) else i.GetName() for i in (taxon, *taxa)}
-            return (prim for prim in prims if taxa_names.intersection(prim.GetAssetInfoByKey(cook._ASSETINFO_TAXA_KEY) or {}))
-
         for each, places in (
             (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
             (emil, filter_taxa(stage.Traverse(), city)),
@@ -1110,8 +1111,8 @@ if __name__ == "__main__":
 
     # 2. How would you update Mina's `places_visited` to include Romania if she went to Castle Dracula for a visit?
     prims = stage.Traverse()
-    # mina = next(cook.itaxa(prims, "NonPlayer"), None)
-    # assert mina is not None
+    mina = next(filter_taxa(prims, "NonPlayer"), None)
+    assert mina is not None
     # mina_places = mina.GetRelationship("places_visited")
     # for each in cook.itaxa(prims, "Place"):
     #     if each.GetName() in {"CastleDracula", "Romania"}:
@@ -1124,12 +1125,12 @@ if __name__ == "__main__":
     # pprint([i for i in cook.itaxa(prims, 'Person') if letters.intersection(i.GetName())])
 
     # 5. How would you add ' the Great' to every Person type?
-    # from pxr import UsdUI
-    # for each in cook.itaxa(prims, 'Person'):
-    #     try:
-    #         each.SetDisplayName(each.GetName() + ' the Great')
-    #     except AttributeError:  # USD-22.8+
-    #         pass
+    from pxr import UsdUI
+    for each in filter_taxa(prims, 'Person'):
+        try:
+            each.SetDisplayName(each.GetName() + ' the Great')
+        except AttributeError:  # USD-22.8+
+            pass
         # ui = UsdUI.SceneGraphPrimAPI(each)
         # display_name = ui.GetDisplayNameAttr()
         # display_name.Set(display_name.Get() + ' the Great')
@@ -1144,12 +1145,12 @@ if __name__ == "__main__":
     #   'At least one city has more than 5 million people: ' ++ <str>any(cities > 5000000),
     #   'Standard deviation: ' ++ <str>math::stddev(cities)
     # );
-    # cities = tuple(cook.itaxa(prims, 'City'))
-    # print(f"""
-    # Number of cities: {len(cities)},
-    # All cities have more than 50,000 people: {', '.join(c.GetName() for c in cities if c.GetAttribute('population').Get() or 0 > 50000) },
-    # Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
-    # """)
+    cities = tuple(filter_taxa(prims, 'City'))
+    print(f"""
+    Number of cities: {len(cities)},
+    All cities have more than 50,000 people: {', '.join(c.GetName() for c in cities if c.GetAttribute('population').Get() or 0 > 50000) },
+    Total population:  {sum(c.GetAttribute('population').Get() or 0 for c in cities)},
+    """)
     print(f"Total notices {next(_notice_counter)}")
     # queries = _types_to_create_query(stage)
     # edgedb_commit(queries)
