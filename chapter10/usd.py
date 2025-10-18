@@ -309,7 +309,6 @@ def main():
                     strict=True,
             ):
                 UsdGeom.XformCommonAPI(each).SetTranslate(transform)
-
         # spawned.GetVariantSet("color").SetVariantSelection("constant")
         # b_stage = Usd.Stage.Open(cook.unit_asset(bistritz))
         # specialized = b_stage.OverridePrim("/Specialized/Model/Place/GoldenKroneHotel")
@@ -881,9 +880,14 @@ over "Origin" {
         But we want to have Jonathan be connected to the cities he has traveled to. We'll change places_visited when we INSERT to places_visited := City:
         """
 
+        def filter_taxa(prims, taxon, *taxa):
+            """Yields prims that are part of the given taxa."""
+            taxa_names = {i if isinstance(i, str) else i.GetName() for i in (taxon, *taxa)}
+            return (prim for prim in prims if taxa_names.intersection(prim.GetAssetInfoByKey(cook._ASSETINFO_TAXA_KEY) or {}))
+
         for each, places in (
             (jonathan, [munich, budapest, bistritz, london, romania, castle_dracula]),
-            # (emil, cook.itaxa(stage.Traverse(), city)),
+            # (emil, filter_taxa(stage.Traverse(), city)),
             (dracula, [romania]),
             (mina, [castle_dracula, romania]),
             (sailor, [london]),  # can propagate updates to a whole taxon group <- NOT ANYMORE
