@@ -102,6 +102,16 @@ def _notify(notice, sender):
         with changeblock:
             Total time: 0:00:06.074809
             Total notices 278
+
+    2025 11 23 - Py-3.14 + USD-25.11
+
+    for amount=1_000:
+        without changeblock:
+            Total time: 0:00:10.237825
+            Total notices 22605
+        with changeblock:
+            Total time: 0:00:05.899489
+            Total notices 278
     """
     next(_notice_counter)
     # print(f"{(no:=next(_notice_counter))}: {notice.GetChangedInfoOnlyPaths()=}")
@@ -930,6 +940,9 @@ over "Origin" {
 
     # 2025-10-18 py313 usd2511
     # Total time: 0:00:06.074809
+
+    # 2025-11-23 py314 usd2511
+    # Total time: 0:00:05.899489
 
     amount = 1
     for taxon in (city, other_place, person):
